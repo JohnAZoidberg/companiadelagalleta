@@ -1,6 +1,7 @@
 #!/usr/bin/python -u
 # coding=utf-8
 import MySQLdb
+from dbdetails import *
 
 class CgBase:
     def __init__(self):
@@ -8,10 +9,10 @@ class CgBase:
         self.cur = self.db.cursor()
 
     def _connectDb(self):
-        return MySQLdb.connect(host="localhost",
-                             user="root",
-                             passwd="schlunz",
-                             db="cg")
+        return MySQLdb.connect(host=dbdetails.host,
+                             user=dbdetails.user,
+                             passwd=dbdetails.passwd,
+                             db=dbdetails.db)
     def close_connection(self):
         self.db.close()
 
