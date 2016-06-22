@@ -63,7 +63,8 @@ list_cookies = [
 	"Strelitzia box - Sabores de Canarias",
 	"Mango box - Mix",
 	"Mango box - Excelencia",
-	"Plumeria box - Excelencia"
+	"Plumeria box - Excelencia",
+        "Galleta individual"
 ]
 cookie_list = OrderedDict((str(i+1), list_cookies[i]) for i in xrange(len(list_cookies)))
 country_list = OrderedDict([

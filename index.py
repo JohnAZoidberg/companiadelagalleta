@@ -15,7 +15,7 @@ form = cgi.FieldStorage()
 
 
 def print_form():
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now().strftime('%Y-%m-%d %H:%M')
     print '<form action="api.py" method="post">'
     print '<input type="hidden" name="redirect" value="index.py">'
     print '<input type="hidden" name="action" value="save_purchase">'
@@ -29,7 +29,7 @@ def print_form():
     for key, country in util.country_list.iteritems():
         print '<option value="' + str(key) + '">' + country + '</option>'
     print '</select></li>'
-    print '<li><label>Date: <input type="text" name="datetime" value="'+now+'" placeholder="'+now+'"></label></li>'
+    print '<li><label>Date: <input type="text" name="datetime" placeholder="'+now+'"></label></li>'
     print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
     print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
     print '<li><input type="submit" value="Save"></li>'

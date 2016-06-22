@@ -24,9 +24,11 @@ def save_purchase():
     if cookies:
         country  = form.getfirst('country')
         card     = form.getvalue('tarjeta')
-        date     = convert_date(form.getfirst('datetime'))
-        if date is None:
-            return False
+        date_field = form.getfirst('datetime')
+        if date_field is None:
+            date = datetime.now() 
+        else:
+            date = convert_date(date_field + ":00")
         discount = int(form.getfirst('discount')) 
         card = False if card is None else True
         base.insert_purchase(country, card, date, discount, cookies)
