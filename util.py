@@ -70,7 +70,7 @@ cookie_list = OrderedDict((str(i+1), list_cookies[i]) for i in xrange(len(list_c
 country_list = OrderedDict([
     ('de', "Alemania"),
     ('es', "Espana"),
-    ('canario', "Islas Canarias"
+    ('canario', "Islas Canarias"),
     ('ne', "Paíes Bajos"),
     ('gb', "Gran Bretana"),
     ('us', "EE.UU."),
