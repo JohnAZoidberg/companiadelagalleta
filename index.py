@@ -40,6 +40,8 @@ def print_purchases(ps):
     print "<ul>"
     for key, p in ps.iteritems():
         (country, card, discount, date) = p['purchase']
+        if not is_same_day(date, datetime.now()):
+            continue
         card_str = "with card" if card else "in cash"
         disc_str = "" if discount == 0 else " and got " + str(discount) + "% off"
         total = 0
@@ -54,6 +56,9 @@ def print_purchases(ps):
         print "</ul>"
     print "</ul>"
 
+def is_same_day(date1, date2):
+    return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
+
 base = CgBase()
 util.print_header()
 util.print_html_header("Herramiento")
@@ -61,5 +66,6 @@ purchases = base.get_purchases()
 #util.println('<a href="analysis.py">Analyze</a>')
 print_form()
 print '<hr>'
+print '<h2>Compras de hoy</h2>'
 print_purchases(purchases)
 util.print_html_footer()
