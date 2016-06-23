@@ -2,6 +2,8 @@
 # coding=utf-8
 import MySQLdb
 from dbdetails import *
+from random import randint
+import time
 
 class CgBase:
     def __init__(self):
@@ -51,6 +53,8 @@ class CgBase:
 
     def insert_purchase(self, country, card, date, discount, cart):
     # type: (str, bool, datetime, int, {int: int}) -> None
+        # a unique id to identify entries: unixtimestamp + 4 random digits
+        syncId = str(int(time.time())) + str(randint(1000, 9999))
         cartId = self.fetchone("cart", ["cartId"], " ORDER BY cartId DESC")
         cartId = 0 if cartId is None else int(cartId) + 1
         for boxId, quantity in cart.iteritems():
@@ -60,11 +64,11 @@ class CgBase:
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0)) 
             self.insert("cart",
-                        ["cartId", "boxId", "quantity", "price"],
-                        [cartId, boxId, quantity, price]) 
+                        ["cartId", "boxId", "quantity", "price", "status", "syncId"],
+                        [cartId, boxId, quantity, price, 0, syncId]) 
         self.insert("purchases",
-                    ["country", "card", "date", "discount", "cartId"],
-                    [country, int(card), self.sqlformatdate(date), discount, cartId])
+                    ["country", "card", "date", "discount", "cartId", "status", "syncId"],
+                    [country, int(card), self.sqlformatdate(date), discount, cartId, 0, syncId])
 
     def get_purchases(self):
         pt = "purchases"
