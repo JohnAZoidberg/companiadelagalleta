@@ -41,8 +41,12 @@ def convert_date(datestring):
     try:
         return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     except:
-        print_text("Not a valid datetime!")
-        return None
+        try:
+            datestring = datetime.now().strftime('%Y-%m-%d ') + datestring
+            return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+        except:
+            print_text("Not a valid datetime! (" + datestring + ")")
+    return None
 
 def print_text(text):
     util.print_header()
