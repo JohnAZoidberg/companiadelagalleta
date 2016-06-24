@@ -54,7 +54,7 @@ class CgBase:
     def insert_purchase(self, country, card, date, discount, cart):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
-        syncId = str(int(time.time())) + str(randint(1000, 9999))
+        syncId = str(randint(100000000, 999999999))
         cartId = self.fetchone("cart", ["cartId"], " ORDER BY cartId DESC")
         cartId = 0 if cartId is None else int(cartId) + 1
         for boxId, quantity in cart.iteritems():
