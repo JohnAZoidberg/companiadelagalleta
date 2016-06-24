@@ -68,6 +68,7 @@ list_cookies = [
 ]
 cookie_list = OrderedDict((str(i+1), list_cookies[i]) for i in xrange(len(list_cookies)))
 country_list = OrderedDict([
+    ('??', "Desconocido"),
     ('de', "Alemania"),
     ('es', "Espana"),
     ('canario', "Islas Canarias"),
@@ -77,8 +78,7 @@ country_list = OrderedDict([
     ('it', "Itala"),
     ('fr', "Francia"),
     ('no', "Noruega"),
-    ('xx', "Otro"),
-    ('??', "Desconocido")
+    ('xx', "Otro")
 ])
 save_file = 'purchases.txt'
 
