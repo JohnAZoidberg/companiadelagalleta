@@ -15,7 +15,7 @@ form = cgi.FieldStorage()
 
 
 def print_form():
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now().strftime('%Y-%m-%d %H:%M')
     print '<form action="api.py" method="post">'
     print '<input type="hidden" name="redirect" value="index.py">'
     print '<input type="hidden" name="action" value="save_purchase">'
@@ -29,24 +29,39 @@ def print_form():
     for key, country in util.country_list.iteritems():
         print '<option value="' + str(key) + '">' + country + '</option>'
     print '</select></li>'
-    print '<li><label>Date: <input type="text" name="datetime" value="'+now+'" placeholder="'+now+'"></label></li>'
+    print '<li><label>Date: <input type="text" name="datetime" placeholder="'+now+'"></label></li>'
     print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
     print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
     print '<li><input type="submit" value="Save"></li>'
     print '</ul>'
     print '</form>'
+def calc_daily_total(ps):
+    daily_total = 0
+    for key, p in ps.iteritems():
+         (country, card, discount, date) = p['purchase']
+         if not is_same_day(date, datetime.now()):
+             continue
+         for item in p['cart']:
+            (title, boxId, quantity, price) = item
+            daily_total += price*quantity
+    return daily_total
 
 def print_purchases(ps):
     print "<ul>"
+    daily_total_str = str(calc_daily_total(ps) / 100.0) + "€"
+    print '<li>Total: ', daily_total_str, '</li>'
     for key, p in ps.iteritems():
         (country, card, discount, date) = p['purchase']
+        if not is_same_day(date, datetime.now()):
+            continue
         card_str = "with card" if card else "in cash"
         disc_str = "" if discount == 0 else " and got " + str(discount) + "% off"
         total = 0
         for item in p['cart']:
             (title, boxId, quantity, price) = item
             total += price*quantity
-        print "<li>", date, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, "</li>"
+        date_str = date.strftime('%H:%M')
+        print "<li>", date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, "</li>"
         print "<ul>"
         for item in p['cart']:
             (title, boxId, quantity, price) = item
@@ -54,12 +69,16 @@ def print_purchases(ps):
         print "</ul>"
     print "</ul>"
 
+def is_same_day(date1, date2):
+    return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
+
 base = CgBase()
 util.print_header()
-util.print_html_header()
+util.print_html_header("Herramiento")
 purchases = base.get_purchases()
 #util.println('<a href="analysis.py">Analyze</a>')
 print_form()
 print '<hr>'
+print '<h2>Compras de hoy</h2>'
 print_purchases(purchases)
 util.print_html_footer()

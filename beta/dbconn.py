@@ -1,27 +1,22 @@
 #!/usr/bin/python -u
 # coding=utf-8
 import MySQLdb
+from dbdetails import *
+from random import randint
+import time
 
-pt = "purchases"
-ct = "cart"
-bt = "boxes"
 class CgBase:
     def __init__(self):
         self.db = self._connectDb()
         self.cur = self.db.cursor()
 
     def _connectDb(self):
-        return MySQLdb.connect(host="localhost",
-                             user="root",
-                             passwd="mannfred21",
-                             db="cg")
+        return MySQLdb.connect(host=dbdetails.host,
+                             user=dbdetails.user,
+                             passwd=dbdetails.passwd,
+                             db=dbdetails.db)
     def close_connection(self):
         self.db.close()
-
-    def truncate_tables(self):
-        self.cur.execute("TRUNCATE TABLE " + pt)
-        self.cur.execute("TRUNCATE TABLE " + ct)
-        self.db.commit()
 
     def _list_to_str(self, xs, quote=""):
         str_value = quote + str(xs[0]) + quote 
@@ -41,6 +36,18 @@ class CgBase:
         self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
         return self.cur.fetchall()
 
+    def update(self, table, data, extra=""):
+        try:
+            sql_str = "UPDATE " + table + " SET"
+            for key, val in data.iteritems():
+                sql_str += " " + str(key) + " = " + str(val)
+            sql_str += " " + extra
+            self.cur.execute(sql_str)
+            self.db.commit()
+        except Exception as e:
+            print "Something weird happened: ", e
+            self.db.rollback()
+
     def insert(self, table, columns, data, extra=""):
     # type: (str, List[obj], List[obj], str) -> None
         column_str = self._list_to_str(columns)
@@ -58,6 +65,8 @@ class CgBase:
 
     def insert_purchase(self, country, card, date, discount, cart):
     # type: (str, bool, datetime, int, {int: int}) -> None
+        # a unique id to identify entries: unixtimestamp + 4 random digits
+        syncId = str(int(time.time())) + str(randint(1000, 9999))
         cartId = self.fetchone("cart", ["cartId"], " ORDER BY cartId DESC")
         cartId = 0 if cartId is None else int(cartId) + 1
         for boxId, quantity in cart.iteritems():
@@ -67,13 +76,16 @@ class CgBase:
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0)) 
             self.insert("cart",
-                        ["cartId", "boxId", "quantity", "price"],
-                        [cartId, boxId, quantity, price]) 
+                        ["cartId", "boxId", "quantity", "price", "status", "syncId"],
+                        [cartId, boxId, quantity, price, 0, syncId]) 
         self.insert("purchases",
-                    ["country", "card", "date", "discount", "cartId"],
-                    [country, int(card), self.sqlformatdate(date), discount, cartId])
+                    ["country", "card", "date", "discount", "cartId", "status", "syncId"],
+                    [country, int(card), self.sqlformatdate(date), discount, cartId, 0, syncId])
 
     def get_purchases(self):
+        pt = "purchases"
+        ct = "cart"
+        bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
                                [pt+".purchaseEntryId", pt+".country", pt+".card", pt+".discount", pt+".date",
                                 ct+".quantity", ct+".price",

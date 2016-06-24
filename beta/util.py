@@ -63,18 +63,22 @@ list_cookies = [
 	"Strelitzia box - Sabores de Canarias",
 	"Mango box - Mix",
 	"Mango box - Excelencia",
-	"Plumeria box - Excelencia"
+	"Plumeria box - Excelencia",
+        "Galleta individual"
 ]
 cookie_list = OrderedDict((str(i+1), list_cookies[i]) for i in xrange(len(list_cookies)))
 country_list = OrderedDict([
-    ('de', "Germany"),
-    ('es', "Spain"),
-    ('ne', "Netherlands"),
-    ('no', "Norway"),
-    ('gb', "Great Britain"),
-    ('us', "USA"),
-    ('it', "Italy"),
-    ('fr', "France")
+    ('de', "Alemania"),
+    ('es', "Espana"),
+    ('canario', "Islas Canarias"),
+    ('ne', "Paíes Bajos"),
+    ('gb', "Gran Bretana"),
+    ('us', "EE.UU."),
+    ('it', "Itala"),
+    ('fr', "Francia"),
+    ('no', "Noruega"),
+    ('xx', "Otro"),
+    ('??', "Desconocido")
 ])
 save_file = 'purchases.txt'
 
@@ -83,10 +87,11 @@ def print_header():
     print
 
 
-def print_html_header():
+def print_html_header(title):
     print '<html>'
     print '<head>'
     print '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    print '<title>' + title + '</title>'
     print '</head>'
     print '<body>'
 
