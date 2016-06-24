@@ -35,21 +35,29 @@ def print_form():
     print '<li><input type="submit" value="Save"></li>'
     print '</ul>'
     print '</form>'
+
 def calc_daily_total(ps):
-    daily_total = 0
+    cash_total = 0
+    card_total = 0
     for key, p in ps.iteritems():
          (country, card, discount, date) = p['purchase']
          if not is_same_day(date, datetime.now()):
              continue
          for item in p['cart']:
             (title, boxId, quantity, price) = item
-            daily_total += price*quantity
-    return daily_total
+            if card:
+                card_total += price * quantity
+            else:
+                cash_total  += price * quantity
+         daily_total = cash_total + card_total
+    return (daily_total, cash_total, card_total)
 
 def print_purchases(ps):
     print "<ul>"
-    daily_total_str = str(calc_daily_total(ps) / 100.0) + "€"
-    print '<li>Total: ', daily_total_str, '</li>'
+    daily_total_str = [str(total / 100.0) + "€" for total in calc_daily_total(ps)]
+    print '<li>Total: ', daily_total_str[0], '</li>'
+    print '<li>Cash-Total: ', daily_total_str[1], '</li>'
+    print '<li>Card-Total: ', daily_total_str[2], '</li>'
     for key, p in ps.iteritems():
         (country, card, discount, date) = p['purchase']
         if not is_same_day(date, datetime.now()):
