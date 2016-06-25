@@ -49,7 +49,7 @@ def calc_daily_total(ps):
                 card_total += price * quantity
             else:
                 cash_total  += price * quantity
-         daily_total = cash_total + card_total
+    daily_total = cash_total + card_total
     return (daily_total, cash_total, card_total)
 
 def print_purchases(ps):
@@ -58,7 +58,7 @@ def print_purchases(ps):
     print '<li>Total: ', daily_total_str[0], '</li>'
     print '<li>Cash-Total: ', daily_total_str[1], '</li>'
     print '<li>Card-Total: ', daily_total_str[2], '</li>'
-    for key, p in ps.iteritems():
+    for syncId, p in ps.iteritems():
         (country, card, discount, date) = p['purchase']
         if not is_same_day(date, datetime.now()):
             continue
@@ -69,7 +69,8 @@ def print_purchases(ps):
             (title, boxId, quantity, price) = item
             total += price*quantity
         date_str = date.strftime('%H:%M')
-        print "<li>", date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, "</li>"
+        delete_link = '<a href="api.py?action=delete_purchase&redirect=index.py&syncId=' + str(syncId) + '">borrar</a>'
+        print "<li>", date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
         print "<ul>"
         for item in p['cart']:
             (title, boxId, quantity, price) = item

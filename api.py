@@ -37,6 +37,12 @@ def save_purchase():
         print_text("No cookies")
     return False
 
+def delete_purchase():
+    syncId = form.getfirst('syncId')
+    if syncId is not None:
+        return base.delete_purchase(syncId)
+    return False
+
 def convert_date(datestring):
     try:
         return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
@@ -58,6 +64,8 @@ success = False
 if action is not None:
     if action == "save_purchase":
         success = save_purchase()
+    elif action == "delete_purchase":
+        success = delete_purchase()
     else:
         print_text("No valid Action")
 else:

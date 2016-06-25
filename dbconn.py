@@ -75,14 +75,14 @@ class CgBase:
         ct = "cart"
         bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
-                               [pt+".purchaseEntryId", pt+".country", pt+".card", pt+".discount", pt+".date",
+                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date",
                                 ct+".quantity", ct+".price",
                                 bt+".boxesEntryId", bt+".title"],
                                "WHERE purchases.cartId = cart.cartId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
         purchases = {}
         for row in result:
-            (purchaseId, country, card, discount, date, quantity, price, boxId, title) = row
-            key = int(row[0])
+            (syncId, country, card, discount, date, quantity, price, boxId, title) = row
+            key = int(syncId)
             try:
                 foo = purchases[key]
             except:
@@ -92,3 +92,12 @@ class CgBase:
             purchases[key]['cart'].append((title, boxId, quantity, price))
         return purchases
 
+    def delete_purchase(self, syncId):
+        syncStr = str(syncId)
+        try:
+            self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
+            self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
+            self.db.commit()
+        except:
+            self.db.rollback()
+        return True
