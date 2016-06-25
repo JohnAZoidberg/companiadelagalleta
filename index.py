@@ -12,20 +12,13 @@ except ImportError:
     from ordereddict import OrderedDict
 import util
 form = cgi.FieldStorage()
+now = datetime.now().strftime('%Y-%m-%d %H:%M')
 
-
-def print_form():
-    now = datetime.now().strftime('%Y-%m-%d %H:%M')
-    print '<form action="api.py" method="post">'
-    print '<input type="hidden" name="redirect" value="index.py">'
-    print '<input type="hidden" name="action" value="save_purchase">'
-    print '<ul style="list-style-type: none;">'
-    for key, cookie in util.cookie_list.iteritems():
-        print '<li><label>'
-        print '<input type="number" name="box_' + str(key) + '" value="0" size="2" required>'
-        print cookie
-        print '</label></li>'
-    print '<li><select name="country">'
+def print_form_header(hidden):
+    attr = 'id="details"'
+    attr += ' class="hidden"'  if hidden else 'class="fixed"'
+    print '<ul ' + attr + '>'
+    print '<li>País: <select name="country">'
     for key, country in util.country_list.iteritems():
         print '<option value="' + str(key) + '">' + country + '</option>'
     print '</select></li>'
@@ -33,6 +26,20 @@ def print_form():
     print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
     print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
     print '<li><input type="submit" value="Save"></li>'
+    print '</ul>'
+
+def print_form():
+    print '<form action="api.py" method="post">'
+    print '<input type="hidden" name="redirect" value="index.py">'
+    print '<input type="hidden" name="action" value="save_purchase">'
+    print_form_header(True)
+    print_form_header(False)
+    print '<ul style="list-style-type: none;">'
+    for key, cookie in util.cookie_list.iteritems():
+        print '<li><label>'
+        print '<input type="number" name="box_' + str(key) + '" value="0" size="2" required>'
+        print cookie
+        print '</label></li>'
     print '</ul>'
     print '</form>'
 
@@ -81,9 +88,16 @@ def print_purchases(ps):
 def is_same_day(date1, date2):
     return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
 
+css = ("ul            { list-style-type: none; }"
+       "ul#details    { padding: 0; }"
+       "ul#details li { display: inline; margin-left: 10px; }"
+       "#details      { top: 0; width: 100%; margin: 0; background: white; }"
+       ".hidden       { visibility: hidden; }"
+       ".fixed        { position: fixed; }"
+      )
 base = CgBase()
 util.print_header()
-util.print_html_header("Herramiento")
+util.print_html_header("Herramiento", css)
 purchases = base.get_purchases()
 #util.println('<a href="analysis.py">Analyze</a>')
 print_form()
