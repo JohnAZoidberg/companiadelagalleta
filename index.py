@@ -18,14 +18,17 @@ def print_form_header(hidden):
     attr = 'id="details"'
     attr += ' class="hidden"'  if hidden else 'class="fixed"'
     print '<ul ' + attr + '>'
-    print '<li>País: <select name="country">'
-    for key, country in util.country_list.iteritems():
-        print '<option value="' + str(key) + '">' + country + '</option>'
-    print '</select></li>'
-    print '<li><label>Date: <input type="text" name="datetime" placeholder="'+now+'"></label></li>'
-    print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
-    print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
-    print '<li><input type="submit" value="Save"></li>'
+    if hidden:
+        print "Menu"
+    else:
+        print '<li>País: <select name="country">'
+        for key, country in util.country_list.iteritems():
+            print '<option value="' + str(key) + '">' + country + '</option>'
+        print '</select></li>'
+        print '<li><label>Date: <input type="text" name="datetime" placeholder="'+now+'"></label></li>'
+        print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
+        print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
+        print '<li><input type="submit" value="Save"></li>'
     print '</ul>'
 
 def print_form():
@@ -89,7 +92,7 @@ def is_same_day(date1, date2):
     return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
 
 css = ("ul            { list-style-type: none; }"
-       "ul#details    { padding: 0; }"
+       "ul#details    { padding: 10; }"
        "ul#details li { display: inline; margin-left: 10px; }"
        "#details      { top: 0; width: 100%; margin: 0; background: white; }"
        ".hidden       { visibility: hidden; }"
