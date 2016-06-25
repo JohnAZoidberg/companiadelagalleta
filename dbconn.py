@@ -27,16 +27,22 @@ class CgBase:
     def sqlformatdate(self, date):
         return date.strftime('%Y-%m-%d %H:%M:%S')
 
+    def _fetch(self, table, columns, extra=""):
+        try:
+            self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
+        except Exception as e:
+            print "Something weird happened: ", e
+
     def fetchone(self, table, columns, extra=""):
-        self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
+        self._fetch(table, columns, extra)
         result = self.cur.fetchone()
         return None if result is None else result[0]
 
     def fetchall(self, table, columns, extra=""):
-        self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
+        self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
-    def insert(self, table, columns, data, extra=""):
+    def insert(self, table, columns, data, commit, extra=""):
     # type: (str, List[obj], List[obj], str) -> None
         column_str = self._list_to_str(columns)
         data_str = self._list_to_str(data, '"')
@@ -44,16 +50,18 @@ class CgBase:
             self.cur.execute("INSERT INTO " + table + " (" + column_str + ") VALUES (" + data_str + ") " + extra)
             self.cur.execute("SELECT LAST_INSERT_ID()")
             id = self.cur.fetchone()
-            self.db.commit()
+            if commit:
+                self.db.commit()
             return id
         except Exception as e:
             print "Something weird happened: ", e 
             self.db.rollback()
-            return None
+            return False 
 
     def insert_purchase(self, country, card, date, discount, cart):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
+        success = False
         syncId = str(randint(100000000, 999999999))
         cartId = self.fetchone("cart", ["cartId"], " ORDER BY cartId DESC")
         cartId = 0 if cartId is None else int(cartId) + 1
@@ -63,12 +71,16 @@ class CgBase:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0)) 
-            self.insert("cart",
+            success = self.insert("cart",
                         ["cartId", "boxId", "quantity", "price", "status", "syncId"],
-                        [cartId, boxId, quantity, price, 0, syncId]) 
-        self.insert("purchases",
+                        [cartId, boxId, quantity, price, 0, syncId],
+                        False) 
+        success = success and self.insert("purchases",
                     ["country", "card", "date", "discount", "cartId", "status", "syncId"],
-                    [country, int(card), self.sqlformatdate(date), discount, cartId, 0, syncId])
+                    [country, int(card), self.sqlformatdate(date), discount, cartId, 0, syncId],
+                    False)
+        if success:
+            self.db.commit()
 
     def get_purchases(self):
         pt = "purchases"
@@ -98,6 +110,7 @@ class CgBase:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             self.db.commit()
-        except:
+        except Exception as e:
             self.db.rollback()
+            print "Someting weird happened: ", e
         return True
