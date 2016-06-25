@@ -25,7 +25,7 @@ def print_form_header(hidden):
         for key, country in util.country_list.iteritems():
             print '<option value="' + str(key) + '">' + country + '</option>'
         print '</select></li>'
-        print '<li><label>Date: <input type="text" name="datetime" placeholder="'+now+'"></label></li>'
+        print '<li><label title="' + now + '">Date: <input type="text" name="datetime" placeholder="11:45" required></label></li>'
         print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
         print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
         print '<li><input type="submit" value="Save"></li>'
@@ -49,8 +49,8 @@ def print_form():
 def calc_daily_total(ps):
     cash_total = 0
     card_total = 0
-    for key, p in ps.iteritems():
-         (country, card, discount, date) = p['purchase']
+    for p in ps:
+         (syncId, country, card, discount, date) = p['purchase']
          if not is_same_day(date, datetime.now()):
              continue
          for item in p['cart']:
@@ -68,8 +68,8 @@ def print_purchases(ps):
     print '<li>Total: ', daily_total_str[0], '</li>'
     print '<li>Cash-Total: ', daily_total_str[1], '</li>'
     print '<li>Card-Total: ', daily_total_str[2], '</li>'
-    for syncId, p in ps.iteritems():
-        (country, card, discount, date) = p['purchase']
+    for p in ps:
+        (syncId, country, card, discount, date) = p['purchase']
         if not is_same_day(date, datetime.now()):
             continue
         card_str = "with card" if card else "in cash"

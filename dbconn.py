@@ -91,17 +91,14 @@ class CgBase:
                                 ct+".quantity", ct+".price",
                                 bt+".boxesEntryId", bt+".title"],
                                "WHERE purchases.cartId = cart.cartId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
-        purchases = {}
+        purchases = [] 
         for row in result:
             (syncId, country, card, discount, date, quantity, price, boxId, title) = row
-            key = int(syncId)
-            try:
-                foo = purchases[key]
-            except:
-                purchases[key] = {}
-                purchases[key]['purchase'] = (country, card, discount, date)
-                purchases[key]['cart'] = [] 
-            purchases[key]['cart'].append((title, boxId, quantity, price))
+            purchase = {}
+            purchase['purchase'] = (syncId, country, card, discount, date)
+            purchase['cart'] = [] 
+            purchase['cart'].append((title, boxId, quantity, price))
+            purchases.append(purchase)
         return purchases
 
     def delete_purchase(self, syncId):
