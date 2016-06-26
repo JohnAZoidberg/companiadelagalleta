@@ -56,12 +56,14 @@ def sync():
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
         if status == 3:
             continue
-        params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)
-        urls.append("http://46.101.112.121/api.py?" + urllib.urlencode(params))
+        params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
+        url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
+        urls.append(url)
         for item in p['cart']:
             (title, status, boxId, quantity, price) = item
             cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
-            urls.append("http://46.101.112.121/api.py?" + urllib.urlencode(cparams))
+            url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
+            urls.append(url)
     with AsyncRequests() as request:
         request.run(urls)
         for result in request.results:
