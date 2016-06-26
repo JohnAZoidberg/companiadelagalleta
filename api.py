@@ -59,20 +59,21 @@ def sync():
             continue
         params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
         url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
-        # TODODODO O urls.append(url)
+        urls.append(url)
         for item in p['cart']:
             (title, status, boxId, quantity, price) = item
             cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
             url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
             urls.append(url)
-            results = []
-            for url in urls:
-                results.append(urllib2.urlopen(url))
-            for result in results:
-                try:
-                    print result.read(), br
-                except:
-                    print result, br
+    results = []
+    for url in urls:
+        results.append(urllib2.urlopen(url))
+    for result in results:
+        try:
+            jresult = json.load(result)
+        except:
+            jresult = json.loads(result)
+        print jresult, br
     return False
 
 def sync_cart():
@@ -81,7 +82,10 @@ def sync_cart():
     boxId  = int(form.getfirst("boxId"))
     quantity = int(form.getfirst("quantity"))
     price = int(form.getfirst("price"))
-    return base.sync_cart(syncId, status, boxId, quantity, price)
+    success = base.sync_cart(syncId, status, boxId, quantity, price)
+    if success:
+        action_result = '{"result": "200 - SYNCED CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}'
+    return success
 
 def sync_purchase():
     syncId = int(form.getfirst("syncId"))
@@ -91,7 +95,10 @@ def sync_purchase():
     datestring = form.getfirst("date")
     date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     status = int(form.getfirst("status"))
-    return base.sync_purchase(syncId, status, country, card, discount, date)
+    success = base.sync_purchase(syncId, status, country, card, discount, date)
+    if success:
+        action_result = '{"result": "200 - SYNCED PURCHASE", "syncId": ' + str(syncId) + '}'
+    return success
 
 def convert_date(datestring):
     try:
@@ -129,12 +136,8 @@ if action is not None:
         success = sync()
     elif action == "syncCart":
         success = sync_cart() 
-        if success:
-            action_result = '{"result": "200 - SYNCED CART"}'
     elif action == "syncPurchase":
         success = sync_purchase() 
-        if success:
-            action_result = '{"result": "200 - SYNCED PURCHASE"}'
     else:
         print_text("No valid Action: " + str(action))
         action = None

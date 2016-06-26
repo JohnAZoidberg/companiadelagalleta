@@ -128,7 +128,7 @@ class CgBase:
 
     def sync_cart(self, syncId, status, boxId, quantity, price):
         if status == 0:
-            result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId))
+            result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId) + " AND boxId=" + str(boxId))
             if result is None:
                 self.insert_cart(syncId, boxId, quantity, price)
         elif status == 1: # edited entry
