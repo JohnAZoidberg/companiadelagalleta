@@ -59,11 +59,14 @@ class CgBase:
             self.db.rollback()
             return False 
 
-    def insert_purchase(self, country, card, date, discount, cart):
+    def insert_purchase(self, country, card, date, discount, cart, syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
         success = False
-        syncId = str(randint(100000000, 999999999))
+        if syncId is None:
+            syncId = str(randint(100000000, 999999999))
+        if len(cart) == 0:
+            success = True
         for boxId, quantity in cart.iteritems():
             price = self.fetchone("boxes", ["price"], " WHERE boxesEntryId = " + str(boxId))
             if price is None:
@@ -74,7 +77,7 @@ class CgBase:
             success = self.insert("cart",
                         ["boxId", "quantity", "price", "status", "syncId"],
                         [boxId, quantity, price, 0, syncId],
-                        False) 
+                        False)
         success = success and self.insert("purchases",
                     ["country", "card", "date", "discount", "status", "syncId"],
                     [country, int(card), self.sqlformatdate(date), discount, 0, syncId],
@@ -116,3 +119,17 @@ class CgBase:
             self.db.rollback()
             print "Someting weird happened: ", e
         return True
+
+    def sync_purchase(self, syncId, status, country, card, discount, date):
+        if status == 0: # new entry
+            result = self.fetchone("purchases", ["status"], "WHERE syncId="+str(syncId))
+            if result is None:
+                self.insert_purchase(country, card, date, discount, {}, syncId=syncId)
+                return True
+        elif status == 1: # edited entry
+            pass
+        elif status == 2: # deleted entry 
+            pass
+        elif status == 3: # synced entry 
+            pass
+        return False

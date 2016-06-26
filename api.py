@@ -13,6 +13,7 @@ except ImportError:
     from ordereddict import OrderedDict
 import util
 form = cgi.FieldStorage()
+action_result = '{"result": "200 - OK"}' 
 
 def save_purchase():
     cookies = {} 
@@ -61,13 +62,22 @@ def sync():
             (title, status, boxId, quantity, price) = item
             cparams = "action=syncCart&syncId="+str(syncId)+"&status="+str(status)+"&boxId="+str(boxId)+"&quantity="+str(quantity)+"&price="+str(price)
             #print "----", cparams, br
-            urls.append("api.py?" + cparams)
-    print urls[0], br
+            urls.append("http://localhost/api.py?" + cparams)
     with AsyncRequests() as request:
-        request.run(["http://localhost/beta/"+urls[0]])
+        request.run(urls)
         for result in request.results:
             print result.read(), br
     return False
+
+def sync_purchase():
+    syncId = int(form.getfirst("syncId"))
+    country = form.getfirst("country")
+    card = bool(form.getfirst("card"))
+    discount = int(form.getfirst("discount"))
+    datestring = form.getfirst("date")
+    date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+    status = int(form.getfirst("status"))
+    return base.sync_purchase(syncId, status, country, card, discount, date)
 
 def convert_date(datestring):
     try:
@@ -99,7 +109,9 @@ if action is not None:
     elif action == "sync":
         success = sync()
     elif action == "syncPurchase":
-        success = True
+        success = sync_purchase() 
+        if success:
+            action_result = '{"result": "200 - SYNCED"}'
     else:
         print_text("No valid Action: " + str(action))
         action = None
@@ -109,7 +121,7 @@ else:
 if success:
     redirect = form.getfirst('redirect')
     if redirect is None:
-        print_json('{"result": "200 - OK"}')
+        print_text(action_result)
     else:
         print "Location: " + redirect
         print 
