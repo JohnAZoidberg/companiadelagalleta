@@ -29,6 +29,7 @@ def print_form_header(hidden):
         print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
         print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
         print '<li><input type="submit" value="Save"></li>'
+        print '<li><a href="api.py?action=sync&redirect=index.py">Sync por la nube</a></li>'
     print '</ul>'
 
 def print_form():

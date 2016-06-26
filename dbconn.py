@@ -4,6 +4,7 @@ import MySQLdb
 from dbdetails import *
 from random import randint
 import time
+from collections import OrderedDict
 
 class CgBase:
     def __init__(self):
@@ -91,15 +92,18 @@ class CgBase:
                                 ct+".quantity", ct+".price",
                                 bt+".boxesEntryId", bt+".title"],
                                "WHERE purchases.cartId = cart.cartId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
-        purchases = [] 
+        purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, quantity, price, boxId, title) = row
-            purchase = {}
-            purchase['purchase'] = (syncId, country, card, discount, date)
-            purchase['cart'] = [] 
-            purchase['cart'].append((title, boxId, quantity, price))
-            purchases.append(purchase)
-        return purchases
+            key = int(syncId)
+            try:
+                foo = purchases[key]
+            except:
+                purchases[key] = {}
+                purchases[key]['purchase'] = (key, country, card, discount, date)
+                purchases[key]['cart'] = [] 
+            purchases[key]['cart'].append((title, boxId, quantity, price))
+        return [val for key, val in purchases.iteritems()]
 
     def delete_purchase(self, syncId):
         syncStr = str(syncId)
