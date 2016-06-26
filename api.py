@@ -6,6 +6,7 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
+import urllib
 from asyncRequests import AsyncRequests
 try:
     from collections import OrderedDict
@@ -55,18 +56,19 @@ def sync():
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
         if status == 3:
             continue
-        params = "action=syncPurchase&syncId="+str(syncId)+"&country="+country+"&card="+str(card)+"&discount="+str(discount)+"&date="+datestring+"&status="+str(status)
-        urls.append("api.py?" + params)
-        #print params, br
+        params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)
+        urls.append("http://46.101.112.121/api.py?" + urllib.urlencode(params))
         for item in p['cart']:
             (title, status, boxId, quantity, price) = item
-            cparams = "action=syncCart&syncId="+str(syncId)+"&status="+str(status)+"&boxId="+str(boxId)+"&quantity="+str(quantity)+"&price="+str(price)
-            #print "----", cparams, br
-            urls.append("http://localhost/api.py?" + cparams)
+            cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
+            urls.append("http://46.101.112.121/api.py?" + urllib.urlencode(cparams))
     with AsyncRequests() as request:
         request.run(urls)
         for result in request.results:
-            print result.read(), br
+            try:
+                print result.read(), br
+            except:
+                print result, br
     return False
 
 def sync_purchase():
