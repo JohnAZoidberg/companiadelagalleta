@@ -6,6 +6,7 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
+import urllib2
 import urllib
 from asyncRequests import AsyncRequests
 try:
@@ -58,19 +59,20 @@ def sync():
             continue
         params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
         url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
-        urls.append(url)
+        # TODODODO O urls.append(url)
         for item in p['cart']:
             (title, status, boxId, quantity, price) = item
             cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
             url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
             urls.append(url)
-    with AsyncRequests() as request:
-        request.run(urls)
-        for result in request.results:
-            try:
-                print result.read(), br
-            except:
-                print result, br
+            results = []
+            for url in urls:
+                results.append(urllib2.urlopen(url))
+            for result in results:
+                try:
+                    print result.read(), br
+                except:
+                    print result, br
     return False
 
 def sync_cart():
@@ -109,6 +111,11 @@ def print_json(text):
 def print_text(text):
     util.print_header()
     print text
+
+def chunk(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
 
 base = CgBase()
 action = form.getfirst("action")
