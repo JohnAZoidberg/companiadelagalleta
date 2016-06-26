@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 26, 2016 at 01:32 PM
+-- Generation Time: Jun 26, 2016 at 11:03 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `cart` (
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL COMMENT 'in cents',
   `status` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB AUTO_INCREMENT=82 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `cart`
@@ -190,7 +190,27 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (77, 167173026, 1, 1, 895, 0),
 (78, 856957995, 1, 1, 895, 0),
 (79, 789422155, 4, 1, 495, 0),
-(80, 460552598, 56, 2, 100, 0);
+(80, 460552598, 56, 2, 100, 0),
+(82, 113888679, 1, 1, 895, 0),
+(83, 102527775, 25, 1, 695, 0),
+(84, 444584089, 1, 1, 895, 0),
+(85, 169996860, 1, 1, 895, 0),
+(86, 317446215, 1, 1, 895, 0),
+(87, 131695445, 4, 1, 495, 0),
+(88, 928590192, 2, 1, 1595, 0),
+(89, 928590192, 15, 1, 795, 0),
+(90, 639701191, 18, 1, 795, 0),
+(91, 639701191, 7, 1, 495, 0),
+(92, 639701191, 6, 1, 495, 0),
+(93, 686665677, 1, 1, 895, 0),
+(94, 638366023, 1, 2, 895, 0),
+(95, 933860465, 1, 2, 895, 0),
+(96, 143579610, 46, 1, 2195, 0),
+(97, 143579610, 2, 1, 1595, 0),
+(98, 150010889, 12, 2, 995, 0),
+(99, 285927377, 1, 1, 895, 0),
+(100, 105502387, 54, 1, 1395, 0),
+(101, 105502387, 56, 1, 100, 0);
 
 -- --------------------------------------------------------
 
@@ -206,7 +226,7 @@ CREATE TABLE IF NOT EXISTS `purchases` (
   `discount` int(11) NOT NULL,
   `date` datetime NOT NULL,
   `status` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `purchases`
@@ -266,7 +286,22 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (54, 851162657, 'gb', 0, 0, '2016-06-25 19:27:00', 0),
 (55, 856957995, 'de', 0, 0, '2016-06-25 20:34:00', 0),
 (56, 789422155, 'de', 0, 0, '2016-06-25 21:40:00', 0),
-(57, 460552598, 'gb', 0, 0, '2016-06-26 11:45:00', 0);
+(57, 460552598, 'gb', 0, 0, '2016-06-26 11:45:00', 0),
+(59, 113888679, 'de', 0, 0, '2016-06-26 13:45:00', 0),
+(60, 102527775, 'can', 0, 0, '2016-06-26 14:20:00', 0),
+(61, 444584089, 'can', 0, 0, '2016-06-26 14:25:00', 0),
+(62, 169996860, 'es', 0, 0, '2016-06-26 14:50:00', 0),
+(63, 317446215, 'gb', 0, 0, '2016-06-26 19:29:00', 0),
+(64, 131695445, 'can', 0, 0, '2016-06-26 19:25:00', 0),
+(65, 928590192, 'es', 1, 0, '2016-06-26 19:28:00', 0),
+(66, 639701191, '??', 0, 0, '2016-06-26 19:39:00', 0),
+(67, 686665677, 'es', 1, 0, '2016-06-26 19:58:00', 0),
+(68, 638366023, 'gb', 0, 0, '2016-06-26 20:27:00', 0),
+(69, 933860465, 'gb', 0, 0, '2016-06-26 20:28:00', 0),
+(70, 143579610, 'fr', 0, 0, '2016-06-26 20:30:00', 0),
+(71, 150010889, 'de', 0, 0, '2016-06-26 18:50:00', 0),
+(72, 285927377, 'de', 0, 0, '2016-06-26 21:40:00', 0),
+(73, 105502387, 'gb', 0, 0, '2016-06-26 21:45:00', 0);
 
 --
 -- Indexes for dumped tables
@@ -303,12 +338,12 @@ MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=57;
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=82;
+MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=102;
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=59;
+MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=74;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
