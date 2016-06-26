@@ -68,6 +68,7 @@ list_cookies = [
 ]
 cookie_list = OrderedDict((str(i+1), list_cookies[i]) for i in xrange(len(list_cookies)))
 country_list = OrderedDict([
+    ('??', "Desconocido"),
     ('de', "Alemania"),
     ('es', "Espana"),
     ('canario', "Islas Canarias"),
@@ -77,8 +78,7 @@ country_list = OrderedDict([
     ('it', "Itala"),
     ('fr', "Francia"),
     ('no', "Noruega"),
-    ('xx', "Otro"),
-    ('??', "Desconocido")
+    ('xx', "Otro")
 ])
 save_file = 'purchases.txt'
 
@@ -87,11 +87,13 @@ def print_header():
     print
 
 
-def print_html_header(title):
+def print_html_header(title, css=None):
     print '<html>'
     print '<head>'
     print '<meta name="viewport" content="width=device-width, initial-scale=1">'
     print '<title>' + title + '</title>'
+    if css is not None:
+        print '<style>' + css + '</style>'
     print '</head>'
     print '<body>'
 

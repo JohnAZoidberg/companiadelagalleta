@@ -37,12 +37,42 @@ def save_purchase():
         print_text("No cookies")
     return False
 
+def delete_purchase():
+    syncId = form.getfirst('syncId')
+    if syncId is not None:
+        return base.delete_purchase(syncId)
+    return False
+
+def sync():
+    print_text("")
+    br = "<br>"
+    ps = base.get_purchases() 
+    urls = []
+    for p in ps:
+        (syncId, status, country, card, discount, date) = p['purchase']
+        datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
+        if status == 3:
+            continue
+        params = "action=syncPurchase&syncId="+str(syncId)+"&country="+country+"&card="+str(card)+"&discount="+str(discount)+"&date="+datestring+"&status="+str(status)
+        urls.append("api?" + params)
+        print params, br
+        for item in p['cart']:
+            (title, status, boxId, quantity, price) = item
+            cparams = "action=syncCart&syncId="+str(syncId)+"&status="+str(status)+"&boxId="+str(boxId)+"&quantity="+str(quantity)+"&price="+str(price)
+            print "----", cparams, br
+            urls.append("api?" + cparams)
+    return False
+
 def convert_date(datestring):
     try:
         return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     except:
-        print_text("Not a valid datetime!")
-        return None
+        try:
+            datestring = datetime.now().strftime('%Y-%m-%d ') + datestring
+            return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+        except:
+            print_text("Not a valid datetime! (" + datestring + ")")
+    return None
 
 def print_text(text):
     util.print_header()
@@ -54,6 +84,10 @@ success = False
 if action is not None:
     if action == "save_purchase":
         success = save_purchase()
+    elif action == "delete_purchase":
+        success = delete_purchase()
+    elif action == "sync":
+        success = sync()
     else:
         print_text("No valid Action")
 else:
@@ -67,3 +101,5 @@ if success:
     else:
         print "Location: " + redirect
         print 
+else:
+    print_text("No success")

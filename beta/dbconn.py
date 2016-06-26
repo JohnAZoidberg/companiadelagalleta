@@ -4,6 +4,7 @@ import MySQLdb
 from dbdetails import *
 from random import randint
 import time
+from collections import OrderedDict
 
 class CgBase:
     def __init__(self):
@@ -27,28 +28,22 @@ class CgBase:
     def sqlformatdate(self, date):
         return date.strftime('%Y-%m-%d %H:%M:%S')
 
+    def _fetch(self, table, columns, extra=""):
+        try:
+            self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
+        except Exception as e:
+            print "Something weird happened: ", e
+
     def fetchone(self, table, columns, extra=""):
-        self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
+        self._fetch(table, columns, extra)
         result = self.cur.fetchone()
         return None if result is None else result[0]
 
     def fetchall(self, table, columns, extra=""):
-        self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
+        self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
-    def update(self, table, data, extra=""):
-        try:
-            sql_str = "UPDATE " + table + " SET"
-            for key, val in data.iteritems():
-                sql_str += " " + str(key) + " = " + str(val)
-            sql_str += " " + extra
-            self.cur.execute(sql_str)
-            self.db.commit()
-        except Exception as e:
-            print "Something weird happened: ", e
-            self.db.rollback()
-
-    def insert(self, table, columns, data, extra=""):
+    def insert(self, table, columns, data, commit, extra=""):
     # type: (str, List[obj], List[obj], str) -> None
         column_str = self._list_to_str(columns)
         data_str = self._list_to_str(data, '"')
@@ -56,51 +51,68 @@ class CgBase:
             self.cur.execute("INSERT INTO " + table + " (" + column_str + ") VALUES (" + data_str + ") " + extra)
             self.cur.execute("SELECT LAST_INSERT_ID()")
             id = self.cur.fetchone()
-            self.db.commit()
+            if commit:
+                self.db.commit()
             return id
         except Exception as e:
             print "Something weird happened: ", e 
             self.db.rollback()
-            return None
+            return False 
 
     def insert_purchase(self, country, card, date, discount, cart):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
-        syncId = str(int(time.time())) + str(randint(1000, 9999))
-        cartId = self.fetchone("cart", ["cartId"], " ORDER BY cartId DESC")
-        cartId = 0 if cartId is None else int(cartId) + 1
+        success = False
+        syncId = str(randint(100000000, 999999999))
         for boxId, quantity in cart.iteritems():
             price = self.fetchone("boxes", ["price"], " WHERE boxesEntryId = " + str(boxId))
             if price is None:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0)) 
-            self.insert("cart",
-                        ["cartId", "boxId", "quantity", "price", "status", "syncId"],
-                        [cartId, boxId, quantity, price, 0, syncId]) 
-        self.insert("purchases",
-                    ["country", "card", "date", "discount", "cartId", "status", "syncId"],
-                    [country, int(card), self.sqlformatdate(date), discount, cartId, 0, syncId])
+            # status: 0: new, 1: edited, 2: deleted, 3: synced
+            success = self.insert("cart",
+                        ["boxId", "quantity", "price", "status", "syncId"],
+                        [boxId, quantity, price, 0, syncId],
+                        False) 
+        success = success and self.insert("purchases",
+                    ["country", "card", "date", "discount", "status", "syncId"],
+                    [country, int(card), self.sqlformatdate(date), discount, 0, syncId],
+                    False)
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback() 
 
     def get_purchases(self):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
-                               [pt+".purchaseEntryId", pt+".country", pt+".card", pt+".discount", pt+".date",
-                                ct+".quantity", ct+".price",
+                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status",
+                                ct+".quantity", ct+".price", ct+".status",
                                 bt+".boxesEntryId", bt+".title"],
-                               "WHERE purchases.cartId = cart.cartId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
-        purchases = {}
+                               "WHERE purchases.syncId = cart.syncId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
+        purchases = OrderedDict()
         for row in result:
-            (purchaseId, country, card, discount, date, quantity, price, boxId, title) = row
-            key = int(row[0])
+            (syncId, country, card, discount, date, p_status, quantity, price, c_status, boxId, title) = row
+            key = int(syncId)
             try:
                 foo = purchases[key]
             except:
                 purchases[key] = {}
-                purchases[key]['purchase'] = (country, card, discount, date)
+                purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
                 purchases[key]['cart'] = [] 
-            purchases[key]['cart'].append((title, boxId, quantity, price))
-        return purchases
+            purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
+        return [val for key, val in purchases.iteritems()]
 
+    def delete_purchase(self, syncId):
+        syncStr = str(syncId)
+        try:
+            self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
+            self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            print "Someting weird happened: ", e
+        return True
