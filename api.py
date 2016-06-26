@@ -73,6 +73,14 @@ def sync():
                 print result, br
     return False
 
+def sync_cart():
+    syncId = int(form.getfirst("syncId"))
+    status = int(form.getfirst("status"))
+    boxId  = int(form.getfirst("boxId"))
+    quantity = int(form.getfirst("quantity"))
+    price = int(form.getfirst("price"))
+    return base.sync_cart(syncId, status, boxId, quantity, price)
+
 def sync_purchase():
     syncId = int(form.getfirst("syncId"))
     country = form.getfirst("country")
@@ -112,10 +120,14 @@ if action is not None:
         success = delete_purchase()
     elif action == "sync":
         success = sync()
+    elif action == "syncCart":
+        success = sync_cart() 
+        if success:
+            action_result = '{"result": "200 - SYNCED CART"}'
     elif action == "syncPurchase":
         success = sync_purchase() 
         if success:
-            action_result = '{"result": "200 - SYNCED"}'
+            action_result = '{"result": "200 - SYNCED PURCHASE"}'
     else:
         print_text("No valid Action: " + str(action))
         action = None

@@ -59,6 +59,16 @@ class CgBase:
             self.db.rollback()
             return False 
 
+    def insert_cart(self, syncId, boxId, quantity, price):
+        success = self.insert("cart",
+                    ["syncId", "boxId", "quantity", "price"],
+                    [syncId, boxId, quantity, price])
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback() 
+        return success
+
     def insert_purchase(self, country, card, date, discount, cart, syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
@@ -119,6 +129,18 @@ class CgBase:
             self.db.rollback()
             print "Someting weird happened: ", e
         return True
+    def sync_cart(self, syncId, status, boxId, quantity, price):
+        if status == 0:
+            result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId))
+            if result is None:
+                self.insert_cart(syncId, status, boxId, quantity, price)
+        elif status == 1: # edited entry
+            pass
+        elif status == 2: # deleted entry 
+            pass
+        elif status == 3: # synced entry 
+            pass
+        return False
 
     def sync_purchase(self, syncId, status, country, card, discount, date):
         if status == 0: # new entry
