@@ -82,8 +82,8 @@ country_list = OrderedDict([
 ])
 save_file = 'purchases.txt'
 
-def print_header():
-    print "Content-Type: text/html;charset=utf-8"
+def print_header(t="text/html"):
+    print "Content-Type: "+ t + ";charset=utf-8"
     print
 
 

@@ -64,45 +64,46 @@ class CgBase:
         # a unique id to identify entries: unixtimestamp + 4 random digits
         success = False
         syncId = str(randint(100000000, 999999999))
-        cartId = self.fetchone("cart", ["cartId"], " ORDER BY cartId DESC")
-        cartId = 0 if cartId is None else int(cartId) + 1
         for boxId, quantity in cart.iteritems():
             price = self.fetchone("boxes", ["price"], " WHERE boxesEntryId = " + str(boxId))
             if price is None:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0)) 
+            # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart",
-                        ["cartId", "boxId", "quantity", "price", "status", "syncId"],
-                        [cartId, boxId, quantity, price, 0, syncId],
+                        ["boxId", "quantity", "price", "status", "syncId"],
+                        [boxId, quantity, price, 0, syncId],
                         False) 
         success = success and self.insert("purchases",
-                    ["country", "card", "date", "discount", "cartId", "status", "syncId"],
-                    [country, int(card), self.sqlformatdate(date), discount, cartId, 0, syncId],
+                    ["country", "card", "date", "discount", "status", "syncId"],
+                    [country, int(card), self.sqlformatdate(date), discount, 0, syncId],
                     False)
         if success:
             self.db.commit()
+        else:
+            self.db.rollback() 
 
     def get_purchases(self):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
-                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date",
-                                ct+".quantity", ct+".price",
+                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status",
+                                ct+".quantity", ct+".price", ct+".status",
                                 bt+".boxesEntryId", bt+".title"],
-                               "WHERE purchases.cartId = cart.cartId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
+                               "WHERE purchases.syncId = cart.syncId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
         purchases = OrderedDict()
         for row in result:
-            (syncId, country, card, discount, date, quantity, price, boxId, title) = row
+            (syncId, country, card, discount, date, p_status, quantity, price, c_status, boxId, title) = row
             key = int(syncId)
             try:
                 foo = purchases[key]
             except:
                 purchases[key] = {}
-                purchases[key]['purchase'] = (key, country, card, discount, date)
+                purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
                 purchases[key]['cart'] = [] 
-            purchases[key]['cart'].append((title, boxId, quantity, price))
+            purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
         return [val for key, val in purchases.iteritems()]
 
     def delete_purchase(self, syncId):

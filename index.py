@@ -29,7 +29,7 @@ def print_form_header(hidden):
         print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
         print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
         print '<li><input type="submit" value="Save"></li>'
-        print '<li><a href="api.py?action=sync&redirect=index.py">Sync por la nube</a></li>'
+        print '<li><a href="api.py?action=sync&redirect=index.py">Sync con nube</a></li>'
     print '</ul>'
 
 def print_form():
@@ -51,11 +51,11 @@ def calc_daily_total(ps):
     cash_total = 0
     card_total = 0
     for p in ps:
-         (syncId, country, card, discount, date) = p['purchase']
+         (syncId, status, country, card, discount, date) = p['purchase']
          if not is_same_day(date, datetime.now()):
              continue
          for item in p['cart']:
-            (title, boxId, quantity, price) = item
+            (title, status, boxId, quantity, price) = item
             if card:
                 card_total += price * quantity
             else:
@@ -70,21 +70,21 @@ def print_purchases(ps):
     print '<li>Cash-Total: ', daily_total_str[1], '</li>'
     print '<li>Card-Total: ', daily_total_str[2], '</li>'
     for p in ps:
-        (syncId, country, card, discount, date) = p['purchase']
+        (syncId, status, country, card, discount, date) = p['purchase']
         if not is_same_day(date, datetime.now()):
             continue
         card_str = "with card" if card else "in cash"
         disc_str = "" if discount == 0 else " and got " + str(discount) + "% off"
         total = 0
         for item in p['cart']:
-            (title, boxId, quantity, price) = item
+            (title, status, boxId, quantity, price) = item
             total += price*quantity
         date_str = date.strftime('%H:%M')
         delete_link = '<a href="api.py?action=delete_purchase&redirect=index.py&syncId=' + str(syncId) + '">borrar</a>'
         print "<li>", date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
         print "<ul>"
         for item in p['cart']:
-            (title, boxId, quantity, price) = item
+            (title, status, boxId, quantity, price) = item
             print "<li>", quantity, "x ", title, " at ", (price / 100.0), "€</li>"
         print "</ul>"
     print "</ul>"
