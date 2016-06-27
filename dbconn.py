@@ -43,6 +43,23 @@ class CgBase:
         self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
+    def update(self, table, columnsdata, extra):
+        try:
+            first = True
+            sqlstr = "UPDATE " + table + " SET "
+            for col, d in columnsdata.iteritems():
+                if not first:
+                    sqlstr += ", "
+                sqlstr += str(col) + " = " + str(d)
+                first = False
+            sqlstr += " " + extra
+            self.cur.execute(sqlstr)
+            self.db.commit()
+            return True
+        except:
+            self.db.rollback()
+        return False
+
     def insert(self, table, columns, data, commit, extra=""):
     # type: (str, List[obj], List[obj], str) -> None
         column_str = self._list_to_str(columns)
@@ -131,6 +148,7 @@ class CgBase:
             result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId) + " AND boxId=" + str(boxId))
             if result is None:
                 self.insert_cart(syncId, boxId, quantity, price)
+            return True
         elif status == 1: # edited entry
             pass
         elif status == 2: # deleted entry 
@@ -144,7 +162,7 @@ class CgBase:
             result = self.fetchone("purchases", ["status"], "WHERE syncId="+str(syncId))
             if result is None:
                 self.insert_purchase(country, card, date, discount, {}, syncId=syncId)
-                return True
+            return True
         elif status == 1: # edited entry
             pass
         elif status == 2: # deleted entry 
@@ -152,3 +170,9 @@ class CgBase:
         elif status == 3: # synced entry 
             pass
         return False
+
+    def mark_synced(self, syncId, boxId=None):
+        if boxId is None:
+            self.update("purchases", {"status": 3}, "WHERE syncId="+str(syncId))
+        else:
+            self.update("cart", {"status": 3}, "WHERE syncId="+str(syncId)+" AND boxId=" + str(boxId))
