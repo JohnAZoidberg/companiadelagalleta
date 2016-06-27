@@ -68,7 +68,7 @@ def sync():
     for url in urls:
         results.append(urllib2.urlopen(url))
     for result in results:
-        jresult = json.loads(result)
+        jresult = json.loads(result.read())
         result_type = jresult['result']
         if result_type == "200 - SYNCED PURCHASE":
             base.mark_synced(jresult['syncId'])
