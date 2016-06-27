@@ -15,7 +15,6 @@ except ImportError:
     from ordereddict import OrderedDict
 import util
 form = cgi.FieldStorage()
-action_result = '{"result": "200 - OK"}' 
 
 def save_purchase():
     cookies = {} 
@@ -69,10 +68,12 @@ def sync():
     for url in urls:
         results.append(urllib2.urlopen(url))
     for result in results:
-        try:
-            jresult = json.load(result)
-        except:
-            jresult = json.loads(result)
+        jresult = json.loads(result)
+        result_type = jresult['result']
+        if result_type == "200 - SYNCED PURCHASE":
+            base.mark_synced(jresult['syncId'])
+        if result_type == "200 - SYNCED CART":
+            base.mark_synced(jresult['syncId'], jresult['boxId'])
         print jresult, br
     return False
 
@@ -83,9 +84,7 @@ def sync_cart():
     quantity = int(form.getfirst("quantity"))
     price = int(form.getfirst("price"))
     success = base.sync_cart(syncId, status, boxId, quantity, price)
-    if success:
-        action_result = '{"result": "200 - SYNCED CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}'
-    return success
+    return (success, '{"result": "200 - SYNCED CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
 
 def sync_purchase():
     syncId = int(form.getfirst("syncId"))
@@ -96,9 +95,7 @@ def sync_purchase():
     date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     status = int(form.getfirst("status"))
     success = base.sync_purchase(syncId, status, country, card, discount, date)
-    if success:
-        action_result = '{"result": "200 - SYNCED PURCHASE", "syncId": ' + str(syncId) + '}'
-    return success
+    return (success, '{"result": "200 - SYNCED PURCHASE", "syncId": ' + str(syncId) + '}')
 
 def convert_date(datestring):
     try:
@@ -127,6 +124,7 @@ def chunk(l, n):
 base = CgBase()
 action = form.getfirst("action")
 success = False
+response = '{"result": "200 - OK"}'
 if action is not None:
     if action == "save_purchase":
         success = save_purchase()
@@ -135,9 +133,9 @@ if action is not None:
     elif action == "sync":
         success = sync()
     elif action == "syncCart":
-        success = sync_cart() 
+        (success, response) = sync_cart() 
     elif action == "syncPurchase":
-        success = sync_purchase() 
+        (success, response) = sync_purchase() 
     else:
         print_text("No valid Action: " + str(action))
         action = None
@@ -147,9 +145,9 @@ else:
 if success:
     redirect = form.getfirst('redirect')
     if redirect is None:
-        print_text(action_result)
+        print_text(response)
     else:
         print "Location: " + redirect
         print 
 elif action is not None:
-    print_text("No success - " + action)
+    print_text('{"result": "No success - ' + action + '"}')
