@@ -89,7 +89,7 @@ def sync_cart():
 def sync_purchase():
     syncId = int(form.getfirst("syncId"))
     country = form.getfirst("country")
-    card = bool(form.getfirst("card"))
+    card = bool(int(form.getfirst("card")))
     discount = int(form.getfirst("discount"))
     datestring = form.getfirst("date")
     date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
