@@ -43,25 +43,24 @@ def save_purchase():
 def delete_purchase():
     syncId = form.getfirst('syncId')
     if syncId is not None:
-        return base.delete_purchase(syncId)
+        return base.mark_purchase_deleted(syncId)
     return False
 
 def sync():
-    ps = base.get_purchases() 
+    ps = base.get_purchases(True) 
     urls = []
     for p in ps:
         (syncId, status, country, card, discount, date) = p['purchase']
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
-        if status == 3:
-            continue
-        params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
-        url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
-        urls.append(url)
-        for item in p['cart']:
-            (title, status, boxId, quantity, price) = item
-            cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
-            url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
+        if status == 0: # new entry
+            params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
+            url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
             urls.append(url)
+            for item in p['cart']:
+                (title, status, boxId, quantity, price) = item
+                cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
+                url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
+                urls.append(url)
     if not urls:
         return (True, '{"result": "Nothing to sync"}')
     results = []
