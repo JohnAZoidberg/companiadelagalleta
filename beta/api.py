@@ -6,6 +6,8 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
+import urllib2
+import urllib
 from asyncRequests import AsyncRequests
 try:
     from collections import OrderedDict
@@ -41,33 +43,65 @@ def save_purchase():
 def delete_purchase():
     syncId = form.getfirst('syncId')
     if syncId is not None:
-        return base.delete_purchase(syncId)
+        return base.mark_purchase_deleted(syncId)
     return False
 
 def sync():
-    print_text("")
-    br = "<br>"
-    ps = base.get_purchases() 
+    ps = base.get_purchases(True) 
     urls = []
     for p in ps:
         (syncId, status, country, card, discount, date) = p['purchase']
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
-        if status == 3:
-            continue
-        params = "action=syncPurchase&syncId="+str(syncId)+"&country="+country+"&card="+str(card)+"&discount="+str(discount)+"&date="+datestring+"&status="+str(status)
-        urls.append("api.py?" + params)
-        #print params, br
-        for item in p['cart']:
-            (title, status, boxId, quantity, price) = item
-            cparams = "action=syncCart&syncId="+str(syncId)+"&status="+str(status)+"&boxId="+str(boxId)+"&quantity="+str(quantity)+"&price="+str(price)
-            #print "----", cparams, br
-            urls.append("api.py?" + cparams)
-    print urls[0], br
-    with AsyncRequests() as request:
-        request.run(["http://localhost/beta/"+urls[0]])
-        for result in request.results:
-            print result.read(), br
-    return False
+        if status == 0: # new entry
+            params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
+            url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
+            urls.append(url)
+            for item in p['cart']:
+                (title, status, boxId, quantity, price) = item
+                cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
+                url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
+                urls.append(url)
+    if not urls:
+        return (True, '{"result": "Nothing to sync"}')
+    results = []
+    for url in urls:
+        results.append(urllib2.urlopen(url))
+    synced = {}
+    synced['purchase'] = 0
+    synced['cart'] = 0
+    for result in results:
+        resultstr = result.read()
+        jresult = json.loads(resultstr)
+        result_type = jresult['result']
+        if result_type == "200 - SYNCED PURCHASE":
+            base.mark_synced(jresult['syncId'])
+            synced['purchase'] += 1
+        if result_type == "200 - SYNCED CART":
+            base.mark_synced(jresult['syncId'], jresult['boxId'])
+            synced['cart'] += 1
+    if synced['cart'] + synced['purchase'] > 0:
+        return (True, '{"result": "SYNC completed (' + str(synced['purchase']) + ', ' + str(synced['cart']) + ')"}') 
+    return (False, None)
+
+def sync_cart():
+    syncId = int(form.getfirst("syncId"))
+    status = int(form.getfirst("status"))
+    boxId  = int(form.getfirst("boxId"))
+    quantity = int(form.getfirst("quantity"))
+    price = int(form.getfirst("price"))
+    success = base.sync_cart(syncId, status, boxId, quantity, price)
+    return (success, '{"result": "200 - SYNCED CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
+
+def sync_purchase():
+    syncId = int(form.getfirst("syncId"))
+    country = form.getfirst("country")
+    card = bool(form.getfirst("card"))
+    discount = int(form.getfirst("discount"))
+    datestring = form.getfirst("date")
+    date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+    status = int(form.getfirst("status"))
+    success = base.sync_purchase(syncId, status, country, card, discount, date)
+    return (success, '{"result": "200 - SYNCED PURCHASE", "syncId": ' + str(syncId) + '}')
 
 def convert_date(datestring):
     try:
@@ -88,18 +122,26 @@ def print_text(text):
     util.print_header()
     print text
 
+def chunk(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i:i+n]
+
 base = CgBase()
 action = form.getfirst("action")
 success = False
+response = '{"result": "200 - OK"}'
 if action is not None:
     if action == "save_purchase":
         success = save_purchase()
     elif action == "delete_purchase":
         success = delete_purchase()
     elif action == "sync":
-        success = sync()
+        (success, response) = sync()
+    elif action == "syncCart":
+        (success, response) = sync_cart() 
     elif action == "syncPurchase":
-        success = True
+        (success, response) = sync_purchase() 
     else:
         print_text("No valid Action: " + str(action))
         action = None
@@ -109,9 +151,9 @@ else:
 if success:
     redirect = form.getfirst('redirect')
     if redirect is None:
-        print_json('{"result": "200 - OK"}')
+        print_text(response)
     else:
         print "Location: " + redirect
         print 
 elif action is not None:
-    print_text("No success - " + action)
+    print_text('{"result": "No success - ' + action + '"}')

@@ -43,39 +43,45 @@ def save_purchase():
 def delete_purchase():
     syncId = form.getfirst('syncId')
     if syncId is not None:
-        return base.delete_purchase(syncId)
+        return base.mark_purchase_deleted(syncId)
     return False
 
 def sync():
-    print_text("")
-    br = "<br>"
-    ps = base.get_purchases() 
+    ps = base.get_purchases(True) 
     urls = []
     for p in ps:
         (syncId, status, country, card, discount, date) = p['purchase']
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
-        if status == 3:
-            continue
-        params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
-        url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
-        urls.append(url)
-        for item in p['cart']:
-            (title, status, boxId, quantity, price) = item
-            cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
-            url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
+        if status == 0: # new entry
+            params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
+            url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
             urls.append(url)
+            for item in p['cart']:
+                (title, status, boxId, quantity, price) = item
+                cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
+                url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
+                urls.append(url)
+    if not urls:
+        return (True, '{"result": "Nothing to sync"}')
     results = []
     for url in urls:
         results.append(urllib2.urlopen(url))
+    synced = {}
+    synced['purchase'] = 0
+    synced['cart'] = 0
     for result in results:
-        jresult = json.loads(result)
+        resultstr = result.read()
+        jresult = json.loads(resultstr)
         result_type = jresult['result']
         if result_type == "200 - SYNCED PURCHASE":
             base.mark_synced(jresult['syncId'])
+            synced['purchase'] += 1
         if result_type == "200 - SYNCED CART":
             base.mark_synced(jresult['syncId'], jresult['boxId'])
-        print jresult, br
-    return False
+            synced['cart'] += 1
+    if synced['cart'] + synced['purchase'] > 0:
+        return (True, '{"result": "SYNC completed (' + str(synced['purchase']) + ', ' + str(synced['cart']) + ')"}') 
+    return (False, None)
 
 def sync_cart():
     syncId = int(form.getfirst("syncId"))
@@ -131,7 +137,7 @@ if action is not None:
     elif action == "delete_purchase":
         success = delete_purchase()
     elif action == "sync":
-        success = sync()
+        (success, response) = sync()
     elif action == "syncCart":
         (success, response) = sync_cart() 
     elif action == "syncPurchase":
