@@ -15,7 +15,9 @@ class CgBase:
         return MySQLdb.connect(host=dbdetails.host,
                              user=dbdetails.user,
                              passwd=dbdetails.passwd,
-                             db=dbdetails.db)
+                             db=dbdetails.db,
+                             use_unicode=True,
+                             charset='utf8')
     def close_connection(self):
         self.db.close()
 
