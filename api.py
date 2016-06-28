@@ -16,14 +16,14 @@ except ImportError:
 import util
 form = cgi.FieldStorage()
 
-def save_purchase():
+def save_purchase(boxes):
     cookies = {} 
-    for box in xrange(1, 1+len(util.cookie_list)):
-        box = str(box)
-        count_field = form.getvalue('box_'+box) 
+    for boxId, box in boxes.iteritems():
+        boxId = str(boxId)
+        count_field = form.getvalue('box_'+boxId) 
         count = 0 if count_field is None else int(count_field)
         if count > 0:
-            cookies[box] = count
+            cookies[boxId] = count
     if cookies:
         country  = form.getfirst('country')
         card     = form.getvalue('tarjeta')
@@ -133,7 +133,7 @@ success = False
 response = '{"result": "200 - OK"}'
 if action is not None:
     if action == "save_purchase":
-        success = save_purchase()
+        success = save_purchase(base.get_boxes())
     elif action == "delete_purchase":
         success = delete_purchase()
     elif action == "sync":

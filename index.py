@@ -32,14 +32,14 @@ def print_form_header(hidden):
         print '<li><a href="api.py?action=sync&redirect=index.py">Sync con nube</a></li>'
     print '</ul>'
 
-def print_form():
+def print_form(boxes):
     print '<form action="api.py" method="post">'
     print '<input type="hidden" name="redirect" value="index.py">'
     print '<input type="hidden" name="action" value="save_purchase">'
     print_form_header(True)
     print_form_header(False)
     print '<ul style="list-style-type: none;">'
-    for key, cookie in util.cookie_list.iteritems():
+    for key, cookie in boxes.iteritems():
         print '<li><label>'
         print '<input type="number" name="box_' + str(key) + '" value="0" size="2" required>'
         print cookie
@@ -104,7 +104,7 @@ util.print_header()
 util.print_html_header("Herramiento", css)
 purchases = base.get_purchases()
 #util.println('<a href="analysis.py">Analyze</a>')
-print_form()
+print_form(base.get_boxes())
 print '<hr>'
 print '<h2>Compras de hoy</h2>'
 print_purchases(purchases)

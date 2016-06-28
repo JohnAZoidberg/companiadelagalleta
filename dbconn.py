@@ -190,3 +190,11 @@ class CgBase:
             self.update("purchases", {"status": 3}, True, "WHERE syncId="+str(syncId))
         else:
             self.update("cart", {"status": 3}, True, "WHERE syncId="+str(syncId)+" AND boxId=" + str(boxId))
+
+    def get_boxes(self):
+        boxes = OrderedDict()
+        results = self.fetchall("boxes", ["boxesEntryId", "title", "price"])
+        for result in results:
+            (boxId, title, price) = result
+            boxes[boxId] = title
+        return boxes
