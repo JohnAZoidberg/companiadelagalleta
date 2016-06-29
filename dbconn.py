@@ -200,3 +200,21 @@ class CgBase:
             (boxId, title, price) = result
             boxes[boxId] = title
         return boxes
+
+    def get_box_stats(self):
+        stats = {} 
+        results = self.fetchall("cart, purchases", 
+                                ["cart.boxId", "cart.quantity", "purchases.date"],
+                                "WHERE cart.syncId = purchases.syncId AND cart.status != 2 ORDER BY date ASC")
+        for (boxId, quantity, date) in results:
+            date = date.strftime('%Y-%m-%d')
+            try:
+                foo = stats[date]
+            except:
+                stats[date] = {}
+            try:
+                foo = stats[date][boxId] 
+                stats[date][boxId] += quantity 
+            except:
+                stats[date][boxId] = quantity 
+        return stats

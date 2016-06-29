@@ -16,12 +16,12 @@ except ImportError:
 import util
 form = cgi.FieldStorage()
 
-def calc_daily_total(ps):
+def calc_daily_total(ps, shown_date):
     cash_total = 0
     card_total = 0
     for p in ps:
          (syncId, status, country, card, discount, date) = p['purchase']
-         if not is_same_day(date, datetime.now()):
+         if not is_same_day(date, shown_date):
              continue
          for item in p['cart']:
             (title, status, boxId, quantity, price) = item
@@ -34,7 +34,7 @@ def calc_daily_total(ps):
 
 def print_purchases(ps, shown_date):
     print "<ul>"
-    daily_total_str = [str(total / 100.0) + "€" for total in calc_daily_total(ps)]
+    daily_total_str = [str(total / 100.0) + "€" for total in calc_daily_total(ps, shown_date)]
     print '<li>Total: ', daily_total_str[0], '</li>'
     print '<li>Cash-Total: ', daily_total_str[1], '</li>'
     print '<li>Card-Total: ', daily_total_str[2], '</li>'
@@ -58,10 +58,9 @@ def print_purchases(ps, shown_date):
         print "</ul>"
     print "</ul>"
 
-def print_date_form(date):
-    now = date.strftime('%Y-%m-%d')
-    print '<form action="" method="post">'
-    print '<input type="text" name="date" value="' + now + '">'
+def print_date_form(datestr):
+    print '<form action="" method="get">'
+    print '<input type="text" name="date" value="' + datestr + '">'
     print '<input type="submit">'
     print '</form>'
 
@@ -79,12 +78,13 @@ base = CgBase()
 util.print_header()
 util.print_html_header("Herramiento", css)
 purchases = base.get_purchases()
-date = form.getfirst('date')
-if date is None:
+datestr = form.getfirst('date')
+if datestr is None:
     date = datetime.now()
+    datestr = date.strftime('%Y-%m-%d')
 else:
-    date = datetime.strptime(date, '%Y-%m-%d')
-print_date_form(date)
-print '<h2>Compras de hoy</h2>'
+    date = datetime.strptime(datestr, '%Y-%m-%d')
+print_date_form(datestr)
+print '<h2>Compras de ' + datestr + '</h2>'
 print_purchases(purchases, date)
 util.print_html_footer()
