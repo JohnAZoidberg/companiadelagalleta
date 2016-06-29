@@ -148,41 +148,61 @@ class CgBase:
             self.db.rollback()
         return success
 
-    def delete_purchase(self, syncId):
+    def delete_purchase(self, syncId, delete_cart=False):
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
-            self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
+            if delete_cart:
+                self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             self.db.commit()
         except Exception as e:
             self.db.rollback()
             print "Someting weird happened: ", e
+            return False
+        return True
+
+    def delete_cart(self, syncId, boxId):
+        syncStr = str(syncId)
+        boxStr = str(boxId)
+        try:
+            self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr + " AND boxId = " + boxStr)
+            self.db.commit()
+        except Exception as e:
+            self.db.rollback()
+            print "Someting weird happened: ", e
+            return False
         return True
 
     def sync_cart(self, syncId, status, boxId, quantity, price):
+        result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId) + " AND boxId=" + str(boxId))
         if status == 0:
-            result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId) + " AND boxId=" + str(boxId))
             if result is None:
                 self.insert_cart(syncId, boxId, quantity, price)
             return True
         elif status == 1: # edited entry
             pass
         elif status == 2: # deleted entry 
-            pass
+            if result is not None:
+                return self.delete_cart(syncId, boxId)
+            else:
+                return True
         elif status == 3: # synced entry 
             pass
         return False
 
     def sync_purchase(self, syncId, status, country, card, discount, date):
+        result = self.fetchone("purchases", ["status"], "WHERE syncId="+str(syncId))
         if status == 0: # new entry
-            result = self.fetchone("purchases", ["status"], "WHERE syncId="+str(syncId))
             if result is None:
                 self.insert_purchase(country, card, date, discount, {}, syncId=syncId)
             return True
         elif status == 1: # edited entry
             pass
         elif status == 2: # deleted entry 
-            pass
+            if result is not None:
+                return self.delete_purchase(syncId)
+            else:
+                return True
         elif status == 3: # synced entry 
             pass
         return False

@@ -52,7 +52,7 @@ def sync():
     for p in ps:
         (syncId, status, country, card, discount, date) = p['purchase']
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
-        if status == 0: # new entry
+        if status == 0 or status == 2: # new entry or deleted entry
             params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
             url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
             urls.append(url)
@@ -65,19 +65,31 @@ def sync():
         return (True, '{"result": "Nothing to sync"}')
     results = []
     for url in urls:
+        print_text(url)
         results.append(urllib2.urlopen(url))
     synced = {}
     synced['purchase'] = 0
     synced['cart'] = 0
     for result in results:
         resultstr = result.read()
+        print_text(resultstr)
         jresult = json.loads(resultstr)
         result_type = jresult['result']
         if result_type == "200 - SYNCED PURCHASE":
-            base.mark_synced(jresult['syncId'])
+            syncId = jresult['syncId'] 
+            base.mark_synced(syncId)
             synced['purchase'] += 1
         if result_type == "200 - SYNCED CART":
-            base.mark_synced(jresult['syncId'], jresult['boxId'])
+            syncId = jresult['syncId'] 
+            base.mark_synced(syncId, jresult['boxId'])
+            synced['cart'] += 1
+        if result_type == "200 - DELETED PURCHASE":
+            syncId = jresult['syncId'] 
+            base.delete_purchase(syncId)
+            synced['purchase'] += 1
+        if result_type == "200 - DELETED CART":
+            syncId = jresult['syncId'] 
+            base.delete_cart(syncId, jresult['boxId'])
             synced['cart'] += 1
     if synced['cart'] + synced['purchase'] > 0:
         return (True, '{"result": "SYNC completed (' + str(synced['purchase']) + ', ' + str(synced['cart']) + ')"}') 
@@ -89,8 +101,10 @@ def sync_cart():
     boxId  = int(form.getfirst("boxId"))
     quantity = int(form.getfirst("quantity"))
     price = int(form.getfirst("price"))
+    print_text("test")
     success = base.sync_cart(syncId, status, boxId, quantity, price)
-    return (success, '{"result": "200 - SYNCED CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
+    msg = "DELETED" if status == 2 else "SYNCED"
+    return (success, '{"result": "200 - ' + msg + ' CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
 
 def sync_purchase():
     syncId = int(form.getfirst("syncId"))
@@ -101,7 +115,8 @@ def sync_purchase():
     date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     status = int(form.getfirst("status"))
     success = base.sync_purchase(syncId, status, country, card, discount, date)
-    return (success, '{"result": "200 - SYNCED PURCHASE", "syncId": ' + str(syncId) + '}')
+    msg = "DELETED" if status == 2 else "SYNCED"
+    return (success, '{"result": "200 - ' + msg + ' PURCHASE", "syncId": ' + str(syncId) + '}')
 
 def convert_date(datestring):
     try:
