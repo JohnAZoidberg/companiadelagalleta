@@ -20,8 +20,8 @@ form = cgi.FieldStorage()
 
 
 base = CgBase()
-util.print_header()
-util.print_html_header("Test")
+#util.print_header()
+#util.print_html_header("Test")
 purchases = base.get_purchases()
 boxes = base.get_boxes()
 
@@ -100,19 +100,18 @@ firstday = day_to_datetime("2016-06-20")
 stats =  base.get_box_stats()
 for date, stat in stats.iteritems():
     diff = (day_to_datetime(date) - firstday).days
-    print diff, date, stat, br
+#    print diff, date, stat, br
     column = colnum_string(6 + diff * 3)
     for box, quantity in stat.iteritems():
         try:
             row = box_mapping[box]
         except: # for mix which are not to be added in the future
             continue
-        print "---- (", column, ", ", row, ") = ", quantity, br
+#        print "---- (", column, ", ", row, ") = ", quantity, br
         ws[column+str(row)] = quantity
 
 wb.save("report.xlsx")
 
-util.print_html_footer()
-def redirect():
-    print "Location: report.xlsx"
-    print 
+#util.print_html_footer()
+print "Location: report.xlsx"
+print 

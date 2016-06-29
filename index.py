@@ -33,6 +33,7 @@ def print_form_header(hidden):
         print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
         print '<li><input type="submit" value="Save"></li>'
         print '<li><a href="api.py?action=sync&redirect=index.py">Sync con nube</a></li>'
+        print '<li><a href="report.py">Excel</a></li>'
     print '</ul>'
 
 def print_form(boxes):
