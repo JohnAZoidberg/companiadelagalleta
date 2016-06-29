@@ -9,7 +9,6 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
-from dbdetails import dbdetails
 try:
     from collections import OrderedDict
 except ImportError:

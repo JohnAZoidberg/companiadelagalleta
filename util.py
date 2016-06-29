@@ -1,6 +1,7 @@
 # coding=utf-8
 import json
 from datetime import datetime
+from dbdetails import dbdetails
 try:
     from collections import OrderedDict
 except ImportError:
@@ -87,12 +88,12 @@ def print_purchases(ps, shown_date, page):
             (title, status, boxId, quantity, price) = item
             total += price*quantity
         date_str = date.strftime('%H:%M')
-        delete_link = '<a href="api.py?action=delete_purchase&redirect=' + page + '&syncId=' + str(syncId) + '">borrar</a>'
-        print "<li>", date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
+        delete_link = "" if dbdetails.server else '<a href="api.py?action=delete_purchase&redirect=' + page + '&syncId=' + str(syncId) + '">borrar</a>'
+        print '<li title="', syncId, '">', date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
         print "<ul>"
         for item in p['cart']:
             (title, status, boxId, quantity, price) = item
-            print "<li>", quantity, "x ", title, " at ", (price / 100.0), "€</li>"
+            print '<li title="', boxId, '">', quantity, "x ", title, " at ", (price / 100.0), "€</li>"
         print "</ul>"
     print "</ul>"
 
