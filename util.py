@@ -10,12 +10,12 @@ except ImportError:
 country_list = OrderedDict([
     ('??', "Desconocido"),
     ('de', "Alemania"),
-    ('es', "Espana"),
+    ('es', "España"),
     ('canario', "Islas Canarias"),
-    ('ne', "Paíes Bajos"),
-    ('gb', "Gran Bretana"),
+    ('ne', "Países Bajos"),
+    ('gb', "Gran Bretaña"),
     ('us', "EE.UU."),
-    ('it', "Itala"),
+    ('it', "Italia"),
     ('fr', "Francia"),
     ('no', "Noruega"),
     ('xx', "Otro")
