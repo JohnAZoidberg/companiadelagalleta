@@ -65,14 +65,12 @@ def sync():
         return (True, '{"result": "Nothing to sync"}')
     results = []
     for url in urls:
-        print_text(url)
         results.append(urllib2.urlopen(url))
     synced = {}
     synced['purchase'] = 0
     synced['cart'] = 0
     for result in results:
         resultstr = result.read()
-        print_text(resultstr)
         jresult = json.loads(resultstr)
         result_type = jresult['result']
         if result_type == "200 - SYNCED PURCHASE":
@@ -101,7 +99,6 @@ def sync_cart():
     boxId  = int(form.getfirst("boxId"))
     quantity = int(form.getfirst("quantity"))
     price = int(form.getfirst("price"))
-    print_text("test")
     success = base.sync_cart(syncId, status, boxId, quantity, price)
     msg = "DELETED" if status == 2 else "SYNCED"
     return (success, '{"result": "200 - ' + msg + ' CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
