@@ -2,6 +2,9 @@
 # coding=utf-8
 import cgitb
 cgitb.enable()
+import sys
+reload(sys)
+sys.setdefaultencoding("utf8")
 import cgi
 import json
 from datetime import datetime
