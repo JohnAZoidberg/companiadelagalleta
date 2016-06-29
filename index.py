@@ -9,6 +9,7 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
+from dbdetails import dbdetails
 try:
     from collections import OrderedDict
 except ImportError:
@@ -32,8 +33,10 @@ def print_form_header(hidden):
         print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
         print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
         print '<li><input type="submit" value="Save"></li>'
-        print '<li><a href="api.py?action=sync&redirect=index.py">Sync con nube</a></li>'
-        print '<li><a href="report.py">Excel</a></li>'
+        if not dbdetails.server:
+            print '<li><a href="api.py?action=sync&redirect=index.py">Sync con nube</a></li>'
+        else:
+            print '<li><a href="report.py">Excel</a></li>'
     print '</ul>'
 
 def print_form(boxes):
@@ -84,7 +87,7 @@ def print_purchases(ps):
             (title, status, boxId, quantity, price) = item
             total += price*quantity
         date_str = date.strftime('%H:%M')
-        delete_link = '<a href="api.py?action=delete_purchase&redirect=index.py&syncId=' + str(syncId) + '">borrar</a>'
+        delete_link = "" if dbdetails.server else '<a href="api.py?action=delete_purchase&redirect=index.py&syncId=' + str(syncId) + '">borrar</a>'
         print "<li>", date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
         print "<ul>"
         for item in p['cart']:
