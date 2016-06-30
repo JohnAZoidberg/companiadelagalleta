@@ -34,13 +34,15 @@ def print_header(t="text/html"):
     print
 
 
-def print_html_header(title, css=None):
+def print_html_header(title, css=None, js=None):
     print '<html>'
     print '<head>'
     print '<meta name="viewport" content="width=device-width, initial-scale=1">'
     print '<title>' + title + '</title>'
     if css is not None:
         print '<style>' + css + '</style>'
+    if js is not None:
+        print '<script>' + js + '</script>'
     print '</head>'
     print '<body>'
 

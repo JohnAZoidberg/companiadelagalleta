@@ -29,7 +29,7 @@ def print_form_header(hidden):
         for key, country in util.country_list.iteritems():
             print '<option value="' + str(key) + '">' + country + '</option>'
         print '</select></li>'
-        print '<li><label title="' + now + '">Date: <input type="text" name="datetime" placeholder="11:45" required></label></li>'
+        print '<li><label id="date" title="' + now + '">Date: <input id="dateinput" type="text" name="datetime" placeholder="11:45" required></label></li>'
         print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
         print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
         print '<li><input type="submit" value="Save"></li>'
@@ -54,9 +54,18 @@ def print_form(boxes):
     print '</ul>'
     print '</form>'
 
+js = (
+    "document.addEventListener('DOMContentLoaded', function(event) {"
+    "    document.getElementById('date').addEventListener('click', function () {"
+    "        var text = document.getElementById('dateinput');"
+    "        text.value = ('2016-08-12 08:30');"
+    "    });"
+    "});"
+)
+
 base = CgBase()
 util.print_header()
-util.print_html_header("Herramiento", util.css)
+util.print_html_header("Herramiento", css=util.css, js=js)
 purchases = base.get_purchases()
 #util.println('<a href="analysis.py">Analyze</a>')
 print_form(base.get_boxes())
