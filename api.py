@@ -32,13 +32,15 @@ def save_purchase(boxes):
             date = datetime.now() 
         else:
             date = convert_date(date_field + ":00")
+            if date is None:
+                return (False, "Not a valid datetime")
         discount = int(form.getfirst('discount')) 
         card = False if card is None else True
         base.insert_purchase(country, card, date, discount, cookies)
-        return True
+        return (True, "Purchase saved")
     else:
-        print_text("No cookies")
-    return False
+        return (False, "No cookies")
+    return (False, "Unknown save_purchase error")
 
 def delete_purchase():
     syncId = form.getfirst('syncId')
@@ -91,7 +93,7 @@ def sync():
             synced['cart'] += 1
     if synced['cart'] + synced['purchase'] > 0:
         return (True, '{"result": "SYNC completed (' + str(synced['purchase']) + ', ' + str(synced['cart']) + ')"}') 
-    return (False, None)
+    return (False, "Unknown sync error")
 
 def sync_cart():
     syncId = int(form.getfirst("syncId"))
@@ -113,7 +115,10 @@ def sync_purchase():
     status = int(form.getfirst("status"))
     success = base.sync_purchase(syncId, status, country, card, discount, date)
     msg = "DELETED" if status == 2 else "SYNCED"
-    return (success, '{"result": "200 - ' + msg + ' PURCHASE", "syncId": ' + str(syncId) + '}')
+    if success:
+        return (True, '{"result": "200 - ' + msg + ' PURCHASE", "syncId": ' + str(syncId) + '}')
+    else:
+        return (False, 'Unknown sync_purchase error')
 
 def convert_date(datestring):
     try:
@@ -123,7 +128,7 @@ def convert_date(datestring):
             datestring = datetime.now().strftime('%Y-%m-%d ') + datestring
             return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
         except:
-            print_text("Not a valid datetime! (" + datestring + ")")
+            pass
     return None
 
 def print_json(text):
@@ -145,7 +150,7 @@ success = False
 response = '{"result": "200 - OK"}'
 if action is not None:
     if action == "save_purchase":
-        success = save_purchase(base.get_boxes())
+        (success, response) = save_purchase(base.get_boxes())
     elif action == "delete_purchase":
         success = delete_purchase()
     elif action == "sync":
@@ -158,7 +163,7 @@ if action is not None:
         print_text("No valid Action: " + str(action))
         action = None
 else:
-    print_text("No Action")
+    print_text('{"result": "No Action"}')
 
 if success:
     redirect = form.getfirst('redirect')
@@ -168,4 +173,4 @@ if success:
         print "Location: " + redirect
         print 
 elif action is not None:
-    print_text('{"result": "No success - ' + action + '"}')
+    print_text('{"result": "No success - ' + response + '", "action": "' + action + '"}')
