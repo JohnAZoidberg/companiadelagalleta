@@ -1,99 +1,48 @@
 # coding=utf-8
 import json
+from datetime import datetime
+from dbdetails import dbdetails
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 
-blanco = " Chocolate Blanco"
-negro  = " Chocolate Negro"
-leche  = " Chocolate con Leche"
-list_cookies = [
-	"Galletas a la carta - 10",
-	"Galletas a la carta - 20",
-	"Galletas a la carta - 30",
-	"Basic bag pequeña - Mix",
-	"Basic bag pequeña - Frutas Tropicales",
-	"Basic bag pequeña - Sabores de Canarias",
-	"Basic bag pequeña - Chocolate",
-	"Basic bag pequeña - Clásica",
-	"Basic bag grande - Mix",
-	"Basic bag grande - Frutas Tropicales",
-	"Basic bag grande - Sabores de Canarias",
-	"Basic bag grande - Chocolate",
-	"Basic bag grande - Clásica",
-	"Cube box pequeña - Mix",
-	"Cube box pequeña - Frutas Tropicales",
-	"Cube box pequeña - Sabores de Canarias",
-	"Cube box pequeña - Chocolate",
-	"Cube box pequeña - Clásica",
-	"Cube box grande - Mix",
-	"Cube box grande - Frutas Tropicales",
-	"Cube box grande - Sabores de Canarias",
-	"Cube box grande - Chocolate",
-	"Cube box grande - Clásica",
-	"Pyramid window box pequeña - Mix",
-	"Pyramid window box pequeña - Frutas Tropicales",
-	"Pyramid window box pequeña - Sabores de Canarias",
-	"Pyramid window box pequeña - Chocolate",
-	"Pyramid window box pequeña - Clásica",
-	"Elegant box 1 verde Mix",
-	"Elegant box 1 verde Chocolate",
-	"Elegant box 1 verde Baño de chocolate",
-	"Elegant box 1 crema Mix",
-	"Elegant box 1 crema Frutas tropicales",
-	"Elegant box 1 crema Sabores de Canarias",
-	"Elegant box 2 verde Mix",
-	"Elegant box 2 verde Chocolate",
-	"Elegant box 2 verde Baño de chocolate",
-	"Elegant box 2 verde Excelencia",
-	"Elegant box 2 crema Mix",
-	"Elegant box 2 crema Frutas tropicales",
-	"Elegant box 2 crema Sabores de Canarias",
-	"Elegant box 2 crema Clasica",
-	"Elegant box 3 verde Mix",
-	"Elegant box 3 verde Chocolate",
-	"Elegant box 3 verde Baño de chocolate",
-	"Elegant box 3 verde Excelencia",
-	"Elegant box 3 crema Mix",
-	"Elegant box 3 crema Frutas tropicales",
-	"Elegant box 3 crema Sabores de Canarias",
-	"Elegant box 3 crema Clasica",
-	"Strelitzia box - Mix",
-	"Strelitzia box - Sabores de Canarias",
-	"Mango box - Mix",
-	"Mango box - Excelencia",
-	"Plumeria box - Excelencia",
-        "Galleta individual"
-]
-cookie_list = OrderedDict((str(i+1), list_cookies[i]) for i in xrange(len(list_cookies)))
 country_list = OrderedDict([
     ('??', "Desconocido"),
     ('de', "Alemania"),
-    ('es', "Espana"),
+    ('es', "España"),
     ('canario', "Islas Canarias"),
-    ('ne', "Paíes Bajos"),
-    ('gb', "Gran Bretana"),
+    ('ne', "Países Bajos"),
+    ('gb', "Gran Bretaña"),
     ('us', "EE.UU."),
-    ('it', "Itala"),
+    ('it', "Italia"),
     ('fr', "Francia"),
     ('no', "Noruega"),
     ('xx', "Otro")
 ])
-save_file = 'purchases.txt'
+
+css = ("ul            { list-style-type: none; }"
+       "ul#details    { padding: 10; }"
+       "ul#details li { display: inline; margin-left: 10px; }"
+       "#details      { top: 0; width: 100%; margin: 0; background: white; }"
+       ".hidden       { visibility: hidden; }"
+       ".fixed        { position: fixed; }"
+      )
 
 def print_header(t="text/html"):
     print "Content-Type: "+ t + ";charset=utf-8"
     print
 
 
-def print_html_header(title, css=None):
+def print_html_header(title, css=None, js=None):
     print '<html>'
     print '<head>'
     print '<meta name="viewport" content="width=device-width, initial-scale=1">'
     print '<title>' + title + '</title>'
     if css is not None:
         print '<style>' + css + '</style>'
+    if js is not None:
+        print '<script>' + js + '</script>'
     print '</head>'
     print '<body>'
 
@@ -108,11 +57,48 @@ def println(*lns):
         print ln
     print "<br>"
 
+def calc_daily_total(ps, shown_date):
+    cash_total = 0
+    card_total = 0
+    for p in ps:
+         (syncId, status, country, card, discount, date) = p['purchase']
+         if not is_same_day(date, shown_date):
+             continue
+         for item in p['cart']:
+            (title, status, boxId, quantity, price) = item
+            if card:
+                card_total += price * quantity
+            else:
+                cash_total  += price * quantity
+    daily_total = cash_total + card_total
+    return (daily_total, cash_total, card_total)
 
-def load_purchases():
-    try:
-        with open(save_file, 'r') as f:
-            purchases = json.load(f)
-    except (IOError, ValueError):
-        purchases = {"purchases": []}
-    return purchases
+def print_purchases(ps, shown_date, page):
+    print "<ul>"
+    daily_total_str = [str(total / 100.0) + "€" for total in calc_daily_total(ps, shown_date)]
+    print '<li>Total: ', daily_total_str[0], '</li>'
+    print '<li>Cash-Total: ', daily_total_str[1], '</li>'
+    print '<li>Card-Total: ', daily_total_str[2], '</li>'
+    for p in ps:
+        (syncId, status, country, card, discount, date) = p['purchase']
+        if not is_same_day(date, shown_date):
+            continue
+        card_str = "with card" if card else "in cash"
+        disc_str = "" if discount == 0 else " and got " + str(discount) + "% off"
+        total = 0
+        for item in p['cart']:
+            (title, status, boxId, quantity, price) = item
+            total += price*quantity
+        date_str = date.strftime('%H:%M')
+        delete_link = "" if dbdetails.server else '<a href="api.py?action=delete_purchase&redirect=' + page + '&syncId=' + str(syncId) + '">borrar</a>'
+        print '<li title="', syncId, '">', date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
+        print "<ul>"
+        for item in p['cart']:
+            (title, status, boxId, quantity, price) = item
+            print '<li title="', boxId, '">', quantity, "x ", title, " at ", (price / 100.0), "€</li>"
+        print "</ul>"
+    print "</ul>"
+
+def is_same_day(date1, date2):
+    return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
+

@@ -82,12 +82,10 @@ util.print_html_header("Test")
 purchases = base.get_purchases()
 
 br = "<br>"
-results = base.fetchall("purchases", ["cartId", "date"])
+results = base.fetchall("cart", ["syncId", "boxId"])
 for result in results:
-    (cartId, date) = result
+    (syncId, boxId) = result
     print result, br
-    syncid = generate_syncid(date)
-    base.update("purchases", {"syncId": syncid}, "WHERE cartId = " + str(cartId))
-    base.update("cart", {"syncId": syncid}, "WHERE cartId = " + str(cartId))
+    #base.update("cart", {"syncId": syncid}, "WHERE cartId = " + str(cartId + " AND boxId = " + str(boxId)))
 
 util.print_html_footer()

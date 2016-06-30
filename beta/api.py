@@ -16,14 +16,14 @@ except ImportError:
 import util
 form = cgi.FieldStorage()
 
-def save_purchase():
+def save_purchase(boxes):
     cookies = {} 
-    for box in xrange(1, 1+len(util.cookie_list)):
-        box = str(box)
-        count_field = form.getvalue('box_'+box) 
+    for boxId, box in boxes.iteritems():
+        boxId = str(boxId)
+        count_field = form.getvalue('box_'+boxId) 
         count = 0 if count_field is None else int(count_field)
         if count > 0:
-            cookies[box] = count
+            cookies[boxId] = count
     if cookies:
         country  = form.getfirst('country')
         card     = form.getvalue('tarjeta')
@@ -32,13 +32,15 @@ def save_purchase():
             date = datetime.now() 
         else:
             date = convert_date(date_field + ":00")
+            if date is None:
+                return (False, "Not a valid datetime")
         discount = int(form.getfirst('discount')) 
         card = False if card is None else True
         base.insert_purchase(country, card, date, discount, cookies)
-        return True
+        return (True, "Purchase saved")
     else:
-        print_text("No cookies")
-    return False
+        return (False, "No cookies")
+    return (False, "Unknown save_purchase error")
 
 def delete_purchase():
     syncId = form.getfirst('syncId')
@@ -52,7 +54,7 @@ def sync():
     for p in ps:
         (syncId, status, country, card, discount, date) = p['purchase']
         datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
-        if status == 0: # new entry
+        if status == 0 or status == 2: # new entry or deleted entry
             params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
             url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
             urls.append(url)
@@ -74,14 +76,24 @@ def sync():
         jresult = json.loads(resultstr)
         result_type = jresult['result']
         if result_type == "200 - SYNCED PURCHASE":
-            base.mark_synced(jresult['syncId'])
+            syncId = jresult['syncId'] 
+            base.mark_synced(syncId)
             synced['purchase'] += 1
         if result_type == "200 - SYNCED CART":
-            base.mark_synced(jresult['syncId'], jresult['boxId'])
+            syncId = jresult['syncId'] 
+            base.mark_synced(syncId, jresult['boxId'])
+            synced['cart'] += 1
+        if result_type == "200 - DELETED PURCHASE":
+            syncId = jresult['syncId'] 
+            base.delete_purchase(syncId)
+            synced['purchase'] += 1
+        if result_type == "200 - DELETED CART":
+            syncId = jresult['syncId'] 
+            base.delete_cart(syncId, jresult['boxId'])
             synced['cart'] += 1
     if synced['cart'] + synced['purchase'] > 0:
         return (True, '{"result": "SYNC completed (' + str(synced['purchase']) + ', ' + str(synced['cart']) + ')"}') 
-    return (False, None)
+    return (False, "Unknown sync error")
 
 def sync_cart():
     syncId = int(form.getfirst("syncId"))
@@ -90,18 +102,23 @@ def sync_cart():
     quantity = int(form.getfirst("quantity"))
     price = int(form.getfirst("price"))
     success = base.sync_cart(syncId, status, boxId, quantity, price)
-    return (success, '{"result": "200 - SYNCED CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
+    msg = "DELETED" if status == 2 else "SYNCED"
+    return (success, '{"result": "200 - ' + msg + ' CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
 
 def sync_purchase():
     syncId = int(form.getfirst("syncId"))
     country = form.getfirst("country")
-    card = bool(form.getfirst("card"))
+    card = bool(int(form.getfirst("card")))
     discount = int(form.getfirst("discount"))
     datestring = form.getfirst("date")
     date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     status = int(form.getfirst("status"))
     success = base.sync_purchase(syncId, status, country, card, discount, date)
-    return (success, '{"result": "200 - SYNCED PURCHASE", "syncId": ' + str(syncId) + '}')
+    msg = "DELETED" if status == 2 else "SYNCED"
+    if success:
+        return (True, '{"result": "200 - ' + msg + ' PURCHASE", "syncId": ' + str(syncId) + '}')
+    else:
+        return (False, 'Unknown sync_purchase error')
 
 def convert_date(datestring):
     try:
@@ -111,7 +128,7 @@ def convert_date(datestring):
             datestring = datetime.now().strftime('%Y-%m-%d ') + datestring
             return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
         except:
-            print_text("Not a valid datetime! (" + datestring + ")")
+            pass
     return None
 
 def print_json(text):
@@ -133,7 +150,7 @@ success = False
 response = '{"result": "200 - OK"}'
 if action is not None:
     if action == "save_purchase":
-        success = save_purchase()
+        (success, response) = save_purchase(base.get_boxes())
     elif action == "delete_purchase":
         success = delete_purchase()
     elif action == "sync":
@@ -146,7 +163,7 @@ if action is not None:
         print_text("No valid Action: " + str(action))
         action = None
 else:
-    print_text("No Action")
+    print_text('{"result": "No Action"}')
 
 if success:
     redirect = form.getfirst('redirect')
@@ -156,4 +173,4 @@ if success:
         print "Location: " + redirect
         print 
 elif action is not None:
-    print_text('{"result": "No success - ' + action + '"}')
+    print_text('{"result": "No success - ' + response + '", "action": "' + action + '"}')
