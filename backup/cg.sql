@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 29, 2016 at 11:30 PM
+-- Generation Time: Jun 30, 2016 at 11:11 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -23,10 +23,71 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `boxes`
+--
+
+CREATE TABLE IF NOT EXISTS `boxes` (
+`boxesEntryId` int(11) NOT NULL,
+  `title` varchar(100) COLLATE utf8_bin NOT NULL,
+  `price` int(11) NOT NULL
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
+-- Dumping data for table `boxes`
+--
+
+INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
+(1, 'Galletas a la carta - 10', 895),
+(2, 'Galletas a la carta - 20', 1595),
+(3, 'Galletas a la carta - 30', 2195),
+(5, 'Basic bag pequeña - Frutas Tropicales', 495),
+(6, 'Basic bag pequeña - Sabores de Canarias', 495),
+(7, 'Basic bag pequeña - Chocolate', 495),
+(8, 'Basic bag pequeña - Clasica', 495),
+(10, 'Basic bag grande - Frutas Tropicales', 995),
+(11, 'Basic bag grande - Sabores de Canarias', 995),
+(12, 'Basic bag grande - Chocolate', 995),
+(13, 'Basic bag grande - Clásica', 995),
+(15, 'Cube box pequeña - Frutas Tropicales', 795),
+(16, 'Cube box pequeña - Sabores de Canarias', 795),
+(17, 'Cube box pequeña - Chocolate', 795),
+(18, 'Cube box pequeña - Clásica', 795),
+(20, 'Cube box grande - Frutas Tropicales', 1195),
+(21, 'Cube box grande - Sabores de Canarias', 1195),
+(22, 'Cube box grande - Chocolate', 1195),
+(23, 'Cube box grande - Clásica', 1195),
+(25, 'Pyramid window box - Tropicales', 695),
+(26, 'Pyramid window box - Sabores de Canarias', 695),
+(27, 'Pyramid window box - Chocolate', 695),
+(28, 'Pyramid window box - Clásica', 695),
+(30, 'Elegant box 1 verde - Chocolate', 995),
+(31, 'Elegant box 1 verde - Baño de chocolate', 995),
+(33, 'Elegant box 1 crema - Frutas tropicales', 995),
+(34, 'Elegant box 1 crema - Sabores de Canarias', 995),
+(36, 'Elegant box 2 verde - Chocolate', 1595),
+(37, 'Elegant box 2 verde - Baño de chocolate', 1595),
+(38, 'Elegant box 2 verde - Excelencia', 1595),
+(40, 'Elegant box 2 crema - Frutas tropicales', 1595),
+(41, 'Elegant box 2 crema - Sabores de Canarias', 1595),
+(42, 'Elegant box 2 crema - Clásica', 1595),
+(44, 'Elegant box 3 verde - Chocolate', 2195),
+(45, 'Elegant box 3 verde - Baño de chocolate', 2195),
+(46, 'Elegant box 3 verde - Excelencia', 2195),
+(48, 'Elegant box 3 crema - Frutas tropicales', 2195),
+(49, 'Elegant box 3 crema - Sabores de Canarias', 2195),
+(50, 'Elegant box 3 crema - Clásica', 2195),
+(52, 'Strelitzia box - Sabores de Canarias', 1395),
+(54, 'Mango box - Excelencia', 1395),
+(55, 'Plumeria box - Excelencia', 1895),
+(56, 'Galleta individual', 100),
+(57, 'Surfero Aythami', 995);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `cart`
 --
 
-DROP TABLE IF EXISTS `cart`;
 CREATE TABLE IF NOT EXISTS `cart` (
 `cartEntryId` int(11) NOT NULL,
   `syncId` int(11) NOT NULL,
@@ -34,7 +95,7 @@ CREATE TABLE IF NOT EXISTS `cart` (
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL COMMENT 'in cents',
   `status` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB AUTO_INCREMENT=152 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=167 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `cart`
@@ -140,8 +201,6 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (101, 105502387, 56, 1, 100, 3),
 (102, 660279019, 11, 2, 995, 3),
 (103, 241136629, 1, 1, 895, 3),
-(104, 300003905, 55, 1, 1895, 2),
-(105, 300003905, 57, 1, 995, 2),
 (106, 872915999, 1, 1, 895, 3),
 (107, 872915999, 55, 2, 1895, 3),
 (108, 355908733, 55, 1, 1895, 3),
@@ -151,42 +210,49 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (112, 318971131, 1, 1, 895, 3),
 (113, 651939871, 56, 3, 100, 3),
 (114, 379525698, 1, 1, 895, 3),
-(116, 105129359, 56, 1, 100, 0),
-(117, 165154717, 1, 1, 895, 0),
-(118, 892889849, 6, 2, 495, 0),
-(119, 830999080, 1, 1, 895, 0),
-(120, 862244390, 1, 1, 805, 0),
+(116, 105129359, 56, 1, 100, 3),
+(117, 165154717, 1, 1, 895, 3),
+(118, 892889849, 6, 2, 495, 3),
+(119, 830999080, 1, 1, 895, 3),
+(120, 862244390, 1, 1, 805, 3),
 (121, 862244390, 32, 1, 895, 0),
-(122, 862244390, 55, 1, 1705, 0),
-(123, 427215076, 54, 1, 1395, 0),
-(124, 337826108, 1, 1, 895, 0),
-(125, 993421899, 8, 1, 495, 0),
-(126, 203642134, 1, 1, 895, 0),
-(127, 785400391, 3, 1, 2195, 0),
-(128, 462411963, 31, 1, 995, 0),
-(129, 425903834, 1, 1, 895, 0),
-(130, 711757448, 1, 1, 895, 0),
-(131, 542540109, 1, 1, 895, 2),
-(132, 542540109, 17, 1, 795, 2),
-(133, 954096693, 3, 1, 2195, 0),
-(134, 178898414, 1, 1, 895, 0),
-(135, 559564301, 25, 1, 695, 0),
-(136, 965954553, 38, 1, 1595, 2),
-(137, 576354393, 1, 1, 895, 2),
-(138, 471305870, 20, 1, 1195, 2),
-(139, 471305870, 5, 1, 495, 2),
-(140, 471305870, 16, 1, 795, 2),
-(141, 297353861, 1, 1, 895, 0),
-(142, 456050062, 16, 1, 795, 0),
-(143, 626757752, 55, 1, 1895, 0),
-(144, 414066876, 52, 1, 1395, 0),
-(145, 986141682, 1, 2, 895, 0),
-(146, 986141682, 17, 1, 795, 0),
-(147, 195480639, 38, 2, 1595, 0),
-(148, 338270320, 1, 2, 895, 0),
-(149, 119323619, 20, 1, 1195, 0),
-(150, 119323619, 5, 1, 495, 0),
-(151, 119323619, 21, 1, 1195, 0);
+(122, 862244390, 55, 1, 1705, 3),
+(123, 427215076, 54, 1, 1395, 3),
+(124, 337826108, 1, 1, 895, 3),
+(125, 993421899, 8, 1, 495, 3),
+(126, 203642134, 1, 1, 895, 3),
+(127, 785400391, 3, 1, 2195, 3),
+(128, 462411963, 31, 1, 995, 3),
+(129, 425903834, 1, 1, 895, 3),
+(130, 711757448, 1, 1, 895, 3),
+(133, 954096693, 3, 1, 2195, 3),
+(134, 178898414, 1, 1, 895, 3),
+(135, 559564301, 25, 1, 695, 3),
+(141, 297353861, 1, 1, 895, 3),
+(142, 456050062, 16, 1, 795, 3),
+(143, 626757752, 55, 1, 1895, 3),
+(144, 414066876, 52, 1, 1395, 3),
+(145, 986141682, 1, 2, 895, 3),
+(146, 986141682, 17, 1, 795, 3),
+(147, 195480639, 38, 2, 1595, 3),
+(148, 338270320, 1, 2, 895, 3),
+(149, 119323619, 20, 1, 1195, 3),
+(150, 119323619, 5, 1, 495, 3),
+(151, 119323619, 21, 1, 1195, 3),
+(153, 843809037, 8, 1, 495, 3),
+(154, 843809037, 6, 1, 495, 3),
+(155, 984919020, 38, 1, 1595, 3),
+(156, 984919020, 52, 1, 1395, 3),
+(157, 796630346, 30, 1, 995, 3),
+(158, 499058449, 55, 2, 1895, 3),
+(159, 545985533, 1, 1, 895, 3),
+(160, 457886677, 26, 1, 695, 3),
+(161, 988668876, 2, 1, 1595, 3),
+(162, 717543349, 26, 1, 695, 3),
+(163, 717543349, 34, 1, 995, 3),
+(164, 336097383, 3, 1, 2195, 3),
+(165, 461810316, 55, 1, 1895, 3),
+(166, 461810316, 54, 1, 1395, 3);
 
 -- --------------------------------------------------------
 
@@ -194,7 +260,6 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 -- Table structure for table `purchases`
 --
 
-DROP TABLE IF EXISTS `purchases`;
 CREATE TABLE IF NOT EXISTS `purchases` (
 `purchaseEntryId` int(11) NOT NULL,
   `syncId` int(11) NOT NULL,
@@ -203,7 +268,7 @@ CREATE TABLE IF NOT EXISTS `purchases` (
   `discount` int(11) NOT NULL,
   `date` datetime NOT NULL,
   `status` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB AUTO_INCREMENT=112 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=122 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `purchases`
@@ -281,7 +346,6 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (73, 105502387, 'gb', 0, 0, '2016-06-26 21:45:00', 3),
 (74, 660279019, '??', 0, 0, '2016-06-27 13:28:00', 3),
 (75, 241136629, 'gb', 0, 0, '2016-06-27 14:50:00', 3),
-(76, 300003905, 'de', 0, 0, '2016-06-27 19:30:00', 2),
 (77, 872915999, 'es', 0, 0, '2016-06-27 20:20:00', 3),
 (78, 355908733, 'de', 0, 0, '2016-06-27 19:30:00', 3),
 (79, 169903777, 'de', 0, 0, '2016-06-27 21:20:00', 3),
@@ -289,38 +353,50 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (81, 318971131, 'es', 0, 0, '2016-06-27 21:55:00', 3),
 (82, 651939871, '??', 0, 0, '2016-06-28 12:45:00', 3),
 (83, 379525698, '??', 0, 0, '2016-06-28 13:25:00', 3),
-(84, 105129359, 'can', 0, 0, '2016-06-29 11:10:00', 0),
-(85, 165154717, 'es', 0, 0, '2016-06-29 13:10:00', 0),
-(86, 892889849, 'gb', 0, 0, '2016-06-29 13:25:00', 0),
-(87, 830999080, 'es', 0, 0, '2016-06-29 19:50:00', 0),
-(88, 862244390, 'it', 0, 10, '2016-06-29 20:10:00', 0),
-(89, 427215076, 'es', 0, 0, '2016-06-29 20:20:00', 0),
-(90, 337826108, 'gb', 0, 0, '2016-06-29 20:20:00', 0),
-(91, 993421899, 'de', 0, 0, '2016-06-29 20:20:00', 0),
-(92, 203642134, 'es', 0, 0, '2016-06-29 20:40:00', 0),
-(93, 785400391, 'de', 0, 0, '2016-06-29 20:50:00', 0),
-(94, 462411963, 'gb', 0, 0, '2016-06-29 20:55:00', 0),
-(95, 425903834, 'can', 0, 0, '2016-06-29 21:10:00', 0),
-(96, 711757448, 'de', 0, 0, '2016-06-29 21:25:00', 0),
-(97, 542540109, '??', 0, 0, '2016-06-28 15:15:00', 2),
-(98, 954096693, 'ne', 0, 0, '2016-06-28 15:30:00', 0),
-(99, 178898414, 'gb', 0, 0, '2016-06-29 21:40:00', 0),
-(100, 559564301, 'es', 0, 0, '2016-06-28 19:30:00', 0),
-(101, 965954553, 'es', 1, 0, '2016-06-28 20:20:00', 2),
-(102, 576354393, 'es', 0, 0, '2016-06-28 20:55:00', 2),
-(103, 471305870, 'can', 0, 0, '2016-06-28 21:20:00', 2),
-(104, 297353861, 'gb', 0, 0, '2016-06-28 21:45:00', 0),
-(105, 456050062, '??', 0, 0, '2016-06-28 21:50:00', 0),
-(106, 626757752, 'gb', 0, 0, '2016-06-28 21:55:00', 0),
-(107, 414066876, 'gb', 0, 0, '2016-06-28 22:15:00', 0),
-(108, 986141682, '??', 0, 0, '2016-06-28 15:15:00', 0),
-(109, 195480639, 'es', 0, 0, '2016-06-28 20:20:00', 0),
-(110, 338270320, 'es', 1, 0, '2016-06-28 20:55:00', 0),
-(111, 119323619, 'can', 0, 0, '2016-06-28 21:20:00', 0);
+(84, 105129359, 'can', 0, 0, '2016-06-29 11:10:00', 3),
+(85, 165154717, 'es', 0, 0, '2016-06-29 13:10:00', 3),
+(86, 892889849, 'gb', 0, 0, '2016-06-29 13:25:00', 3),
+(87, 830999080, 'es', 0, 0, '2016-06-29 19:50:00', 3),
+(88, 862244390, 'it', 0, 10, '2016-06-29 20:10:00', 3),
+(89, 427215076, 'es', 0, 0, '2016-06-29 20:20:00', 3),
+(90, 337826108, 'gb', 0, 0, '2016-06-29 20:20:00', 3),
+(91, 993421899, 'de', 0, 0, '2016-06-29 20:20:00', 3),
+(92, 203642134, 'es', 0, 0, '2016-06-29 20:40:00', 3),
+(93, 785400391, 'de', 0, 0, '2016-06-29 20:50:00', 3),
+(94, 462411963, 'gb', 0, 0, '2016-06-29 20:55:00', 3),
+(95, 425903834, 'can', 0, 0, '2016-06-29 21:10:00', 3),
+(96, 711757448, 'de', 0, 0, '2016-06-29 21:25:00', 3),
+(98, 954096693, 'ne', 0, 0, '2016-06-28 15:30:00', 3),
+(99, 178898414, 'gb', 0, 0, '2016-06-29 21:40:00', 3),
+(100, 559564301, 'es', 0, 0, '2016-06-28 19:30:00', 3),
+(104, 297353861, 'gb', 0, 0, '2016-06-28 21:45:00', 3),
+(105, 456050062, '??', 0, 0, '2016-06-28 21:50:00', 3),
+(106, 626757752, 'gb', 0, 0, '2016-06-28 21:55:00', 3),
+(107, 414066876, 'gb', 0, 0, '2016-06-28 22:15:00', 3),
+(108, 986141682, '??', 0, 0, '2016-06-28 15:15:00', 3),
+(109, 195480639, 'es', 0, 0, '2016-06-28 20:20:00', 3),
+(110, 338270320, 'es', 1, 0, '2016-06-28 20:55:00', 3),
+(111, 119323619, 'can', 0, 0, '2016-06-28 21:20:00', 3),
+(112, 843809037, 'gb', 0, 0, '2016-06-30 11:30:00', 3),
+(113, 984919020, 'gb', 0, 0, '2016-06-30 13:50:00', 3),
+(114, 796630346, 'gb', 0, 0, '2016-06-30 17:55:00', 3),
+(115, 499058449, 'es', 1, 0, '2016-06-30 19:45:00', 3),
+(116, 545985533, 'can', 0, 0, '2016-06-30 19:55:00', 3),
+(117, 457886677, 'can', 0, 0, '2016-06-30 20:00:00', 3),
+(118, 988668876, 'de', 0, 0, '2016-06-30 20:10:00', 3),
+(119, 717543349, 'de', 0, 0, '2016-06-30 20:37:00', 3),
+(120, 336097383, 'can', 0, 0, '2016-06-30 20:39:00', 3),
+(121, 461810316, 'de', 0, 0, '2016-06-30 20:52:00', 3);
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `boxes`
+--
+ALTER TABLE `boxes`
+ ADD PRIMARY KEY (`boxesEntryId`);
 
 --
 -- Indexes for table `cart`
@@ -339,15 +415,20 @@ ALTER TABLE `purchases`
 --
 
 --
+-- AUTO_INCREMENT for table `boxes`
+--
+ALTER TABLE `boxes`
+MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=58;
+--
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=152;
+MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=167;
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=112;
+MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=122;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
