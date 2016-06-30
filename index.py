@@ -65,7 +65,7 @@ js = (
 
 base = CgBase()
 util.print_header()
-util.print_html_header("Herramiento", css=util.css, js=js)
+util.print_html_header("Herramienta", css=util.css, js=js)
 purchases = base.get_purchases()
 #util.println('<a href="analysis.py">Analyze</a>')
 print_form(base.get_boxes())
