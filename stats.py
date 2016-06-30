@@ -24,7 +24,7 @@ def print_date_form(datestr):
 
 base = CgBase()
 util.print_header()
-util.print_html_header("Herramiento", css=util.css)
+util.print_html_header("Herramienta", css=util.css)
 purchases = base.get_purchases()
 datestr = form.getfirst('date')
 if datestr is None:
