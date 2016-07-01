@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 01, 2016 at 11:16 AM
+-- Generation Time: Jul 01, 2016 at 03:10 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `boxes` (
 `boxesEntryId` int(11) NOT NULL,
   `title` varchar(100) COLLATE utf8_bin NOT NULL,
   `price` int(11) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `boxes`
@@ -80,7 +80,13 @@ INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
 (54, 'Mango box - Excelencia', 1395),
 (55, 'Plumeria box - Excelencia', 1895),
 (56, 'Galleta individual', 100),
-(57, 'Surfero Aythami', 995);
+(57, 'Surfero Aythami', 995),
+(58, 'Cube Box pequeño - vegano', 945),
+(59, 'Cube box grande - vegano', 1395),
+(60, 'Elegant boc pequeño - vegano', 1045),
+(61, 'Mango Box - vegano', 1495),
+(62, 'Strelitzia box - vegano', 1495),
+(63, 'Galletas a la Carta - vegano', 1645);
 
 -- --------------------------------------------------------
 
@@ -418,7 +424,7 @@ ALTER TABLE `purchases`
 -- AUTO_INCREMENT for table `boxes`
 --
 ALTER TABLE `boxes`
-MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=58;
+MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=64;
 --
 -- AUTO_INCREMENT for table `cart`
 --
