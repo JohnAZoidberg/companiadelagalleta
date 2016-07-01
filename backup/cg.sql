@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 01, 2016 at 03:10 PM
+-- Generation Time: Jul 01, 2016 at 03:18 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -83,10 +83,11 @@ INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
 (57, 'Surfero Aythami', 995),
 (58, 'Cube Box pequeño - vegano', 945),
 (59, 'Cube box grande - vegano', 1395),
-(60, 'Elegant boc pequeño - vegano', 1045),
-(61, 'Mango Box - vegano', 1495),
+(60, 'Elegant box 1 verde - vegano', 1045),
+(61, 'Elegant box 1 crema - vegano', 1045),
 (62, 'Strelitzia box - vegano', 1495),
-(63, 'Galletas a la Carta - vegano', 1645);
+(63, 'Galletas a la Carta 20 - vegano', 1645),
+(64, 'Mango Box - vegano', 1495);
 
 -- --------------------------------------------------------
 
