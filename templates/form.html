@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/bootstrap.min.css">
+    <script src="/jquery-2.2.4.min.js"></script>
+    <script src="/bootstrap.min.js"></script>
+    <style>
+        .clickable {
+                cursor: pointer;
+        }
+
+        .list-group-horizontal .list-group-item {
+                display: inline-block;
+        }
+        .list-group-horizontal .list-group-item {
+        	margin-bottom: 0;
+        	margin-left:-4px;
+        	margin-right: 0;
+        }
+        .list-group-horizontal .list-group-item:first-child {
+        	border-top-right-radius:0;
+        	border-bottom-left-radius:4px;
+        }
+        .list-group-horizontal .list-group-item:last-child {
+        	border-top-right-radius:4px;
+        	border-bottom-left-radius:0;
+        }
+    </style>
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+
+        <div class="col-sm-6">
+          <h2>Nueva compra</h2>
+          <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
+            <input type="hidden" name="action" value="save_purchase">
+            <input type="hidden" name="redirect" value="index.py">
+            <div class="form-group">
+              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date">Fecha:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="date" placeholder="18:04">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="country">País:</label>
+              <div class="col-sm-4">
+                <select class="form-control" name="country" id="country">
+                {% for country in countries %}
+                  <option value="{{ country[0] }}">{{ country[1] }}</option>
+                {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="discount">Desconto:</label>
+              <div class="col-sm-4 input-group" style="padding: 0 15px;">
+                <div class="input-group-addon">-</div>
+                <input type="number" class="form-control" id="discount"name="discount" value="0">
+                <div class="input-group-addon">%</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="control-label col-sm-2" for="box">Caja:</label>
+              <div class="col-sm-6">
+                <input type="text" class="form-control" id="box" placeholder="Box" list="boxes">
+                <datalist id="boxes">
+                {% for box in boxes %}
+                  <option data-value="{{ box[0] }}">{{ box[1] }}</option>
+                {% endfor %}
+                </datalist>
+                <input type="hidden" name="current_box" id="box-hidden">
+              </div>
+              <div class="col-sm-2">
+                <input type="number" class="form-control" name="quantity" id="quantity" value="1">
+              </div>
+              <div class="col-sm-2">
+                <input type="button" class="form-control" id="add-box" value="Add">
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="control-label col-sm-2" for="box"></div>
+              <ul id="added-boxes" class="col-sm-10">
+              </ul>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                  <label><input type="checkbox" name="tarjeta">Tarjeta</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="col-sm-6">
+          <h2>Compras</h2>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <td>{{ date|dateformat }}</td>
+                <td align="right" colspan="2">{{ card_total|moneyformat }} + {{ cash_total|moneyformat }} = </td>
+                <td>{{ (card_total + cash_total)|moneyformat }}</td>
+              </tr>
+            </thead>
+            <tbody>
+            {% for purchase in purchases %}
+            <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py&syncId={{ purchase['purchase']['syncId'] }}">
+              <td>{{ purchase['purchase']['date']|timeformat }}</td>
+              <td>{{ purchase['purchase']['country']|countryformat }}</td>
+              <td>{{ purchase['purchase']['card']|cardformat }}</td>
+              <td>{{ purchase['purchase']['total']|moneyformat }}</td>
+            </tr>
+            {% for item in purchase['cart'] %}
+            <tr>
+              <td align="right" colspan="2">{{ item['title'] }}</td>
+              <td>x{{ item['quantity'] }}</td>
+              <td>{{ item['price']|moneyformat }}</td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+          </table>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Turn label into data-value on datalist input
+      $('input[list]').on('input', function(e) {
+          var $input = $(e.target),
+              $options = $('#' + $input.attr('list') + ' option'),
+              $hiddenInput = $('#' + $input.attr('id') + '-hidden'),
+              label = $input.val();
+
+          $hiddenInput.val(label);
+
+          for(var i = 0; i < $options.length; i++) {
+              var $option = $options.eq(i);
+
+              if($option.text() === label) {
+                  $hiddenInput.val( $option.attr('data-value') );
+                  break;
+              }
+          }
+      });
+
+      // add boxes - obviously
+      $('#add-box').click(function(e) {
+          title = $('#box').val()
+          boxId = $('#box-hidden').val()
+          quantity = $('#quantity').val()
+          // TODO: show errors
+          
+          if (title == "" || quantity == 0 || boxId == "" || $('#box_'+boxId).length > 0) return;
+          // clear fields
+          $('#box').val("")
+          $('#box-hidden').val("")
+          $('#quantity').val("1")
+
+          input = '<input type="hidden" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">'
+          $('#added-boxes').append('<a href="#" class="list-group-item added-box"><span class="badge">' + quantity + '</span> ' + title + input + '</li>')
+          e.preventDefault();
+      }); 
+
+      // remove added boxes by onclick
+      $('#added-boxes').on('click', '.added-box', function() {
+          $(this).remove();
+      });
+          $(".deletable-row").click(function() {
+              if (confirm("Really delete?")) {
+                  window.document.location = $(this).data("href");
+              }
+          });
+    </script>
+  </body>
+</html>
