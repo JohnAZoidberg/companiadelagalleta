@@ -4,72 +4,44 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf8")
 import cgitb
-cgitb.enable()
-import cgi
-import json
-from datetime import datetime
-from dbconn import *
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+cgitb.enable() # Displays any errors
+
+from jinja2 import Environment, FileSystemLoader
+import os
+
 import util
-form = cgi.FieldStorage()
-now_date = datetime.now()
-now = now_date.strftime('%Y-%m-%d %H:%M')
+from dbconn import CgBase
+from datetime import datetime
 
-def print_form_header(hidden):
-    attr = 'id="details"'
-    attr += ' class="hidden"'  if hidden else 'class="fixed"'
-    print '<ul ' + attr + '>'
-    if hidden:
-        print "Menu"
-    else:
-        print '<li>País: <select name="country">'
-        for key, country in util.country_list.iteritems():
-            print '<option value="' + str(key) + '">' + country + '</option>'
-        print '</select></li>'
-        print '<li><label title="' + now + '"><span id="datelabel">Date: </span><input id="dateinput" type="text" name="datetime" placeholder="11:45" required></label></li>'
-        print '<li><label>Discount: <input type="text" name="discount" value="0" size="2" required>%</label></li>'
-        print '<li><label>Tarjeta? <input type="checkbox" name="tarjeta"></label></li>'
-        print '<li><input type="submit" value="Save"></li>'
-        if not dbdetails.server:
-            print '<li><a href="api.py?action=sync&redirect=index.py">Sync con nube</a></li>'
-        else:
-            print '<li><a href="report.py">Excel</a></li>'
-    print '</ul>'
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def print_form(boxes):
-    print '<form action="api.py" method="post">'
-    print '<input type="hidden" name="redirect" value="index.py">'
-    print '<input type="hidden" name="action" value="save_purchase">'
-    print_form_header(True)
-    print_form_header(False)
-    print '<ul style="list-style-type: none;">'
-    for key, cookie in boxes.iteritems():
-        print '<li><label>'
-        print '<input type="number" name="box_' + str(key) + '" value="0" size="2" required>'
-        print cookie
-        print '</label></li>'
-    print '</ul>'
-    print '</form>'
+def print_html():
+    # data
+    now = datetime.now()
+    base = CgBase()
+    boxes = base.get_boxes()
+    purchases, card_total, cash_total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
 
-js = (
-    "document.addEventListener('DOMContentLoaded', function(event) {"
-    "    document.getElementById('datelabel').addEventListener('click', function () {"
-    "        var text = document.getElementById('dateinput');"
-    "        text.value = ('2016-08-12 08:30');"
-    "    });"
-    "});"
-)
+    # env
+    j2_env = Environment(loader=FileSystemLoader(THIS_DIR),
+                         trim_blocks=True)
+    j2_env.filters['dateformat'] = util.dateformat
+    j2_env.filters['timeformat'] = util.timeformat
+    j2_env.filters['moneyformat'] = util.moneyformat
+    j2_env.filters['countryformat'] = util.countryformat
+    j2_env.filters['cardformat'] = util.cardformat
 
-base = CgBase()
-util.print_header()
-util.print_html_header("Herramienta", css=util.css, js=js)
-purchases = base.get_purchases()
-#util.println('<a href="analysis.py">Analyze</a>')
-print_form(base.get_boxes())
-print '<hr>'
-print '<h2>Compras de hoy</h2>'
-util.print_purchases(purchases, now_date, "index.py")
-util.print_html_footer()
+    # printing
+    util.print_header()
+    print j2_env.get_template('/templates/form.html').render(
+        title='Herramienta',
+        date=now,
+        countries=util.country_list.items(),
+        boxes=boxes.items(),
+        purchases=purchases,
+        card_total=card_total,
+        cash_total=cash_total
+    )
+
+if __name__ == "__main__":
+    print_html()
