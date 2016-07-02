@@ -108,11 +108,11 @@ def calc_purchases_totals(ps):
     for pk, p in enumerate(ps):
         ps[pk]['purchase']['total'] = 0
         for ik, item in enumerate(p['cart']):
-            ps[pk]['purchase']['total'] += item['price']
+            ps[pk]['purchase']['total'] += item['price'] * item['quantity']
             if p['purchase']['card']:
-                card_total += item['price']
+                card_total += item['price'] * item['quantity']
             else:
-                cash_total += item['price']
+                cash_total += item['price'] * item['quantity']
     return ps, card_total, cash_total
 
 # Jinja Filters:
@@ -132,4 +132,4 @@ def countryformat(value):
     return country_list[value]
 
 def cardformat(value):
-    return "tarjeta" if value else "efectivo"
+    return "VISA" if value else ""
