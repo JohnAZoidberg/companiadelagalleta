@@ -7,35 +7,47 @@
     <script src="/jquery-2.2.4.min.js"></script>
     <script src="/bootstrap.min.js"></script>
     <style>
-        .body { background-color: red; }
+        .clickable {
+                cursor: pointer;
+        }
+
+        .list-group-horizontal .list-group-item {
+                display: inline-block;
+        }
+        .list-group-horizontal .list-group-item {
+        	margin-bottom: 0;
+        	margin-left:-4px;
+        	margin-right: 0;
+        }
+        .list-group-horizontal .list-group-item:first-child {
+        	border-top-right-radius:0;
+        	border-bottom-left-radius:4px;
+        }
+        .list-group-horizontal .list-group-item:last-child {
+        	border-top-right-radius:4px;
+        	border-bottom-left-radius:0;
+        }
     </style>
     <title>{{ title }}</title>
   </head>
   <body>
     <div class="container">
       <div class="row">
+
         <div class="col-sm-6">
-          <h2>Compras</h2>
-          <ul class="list-group">
-            {% for purchase in purchases %}
-            <li class="list-group-item">{{ purchase }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-        <div class="col-sm-6">
-          <h2>Horizontal form</h2>
+          <h2>Nueva compra</h2>
           <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
             <input type="hidden" name="action" value="save_purchase">
             <input type="hidden" name="redirect" value="jinja.py">
             <div class="form-group">
-              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date">Date:</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="date" placeholder="{{ now }}">
+              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date">Fecha:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" id="date" placeholder="18:04">
               </div>
             </div>
             <div class="form-group">
-              <label class="control-label col-sm-2" for="country">Country:</label>
-              <div class="col-sm-10">
+              <label class="control-label col-sm-2" for="country">País:</label>
+              <div class="col-sm-4">
                 <select class="form-control" name="country" id="country">
                 {% for country in countries %}
                   <option value="{{ country[0] }}">{{ country[1] }}</option>
@@ -44,13 +56,15 @@
               </div>
             </div>
             <div class="form-group">
-              <label class="control-label col-sm-2" for="discount">Discount:</label>
-              <div class="col-sm-10">
-                <input type="number" class="form-control" id="discount" style="width: 5em" name="discount" value="0">
+              <label class="control-label col-sm-2" for="discount">Desconto:</label>
+              <div class="col-sm-4 input-group" style="padding: 0 15px;">
+                <div class="input-group-addon">-</div>
+                <input type="number" class="form-control" id="discount"name="discount" value="0">
+                <div class="input-group-addon">%</div>
               </div>
             </div>
             <div class="form-group">
-              <label class="control-label col-sm-2" for="box">Box:</label>
+              <label class="control-label col-sm-2" for="box">Caja:</label>
               <div class="col-sm-6">
                 <input type="text" class="form-control" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
@@ -75,16 +89,44 @@
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
                 <div class="checkbox">
-                  <label><input type="checkbox" name="tarjeta">Card</label>
+                  <label><input type="checkbox" name="tarjeta">Tarjeta</label>
                 </div>
               </div>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-default">Submit</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
               </div>
             </div>
           </form>
+        </div>
+        <div class="col-sm-6">
+          <h2>Compras</h2>
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <td>{{ date|dateformat }}</td>
+                <td align="right" colspan="2">{{ card_total|moneyformat }} + {{ cash_total|moneyformat }} = </td>
+                <td>{{ (card_total + cash_total)|moneyformat }}</td>
+              </tr>
+            </thead>
+            <tbody>
+            {% for purchase in purchases %}
+            <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=jinja.py&syncId={{ purchase['purchase']['syncId'] }}">
+              <td>{{ purchase['purchase']['date']|timeformat }}</td>
+              <td>{{ purchase['purchase']['country']|countryformat }}</td>
+              <td>{{ purchase['purchase']['card']|cardformat }}</td>
+              <td>{{ purchase['purchase']['total']|moneyformat }}</td>
+            </tr>
+            {% for item in purchase['cart'] %}
+            <tr>
+              <td align="right" colspan="2">{{ item['title'] }}</td>
+              <td>x{{ item['quantity'] }}</td>
+              <td>{{ item['price']|moneyformat }}</td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+          </table>
         </div>
       </div>
     </div>
@@ -128,9 +170,13 @@
 
       // remove added boxes by onclick
       $('#added-boxes').on('click', '.added-box', function() {
-          console.log("test")
           $(this).remove();
       });
+          $(".deletable-row").click(function() {
+              if (confirm("Really delete?")) {
+                  window.document.location = $(this).data("href");
+              }
+          });
     </script>
   </body>
 </html>

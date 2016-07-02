@@ -5,6 +5,8 @@ from dbdetails import *
 from random import randint
 import time
 from collections import OrderedDict
+from datetime import datetime
+import util
 
 class CgBase:
     def __init__(self):
@@ -114,7 +116,7 @@ class CgBase:
         else:
             self.db.rollback() 
 
-    def get_purchases(self, getDeleted=False):
+    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
@@ -126,6 +128,9 @@ class CgBase:
         purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, p_status, quantity, price, c_status, boxId, title) = row
+            if onlydate is not None:
+                if not util.is_same_day(onlydate, date):
+                    continue
             if not getDeleted and p_status == 2:
                 continue 
             key = int(syncId)
@@ -133,9 +138,15 @@ class CgBase:
                 foo = purchases[key]
             except:
                 purchases[key] = {}
-                purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
+                if prettydict:
+                    purchases[key]['purchase'] = {"syncId": key, "status": p_status, "country": country, "card": card, "discount": discount, "date": date} 
+                else:
+                    purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
                 purchases[key]['cart'] = [] 
-            purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
+            if prettydict:
+                purchases[key]['cart'].append({"title": title, "status": c_status, "boxId": boxId, "quantity": quantity, "price": price})
+            else:
+                purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
         return [val for key, val in purchases.iteritems()]
 
     def mark_purchase_deleted(self, syncId):

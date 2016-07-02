@@ -102,3 +102,34 @@ def print_purchases(ps, shown_date, page):
 def is_same_day(date1, date2):
     return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
 
+def calc_purchases_totals(ps):
+    cash_total = 0
+    card_total = 0
+    for pk, p in enumerate(ps):
+        ps[pk]['purchase']['total'] = 0
+        for ik, item in enumerate(p['cart']):
+            ps[pk]['purchase']['total'] += item['price']
+            if p['purchase']['card']:
+                card_total += item['price']
+            else:
+                cash_total += item['price']
+    return ps, card_total, cash_total
+
+# Jinja Filters:
+def dateformat(value):
+    return value.strftime('%Y-%m-%d')
+
+def datetimeformat(value):
+    return value.strftime('%Y-%m-%d %H:%M')
+
+def timeformat(value):
+    return value.strftime('%H:%M')
+
+def moneyformat(value):
+    return str((value / 100.0)) + " €"
+
+def countryformat(value):
+    return country_list[value]
+
+def cardformat(value):
+    return "tarjeta" if value else "efectivo"
