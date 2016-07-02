@@ -113,6 +113,7 @@ class CgBase:
             self.db.commit()
         else:
             self.db.rollback() 
+        return success
 
     def get_purchases(self, getDeleted=False):
         pt = "purchases"

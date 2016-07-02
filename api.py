@@ -36,8 +36,9 @@ def save_purchase(boxes):
                 return (False, "Not a valid datetime")
         discount = int(form.getfirst('discount')) 
         card = False if card is None else True
-        base.insert_purchase(country, card, date, discount, cookies)
-        return (True, "Purchase saved")
+        insert_success = base.insert_purchase(country, card, date, discount, cookies)
+        if insert_success:
+            return (True, "Purchase saved")
     else:
         return (False, "No cookies")
     return (False, "Unknown save_purchase error")
