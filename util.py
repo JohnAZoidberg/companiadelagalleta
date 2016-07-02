@@ -11,7 +11,7 @@ country_list = OrderedDict([
     ('??', "Desconocido"),
     ('de', "Alemania"),
     ('es', "España"),
-    ('canario', "Islas Canarias"),
+    ('can', "Islas Canarias"),
     ('ne', "Países Bajos"),
     ('gb', "Gran Bretaña"),
     ('us', "EE.UU."),
