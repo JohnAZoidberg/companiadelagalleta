@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jun 30, 2016 at 11:11 PM
+-- Generation Time: Jul 01, 2016 at 03:18 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `boxes` (
 `boxesEntryId` int(11) NOT NULL,
   `title` varchar(100) COLLATE utf8_bin NOT NULL,
   `price` int(11) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `boxes`
@@ -80,7 +80,14 @@ INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
 (54, 'Mango box - Excelencia', 1395),
 (55, 'Plumeria box - Excelencia', 1895),
 (56, 'Galleta individual', 100),
-(57, 'Surfero Aythami', 995);
+(57, 'Surfero Aythami', 995),
+(58, 'Cube Box pequeño - vegano', 945),
+(59, 'Cube box grande - vegano', 1395),
+(60, 'Elegant box 1 verde - vegano', 1045),
+(61, 'Elegant box 1 crema - vegano', 1045),
+(62, 'Strelitzia box - vegano', 1495),
+(63, 'Galletas a la Carta 20 - vegano', 1645),
+(64, 'Mango Box - vegano', 1495);
 
 -- --------------------------------------------------------
 
@@ -156,12 +163,12 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (53, 360838894, 55, 1, 1895, 3),
 (54, 858748441, 2, 2, 1595, 3),
 (55, 989271354, 1, 1, 895, 3),
-(56, 989271354, 4, 1, 495, 3),
-(57, 443514084, 4, 1, 495, 3),
+(56, 989271354, 6, 1, 495, 3),
+(57, 443514084, 7, 1, 495, 3),
 (58, 778617858, 27, 1, 695, 3),
 (59, 509771231, 7, 3, 495, 3),
 (60, 482836353, 2, 1, 1595, 3),
-(61, 482836353, 14, 2, 795, 3),
+(61, 482836353, 17, 2, 795, 3),
 (62, 482836353, 17, 1, 795, 3),
 (63, 573528400, 20, 2, 1195, 3),
 (64, 780388391, 34, 1, 995, 3),
@@ -177,14 +184,14 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (76, 851162657, 2, 1, 1595, 3),
 (77, 167173026, 1, 1, 895, 0),
 (78, 856957995, 1, 1, 895, 3),
-(79, 789422155, 4, 1, 495, 3),
+(79, 789422155, 8, 1, 495, 3),
 (80, 460552598, 56, 2, 100, 3),
 (82, 113888679, 1, 1, 895, 3),
 (83, 102527775, 25, 1, 695, 3),
 (84, 444584089, 1, 1, 895, 3),
 (85, 169996860, 1, 1, 895, 3),
 (86, 317446215, 1, 1, 895, 3),
-(87, 131695445, 4, 1, 495, 3),
+(87, 131695445, 8, 1, 495, 3),
 (88, 928590192, 2, 1, 1595, 3),
 (89, 928590192, 15, 1, 795, 3),
 (90, 639701191, 18, 1, 795, 3),
@@ -215,7 +222,7 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (118, 892889849, 6, 2, 495, 3),
 (119, 830999080, 1, 1, 895, 3),
 (120, 862244390, 1, 1, 805, 3),
-(121, 862244390, 32, 1, 895, 0),
+(121, 862244390, 33, 1, 895, 0),
 (122, 862244390, 55, 1, 1705, 3),
 (123, 427215076, 54, 1, 1395, 3),
 (124, 337826108, 1, 1, 895, 3),
@@ -418,7 +425,7 @@ ALTER TABLE `purchases`
 -- AUTO_INCREMENT for table `boxes`
 --
 ALTER TABLE `boxes`
-MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=58;
+MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=64;
 --
 -- AUTO_INCREMENT for table `cart`
 --
