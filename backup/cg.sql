@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 01, 2016 at 03:18 PM
+-- Generation Time: Jul 02, 2016 at 01:18 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `boxes` (
 `boxesEntryId` int(11) NOT NULL,
   `title` varchar(100) COLLATE utf8_bin NOT NULL,
   `price` int(11) NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `boxes`
@@ -220,7 +220,7 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (116, 105129359, 56, 1, 100, 3),
 (117, 165154717, 1, 1, 895, 3),
 (118, 892889849, 6, 2, 495, 3),
-(119, 830999080, 1, 1, 895, 3),
+(119, 830999080, 1, 1, 895, 2),
 (120, 862244390, 1, 1, 805, 3),
 (121, 862244390, 33, 1, 895, 0),
 (122, 862244390, 55, 1, 1705, 3),
@@ -363,7 +363,7 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (84, 105129359, 'can', 0, 0, '2016-06-29 11:10:00', 3),
 (85, 165154717, 'es', 0, 0, '2016-06-29 13:10:00', 3),
 (86, 892889849, 'gb', 0, 0, '2016-06-29 13:25:00', 3),
-(87, 830999080, 'es', 0, 0, '2016-06-29 19:50:00', 3),
+(87, 830999080, 'es', 0, 0, '2016-06-29 19:50:00', 2),
 (88, 862244390, 'it', 0, 10, '2016-06-29 20:10:00', 3),
 (89, 427215076, 'es', 0, 0, '2016-06-29 20:20:00', 3),
 (90, 337826108, 'gb', 0, 0, '2016-06-29 20:20:00', 3),
@@ -425,7 +425,7 @@ ALTER TABLE `purchases`
 -- AUTO_INCREMENT for table `boxes`
 --
 ALTER TABLE `boxes`
-MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=64;
+MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=65;
 --
 -- AUTO_INCREMENT for table `cart`
 --
