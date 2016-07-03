@@ -59,13 +59,13 @@
               <label class="control-label col-sm-2" for="discount">Desconto:</label>
               <div class="col-sm-5 input-group" style="padding: 0 15px;">
                 <div class="input-group-addon">-</div>
-                <input type="number" class="form-control" id="discount"name="discount" placeholder="0">
+                <input type="number" class="form-control" id="discount" name="discount" placeholder="0">
                 <div class="input-group-addon">%</div>
               </div>
             </div>
             <div class="form-group">
               <label class="control-label col-sm-2" for="box">Caja:</label>
-              <div class="col-sm-6">
+              <div class="col-sm-6 box-inputs">
                 <input type="text" class="form-control" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
                 {% for box in boxes %}
@@ -74,10 +74,10 @@
                 </datalist>
                 <input type="hidden" name="current_box" id="box-hidden">
               </div>
-              <div class="col-sm-2">
+              <div class="col-sm-2 box-inputs">
                 <input type="number" class="form-control" name="quantity" id="quantity" value="1">
               </div>
-              <div class="col-sm-2">
+              <div class="col-sm-2 box-inputs">
                 <input type="button" class="form-control" id="add-box" value="Add">
               </div>
             </div>
@@ -105,7 +105,7 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <td><form method="get"><input name="showndate" size="10" style="width: auto;" class="form-control"class="form-control" placeholder="{{ date|dateformat }}"  value="{{ date|dateformat }}"></input></form></td>
+                <td><form method="get"><input name="showndate" size="10" style="width: auto;" class="form-control" placeholder="{{ date|dateformat }}"  value="{{ date|dateformat }}"></input></form></td>
               </tr>
               <tr>
                 <td>
@@ -172,9 +172,11 @@
           $('#box').val("")
           $('#box-hidden').val("")
           $('#quantity').val("1")
+          // clear error
+          $(".box-inputs").removeClass("has-error");
 
           input = '<input type="hidden" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">'
-          $('#added-boxes').append('<a href="#" class="list-group-item added-box"><span class="badge">' + quantity + '</span> ' + title + input + '</li>')
+          $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + '</span> ' + title + input + '</li>')
           e.preventDefault();
       }); 
 
@@ -182,11 +184,18 @@
       $('#added-boxes').on('click', '.added-box', function() {
           $(this).remove();
       });
-          $(".deletable-row").click(function() {
-              if (confirm("Really delete?")) {
-                  window.document.location = $(this).data("href");
-              }
-          });
+      $(".deletable-row").click(function() {
+          if (confirm("Really delete?")) {
+              window.document.location = $(this).data("href");
+          }
+      });
+      // display error when submitting without boxes
+      $("#myForm").on("submit", function(e) {
+          if ($('.added-box').length <= 0) {
+              $(".box-inputs").addClass("has-error");
+              e.preventDefault();
+          }
+      });
     </script>
   </body>
 </html>
