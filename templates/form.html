@@ -41,13 +41,13 @@
             <input type="hidden" name="redirect" value="index.py">
             <div class="form-group">
               <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date" required>Fecha:</label>
-              <div class="col-sm-4">
+              <div class="col-sm-5">
                 <input type="text" class="form-control" name="datetime" id="date" placeholder="18:04">
               </div>
             </div>
             <div class="form-group">
               <label class="control-label col-sm-2" for="country">País:</label>
-              <div class="col-sm-4">
+              <div class="col-sm-5">
                 <select class="form-control" name="country" id="country">
                 {% for country in countries %}
                   <option value="{{ country[0] }}">{{ country[1] }}</option>
@@ -57,9 +57,9 @@
             </div>
             <div class="form-group">
               <label class="control-label col-sm-2" for="discount">Desconto:</label>
-              <div class="col-sm-4 input-group" style="padding: 0 15px;">
+              <div class="col-sm-5 input-group" style="padding: 0 15px;">
                 <div class="input-group-addon">-</div>
-                <input type="number" class="form-control" id="discount"name="discount" value="0">
+                <input type="number" class="form-control" id="discount"name="discount" placeholder="0">
                 <div class="input-group-addon">%</div>
               </div>
             </div>
@@ -105,9 +105,19 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <td>{{ date|dateformat }}</td>
-                <td align="right" colspan="2"><span title="VISA">{{ card_total|moneyformat }}</span> + <span title="efectivo">{{ cash_total|moneyformat }}</span> = </td>
-                <td>{{ (card_total + cash_total)|moneyformat }}</td>
+                <td><form method="get"><input name="showndate" size="10" style="width: auto;" class="form-control"class="form-control" placeholder="{{ date|dateformat }}"  value="{{ date|dateformat }}"></input></form></td>
+              </tr>
+              <tr>
+                <td>
+                  <ul class="list-inline">
+                    <li><a href="?showndate={{ date|adddays(-1)|dateformat }}" class="btn btn-default">Ant</a></li>
+                    <li><a href="?" class="btn btn-default">Hoy</a></li>
+                    <li><a href="?showndate={{ date|adddays(1)|dateformat }}" class="btn btn-default">Sig</a></li>
+                  </ul>
+                </td>
+                <td align="right" style="vertical-align:bottom" colspan="3">
+                  <span title="VISA">{{ card_total|moneyformat }}</span> + <span title="efectivo">{{ cash_total|moneyformat }}</span> = {{ (card_total + cash_total)|moneyformat }}
+               </td>
               </tr>
             </thead>
             <tbody>
@@ -116,13 +126,13 @@
               <td>{{ purchase['purchase']['date']|timeformat }}</td>
               <td>{{ purchase['purchase']['country']|countryformat }}</td>
               <td>{{ purchase['purchase']['card']|cardformat }}</td>
-              <td>{{ purchase['purchase']['total']|moneyformat }}</td>
+              <td align="right">{{ purchase['purchase']['discount']|discountformat }}{{ purchase['purchase']['total']|moneyformat }}</td>
             </tr>
             {% for item in purchase['cart'] %}
             <tr>
               <td align="right" colspan="2">{{ item['title'] }}</td>
               <td>x{{ item['quantity'] }}</td>
-              <td>{{ item['price']|moneyformat }}</td>
+              <td align="right">{{ item['price']|moneyformat }}</td>
             </tr>
             {% endfor %}
             {% endfor %}

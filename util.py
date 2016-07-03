@@ -1,6 +1,6 @@
 # coding=utf-8
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from dbdetails import dbdetails
 try:
     from collections import OrderedDict
@@ -133,3 +133,9 @@ def countryformat(value):
 
 def cardformat(value):
     return "VISA" if value else ""
+
+def discountformat(value):
+    return "(-" + str(value) + "%) " if value > 0 else ""
+
+def adddays(date, summand):
+    return date + timedelta(days=summand)
