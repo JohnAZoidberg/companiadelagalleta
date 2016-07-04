@@ -5,6 +5,8 @@ from dbdetails import *
 from random import randint
 import time
 from collections import OrderedDict
+from datetime import datetime
+import util
 
 class CgBase:
     def __init__(self):
@@ -33,8 +35,7 @@ class CgBase:
     def _fetch(self, table, columns, extra=""):
         try:
             self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
-        except Exception as e:
-            #print "Something weird happened: ", e
+        except:
             raise
 
     def fetchone(self, table, columns, extra=""):
@@ -53,7 +54,7 @@ class CgBase:
             for col, d in columnsdata.iteritems():
                 if not first:
                     sqlstr += ", "
-                sqlstr += str(col) + " = " + str(d)
+                sqlstr += str(col) + ' = "' + str(d) + '"'
                 first = False
             sqlstr += " " + extra
             self.cur.execute(sqlstr)
@@ -62,12 +63,13 @@ class CgBase:
             return True
         except:
             self.db.rollback()
+            raise
         return False
 
-    def insert(self, table, columns, data, commit, extra=""):
-    # type: (str, List[obj], List[obj], str) -> None
-        column_str = self._list_to_str(columns)
-        data_str = self._list_to_str(data, '"')
+    def insert(self, table, columns_data, commit, extra=""):
+    # type: (str, {obj: obj}, str) -> None
+        column_str = self._list_to_str(columns_data.keys())
+        data_str = self._list_to_str(columns_data.values(), '"')
         try:
             self.cur.execute("INSERT INTO " + table + " (" + column_str + ") VALUES (" + data_str + ") " + extra)
             self.cur.execute("SELECT LAST_INSERT_ID()")
@@ -75,15 +77,14 @@ class CgBase:
             if commit:
                 self.db.commit()
             return id
-        except Exception as e:
-            print "Something weird happened: ", e 
+        except:
             self.db.rollback()
+            raise
             return False 
 
     def insert_cart(self, syncId, boxId, quantity, price):
         return self.insert("cart",
-                    ["syncId", "boxId", "quantity", "price"],
-                    [syncId, boxId, quantity, price],
+                    {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price},
                     True)
 
     def insert_purchase(self, country, card, date, discount, cart, syncId=None):
@@ -102,19 +103,18 @@ class CgBase:
             price = int(price * ((100 - discount) / 100.0)) 
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart",
-                        ["boxId", "quantity", "price", "status", "syncId"],
-                        [boxId, quantity, price, 0, syncId],
+                        {"boxId": boxId, "quantity": quantity, "price": price, "status": 0, "syncId": syncId},
                         False)
         success = success and self.insert("purchases",
-                    ["country", "card", "date", "discount", "status", "syncId"],
-                    [country, int(card), self.sqlformatdate(date), discount, 0, syncId],
+                    {"country": country, "card": int(card), "date": self.sqlformatdate(date), "discount": discount, "status": 0, "syncId": syncId},
                     False)
         if success:
             self.db.commit()
         else:
             self.db.rollback() 
+        return success
 
-    def get_purchases(self, getDeleted=False):
+    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
@@ -126,6 +126,9 @@ class CgBase:
         purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, p_status, quantity, price, c_status, boxId, title) = row
+            if onlydate is not None:
+                if not util.is_same_day(onlydate, date):
+                    continue
             if not getDeleted and p_status == 2:
                 continue 
             key = int(syncId)
@@ -133,9 +136,15 @@ class CgBase:
                 foo = purchases[key]
             except:
                 purchases[key] = {}
-                purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
+                if prettydict:
+                    purchases[key]['purchase'] = {"syncId": key, "status": p_status, "country": country, "card": card, "discount": discount, "date": date} 
+                else:
+                    purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
                 purchases[key]['cart'] = [] 
-            purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
+            if prettydict:
+                purchases[key]['cart'].append({"title": title, "status": c_status, "boxId": boxId, "quantity": quantity, "price": price})
+            else:
+                purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
         return [val for key, val in purchases.iteritems()]
 
     def mark_purchase_deleted(self, syncId):
@@ -155,9 +164,9 @@ class CgBase:
             if delete_cart:
                 self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             self.db.commit()
-        except Exception as e:
+        except:
             self.db.rollback()
-            print "Someting weird happened: ", e
+            raise
             return False
         return True
 
@@ -167,9 +176,9 @@ class CgBase:
         try:
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr + " AND boxId = " + boxStr)
             self.db.commit()
-        except Exception as e:
+        except e:
             self.db.rollback()
-            print "Someting weird happened: ", e
+            raise
             return False
         return True
 
