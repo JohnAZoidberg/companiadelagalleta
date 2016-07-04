@@ -38,7 +38,7 @@
           <h2>Nueva compra</h2>
           <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
             <input type="hidden" name="action" value="save_purchase">
-            <input type="hidden" name="redirect" value="index.py">
+            <input type="hidden" name="redirect" value="index.py?showndate={{ date|dateformat }}">
             <div class="form-group">
               <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date" required>Fecha:</label>
               <div class="col-sm-5">
@@ -122,7 +122,7 @@
             </thead>
             <tbody>
             {% for purchase in purchases %}
-            <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py&syncId={{ purchase['purchase']['syncId'] }}">
+            <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py?showndate={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
               <td>{{ purchase['purchase']['date']|timeformat }}</td>
               <td>{{ purchase['purchase']['country']|countryformat }}</td>
               <td>{{ purchase['purchase']['card']|cardformat }}</td>
