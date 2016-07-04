@@ -51,6 +51,14 @@ def delete_purchase():
     return False
 
 def sync():
+    #sync_up()
+    sync_down()
+
+def sync_down():
+    url = "http://46.101.112.121/api.py?action=get_purchases"
+    print urllib2.urlopen(url).read() 
+
+def sync_up():
     ps = base.get_purchases(True) 
     urls = []
     for p in ps:
@@ -122,6 +130,14 @@ def sync_purchase():
     else:
         return (False, 'Unknown sync_purchase error')
 
+def get_purchases():
+    datestring = form.getfirst("last_update")
+    if datestring is None:
+        return (False, "You must give a date of the last update (last_update)")
+    last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True)
+    return (True, json.dumps(purchases))
+
 def convert_date(datestring):
     try:
         return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
@@ -161,6 +177,8 @@ if action is not None:
         (success, response) = sync_cart() 
     elif action == "syncPurchase":
         (success, response) = sync_purchase() 
+    elif action == "get_purchases":
+        (success, response) = get_purchases()
     else:
         print_text("No valid Action: " + str(action))
         action = None

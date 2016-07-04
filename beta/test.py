@@ -20,17 +20,17 @@ base = CgBase()
 util.print_header()
 util.print_html_header("Test")
 
-purchases = base.get_purchases(prettydict=True)
-#base.cur.execute("ALTER TABLE purchases ADD added DATETIME NOT NULL AFTER  status")
-#base.cur.execute("ALTER TABLE cart ADD added DATETIME NOT NULL AFTER status")
+purchases = base.get_purchases(getDeleted=True, prettydict=True)
+#base.cur.execute("ALTER TABLE purchases ADD edited DATETIME NOT NULL AFTER  status")
+#base.cur.execute("ALTER TABLE cart ADD edited DATETIME NOT NULL AFTER status")
 for p in purchases:
     syncId = p['purchase']['syncId']
     date = p['purchase']['date']
     print syncId, date, br
-    print base.update("purchases", {"added": date}, False, "WHERE syncId = " + str(syncId))
+    print base.update("purchases", {"edited": date}, False, "WHERE syncId = " + str(syncId))
     for item in p['cart']:
         boxId = item['boxId']
-        print base.update("cart", {"added": date}, False, "WHERE syncId = " + str(syncId) + " AND boxId = " + str(boxId))
+        print base.update("cart", {"edited": date}, False, "WHERE syncId = " + str(syncId) + " AND boxId = " + str(boxId))
         print item, br
     print br, br
 base.db.commit()

@@ -82,12 +82,12 @@ class CgBase:
             raise
             return False 
 
-    def insert_cart(self, syncId, boxId, quantity, price):
+    def insert_cart(self, syncId, boxId, quantity, price, edited):
         return self.insert("cart",
-                    {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price},
+                    {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price, "edited": edited},
                     True)
 
-    def insert_purchase(self, country, card, date, discount, cart, syncId=None):
+    def insert_purchase(self, country, card, date, discount, cart, edited=datetime.now(), syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
         success = False
@@ -103,10 +103,10 @@ class CgBase:
             price = int(price * ((100 - discount) / 100.0)) 
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart",
-                        {"boxId": boxId, "quantity": quantity, "price": price, "status": 0, "syncId": syncId},
+                        {"boxId": boxId, "quantity": quantity, "price": price, "status": 0, "syncId": syncId, "edited": edited},
                         False)
         success = success and self.insert("purchases",
-                    {"country": country, "card": int(card), "date": self.sqlformatdate(date), "discount": discount, "status": 0, "syncId": syncId},
+                    {"country": country, "card": int(card), "date": self.sqlformatdate(date), "discount": discount, "status": 0, "syncId": syncId, "edited": edited},
                     False)
         if success:
             self.db.commit()
@@ -114,35 +114,42 @@ class CgBase:
             self.db.rollback() 
         return success
 
-    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None):
+    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
-                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status",
-                                ct+".quantity", ct+".price", ct+".status",
+                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status", pt+".edited",
+                                ct+".quantity", ct+".price", ct+".status", ct+".edited",
                                 bt+".boxesEntryId", bt+".title"],
                                "WHERE purchases.syncId = cart.syncId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
         purchases = OrderedDict()
         for row in result:
-            (syncId, country, card, discount, date, p_status, quantity, price, c_status, boxId, title) = row
+            (syncId, country, card, discount, date, p_status, p_edited, quantity, price, c_status, c_edited, boxId, title) = row
             if onlydate is not None:
                 if not util.is_same_day(onlydate, date):
                     continue
+            if newerthan is not None:
+                if newerthan > date:
+                    continue
             if not getDeleted and p_status == 2:
                 continue 
+            if datestring:
+                date = self.sqlformatdate(date)
+                p_edited = self.sqlformatdate(p_edited)
+                c_edited = self.sqlformatdate(c_edited)
             key = int(syncId)
             try:
                 foo = purchases[key]
             except:
                 purchases[key] = {}
                 if prettydict:
-                    purchases[key]['purchase'] = {"syncId": key, "status": p_status, "country": country, "card": card, "discount": discount, "date": date} 
+                    purchases[key]['purchase'] = {"syncId": key, "status": p_status, "country": country, "card": card, "discount": discount, "date": date, "edited": p_edited} 
                 else:
                     purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
                 purchases[key]['cart'] = [] 
             if prettydict:
-                purchases[key]['cart'].append({"title": title, "status": c_status, "boxId": boxId, "quantity": quantity, "price": price})
+                purchases[key]['cart'].append({"title": title, "status": c_status, "boxId": boxId, "quantity": quantity, "price": price, "edited": c_edited})
             else:
                 purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
         return [val for key, val in purchases.iteritems()]
