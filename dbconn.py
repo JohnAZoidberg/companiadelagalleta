@@ -35,8 +35,7 @@ class CgBase:
     def _fetch(self, table, columns, extra=""):
         try:
             self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
-        except Exception as e:
-            #print "Something weird happened: ", e
+        except:
             raise
 
     def fetchone(self, table, columns, extra=""):
@@ -55,7 +54,7 @@ class CgBase:
             for col, d in columnsdata.iteritems():
                 if not first:
                     sqlstr += ", "
-                sqlstr += str(col) + " = " + str(d)
+                sqlstr += str(col) + ' = "' + str(d) + '"'
                 first = False
             sqlstr += " " + extra
             self.cur.execute(sqlstr)
@@ -64,6 +63,7 @@ class CgBase:
             return True
         except:
             self.db.rollback()
+            raise
         return False
 
     def insert(self, table, columns_data, commit, extra=""):
@@ -77,9 +77,9 @@ class CgBase:
             if commit:
                 self.db.commit()
             return id
-        except Exception as e:
-            print "Something weird happened: ", e 
+        except:
             self.db.rollback()
+            raise
             return False 
 
     def insert_cart(self, syncId, boxId, quantity, price):
@@ -164,9 +164,9 @@ class CgBase:
             if delete_cart:
                 self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             self.db.commit()
-        except Exception as e:
+        except:
             self.db.rollback()
-            print "Someting weird happened: ", e
+            raise
             return False
         return True
 
@@ -176,9 +176,9 @@ class CgBase:
         try:
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr + " AND boxId = " + boxStr)
             self.db.commit()
-        except Exception as e:
+        except e:
             self.db.rollback()
-            print "Someting weird happened: ", e
+            raise
             return False
         return True
 
