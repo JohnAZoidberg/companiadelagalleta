@@ -66,10 +66,10 @@ class CgBase:
             self.db.rollback()
         return False
 
-    def insert(self, table, columns, data, commit, extra=""):
-    # type: (str, List[obj], List[obj], str) -> None
-        column_str = self._list_to_str(columns)
-        data_str = self._list_to_str(data, '"')
+    def insert(self, table, columns_data, commit, extra=""):
+    # type: (str, {obj: obj}, str) -> None
+        column_str = self._list_to_str(columns_data.keys())
+        data_str = self._list_to_str(columns_data.values(), '"')
         try:
             self.cur.execute("INSERT INTO " + table + " (" + column_str + ") VALUES (" + data_str + ") " + extra)
             self.cur.execute("SELECT LAST_INSERT_ID()")
@@ -84,8 +84,7 @@ class CgBase:
 
     def insert_cart(self, syncId, boxId, quantity, price):
         return self.insert("cart",
-                    ["syncId", "boxId", "quantity", "price"],
-                    [syncId, boxId, quantity, price],
+                    {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price},
                     True)
 
     def insert_purchase(self, country, card, date, discount, cart, syncId=None):
@@ -104,12 +103,10 @@ class CgBase:
             price = int(price * ((100 - discount) / 100.0)) 
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart",
-                        ["boxId", "quantity", "price", "status", "syncId"],
-                        [boxId, quantity, price, 0, syncId],
+                        {"boxId": boxId, "quantity": quantity, "price": price, "status": 0, "syncId": syncId},
                         False)
         success = success and self.insert("purchases",
-                    ["country", "card", "date", "discount", "status", "syncId"],
-                    [country, int(card), self.sqlformatdate(date), discount, 0, syncId],
+                    {"country": country, "card": int(card), "date": self.sqlformatdate(date), "discount": discount, "status": 0, "syncId": syncId},
                     False)
         if success:
             self.db.commit()
