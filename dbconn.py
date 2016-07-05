@@ -165,9 +165,9 @@ class CgBase:
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
-            rows = self.cur.rowcount
+            p_rows = self.cur.rowcount
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
-            rows = self.cur.rowcount
+            c_rows = self.cur.rowcount
             self.db.commit()
             if p_rows > 0 and c_rows > 0:
                 return True
