@@ -104,7 +104,7 @@ class CgBase:
             self.db.rollback() 
         return success
 
-    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False):
+    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False, simplecart=False):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
@@ -138,8 +138,13 @@ class CgBase:
                     purchases[key]['purchase'] = {"syncId": key, "status": status, "country": country, "card": card, "discount": discount, "date": date, "edited": edited} 
                 else:
                     purchases[key]['purchase'] = (key, status, country, card, discount, date)
-                purchases[key]['cart'] = [] 
-            if prettydict:
+                if simplecart:
+                    purchases[key]['cart'] = {}
+                else:
+                    purchases[key]['cart'] = [] 
+            if simplecart:
+                purchases[key]['cart'][boxId] = quantity 
+            elif prettydict:
                 purchases[key]['cart'].append({"title": title, "boxId": boxId, "quantity": quantity, "price": price})
             else:
                 purchases[key]['cart'].append((title, boxId, quantity, price))
@@ -164,9 +169,8 @@ class CgBase:
             return False
         return True
 
-        def mark_synced(self, syncId, boxId):
+    def mark_synced(self, syncId):
         self.update("purchases", {"status": 3}, True, "WHERE syncId="+str(syncId))
-        self.update("cart", {"status": 3}, True, "WHERE syncId="+str(syncId)+" AND boxId=" + str(boxId))
 
     def get_boxes(self):
         boxes = OrderedDict()

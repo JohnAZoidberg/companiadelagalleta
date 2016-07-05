@@ -57,11 +57,17 @@ def sync():
     return (False, "Not yet implemented")
 
 def sync_up():
-    ps = base.get_purchases(datestring=True, prettydict=True, notsynced=True)
+    ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
     jsonstr = json.dumps(ps)
     r = requests.post("http://46.101.112.121/api.py", params={"action": "syncUp"}, data={"data": jsonstr})
     print_text("")
-    print r.url, util.br, r.text
+    jresponse = r.json()
+    for syncId in jresponse["deleted"]:
+        base.delete_purchase(syncId)
+        print "deleted: ", syncId, util.br
+    for syncId in jresponse["added"]:
+        base.mark_synced(syncId)
+        print "added: ", syncId, util.br
 
 def receive_sync_up():
     result = {"action": "syncUp", "deleted": [], "added": []}
@@ -79,7 +85,7 @@ def receive_sync_up():
         elif status == 2:
             if base.delete_purchase(syncId):
                 result['deleted'].append(syncId)
-    return (True, result)
+    return (True, json.dumps(result))
 
 def get_purchases():
     datestring = form.getfirst("last_update")
@@ -126,6 +132,8 @@ if action is not None:
         (success, response) = get_purchases()
     elif action == "sync":
         (success, response) = sync()
+    elif action == "syncUp":
+        (success, response) = receive_sync_up() 
     else:
         print_text("No valid Action: " + str(action))
         action = None
