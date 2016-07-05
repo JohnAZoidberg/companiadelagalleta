@@ -6,9 +6,7 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
-import urllib2
-import urllib
-from asyncRequests import AsyncRequests
+import requests
 try:
     from collections import OrderedDict
 except ImportError:
@@ -30,14 +28,16 @@ def save_purchase(boxes):
         date_field = form.getfirst('datetime')
         if date_field is None:
             date = datetime.now() 
+            edited = date
         else:
             date = convert_date(date_field + ":00")
             if date is None:
                 return (False, "Not a valid datetime")
+            edited = datetime.now()
         discount_field = form.getfirst('discount')
         discount = 0 if discount_field is None else int(discount_field) 
         card = False if card is None else True
-        insert_success = base.insert_purchase(country, card, date, discount, cookies)
+        insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
         if insert_success:
             return (True, "Purchase saved")
     else:
@@ -55,6 +55,31 @@ def sync():
     sync_up()
     # TODO combine return values
     return (False, "Not yet implemented")
+
+def sync_up():
+    ps = base.get_purchases(datestring=True, prettydict=True, notsynced=True)
+    jsonstr = json.dumps(ps)
+    r = requests.post("http://46.101.112.121/api.py", params={"action": "syncUp"}, data={"data": jsonstr})
+    print_text("")
+    print r.url, util.br, r.text
+
+def receive_sync_up():
+    result = {"action": "syncUp", "deleted": [], "added": []}
+    data = form.getfirst("data")
+    edited = form.getfirst("edited")
+    ps = json.loads(data)
+    for p in ps:
+        purchase = p['purchase']
+        cart = p['cart']
+        status = purchase['status']
+        syncId = purchase['syncId']
+        if status == 0:
+            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                result['added'].append(syncId)
+        elif status == 2:
+            if base.delete_purchase(syncId):
+                result['deleted'].append(syncId)
+    return (True, result)
 
 def get_purchases():
     datestring = form.getfirst("last_update")
@@ -99,6 +124,8 @@ if action is not None:
         success = delete_purchase()
     elif action == "get_purchases":
         (success, response) = get_purchases()
+    elif action == "sync":
+        (success, response) = sync()
     else:
         print_text("No valid Action: " + str(action))
         action = None
