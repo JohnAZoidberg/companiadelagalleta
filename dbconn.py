@@ -29,9 +29,6 @@ class CgBase:
             str_value += ", " + quote + str(x) + quote
         return str_value
 
-    def sqlformatdate(self, date):
-        return date.strftime('%Y-%m-%d %H:%M:%S')
-
     def _fetch(self, table, columns, extra=""):
         try:
             self.cur.execute("SELECT " + self._list_to_str(columns) + " FROM " + table + " " + extra)
@@ -82,12 +79,12 @@ class CgBase:
             raise
             return False 
 
-    def insert_cart(self, syncId, boxId, quantity, price, edited):
+    def insert_cart(self, syncId, boxId, quantity, price, commit):
         return self.insert("cart",
-                    {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price, "edited": edited},
-                    True)
+                    {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price},
+                    commit)
 
-    def insert_purchase(self, country, card, date, discount, cart, edited=datetime.now(), syncId=None):
+    def insert_purchase(self, country, card, date, discount, cart, status=0, edited=datetime.now(), syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
         # a unique id to identify entries: unixtimestamp + 4 random digits
         success = False
@@ -102,11 +99,9 @@ class CgBase:
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0)) 
             # status: 0: new, 1: edited, 2: deleted, 3: synced
-            success = self.insert("cart",
-                        {"boxId": boxId, "quantity": quantity, "price": price, "status": 0, "syncId": syncId, "edited": edited},
-                        False)
+            success = self.insert_cart(syncId, boxId, quantity, price, False)
         success = success and self.insert("purchases",
-                    {"country": country, "card": int(card), "date": self.sqlformatdate(date), "discount": discount, "status": 0, "syncId": syncId, "edited": edited},
+                    {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited},
                     False)
         if success:
             self.db.commit()
@@ -114,54 +109,52 @@ class CgBase:
             self.db.rollback() 
         return success
 
-    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False):
+    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False):
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
                                [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status", pt+".edited",
-                                ct+".quantity", ct+".price", ct+".status", ct+".edited",
+                                ct+".quantity", ct+".price",
                                 bt+".boxesEntryId", bt+".title"],
                                "WHERE purchases.syncId = cart.syncId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
         purchases = OrderedDict()
         for row in result:
-            (syncId, country, card, discount, date, p_status, p_edited, quantity, price, c_status, c_edited, boxId, title) = row
+            (syncId, country, card, discount, date, status, edited, quantity, price, boxId, title) = row
             if onlydate is not None:
                 if not util.is_same_day(onlydate, date):
                     continue
             if newerthan is not None:
-                if newerthan > date:
+                if newerthan > edited:
                     continue
-            if not getDeleted and p_status == 2:
+            if notsynced and status == 3:
+                continue
+            if not getDeleted and status == 2:
                 continue 
             if datestring:
-                date = self.sqlformatdate(date)
-                p_edited = self.sqlformatdate(p_edited)
-                c_edited = self.sqlformatdate(c_edited)
+                date = util.datestring(date)
+                edited = util.datestring(edited)
             key = int(syncId)
             try:
                 foo = purchases[key]
             except:
                 purchases[key] = {}
                 if prettydict:
-                    purchases[key]['purchase'] = {"syncId": key, "status": p_status, "country": country, "card": card, "discount": discount, "date": date, "edited": p_edited} 
+                    purchases[key]['purchase'] = {"syncId": key, "status": status, "country": country, "card": card, "discount": discount, "date": date, "edited": edited} 
                 else:
-                    purchases[key]['purchase'] = (key, p_status, country, card, discount, date)
+                    purchases[key]['purchase'] = (key, status, country, card, discount, date)
                 purchases[key]['cart'] = [] 
             if prettydict:
-                purchases[key]['cart'].append({"title": title, "status": c_status, "boxId": boxId, "quantity": quantity, "price": price, "edited": c_edited})
+                purchases[key]['cart'].append({"title": title, "boxId": boxId, "quantity": quantity, "price": price})
             else:
-                purchases[key]['cart'].append((title, c_status, boxId, quantity, price))
+                purchases[key]['cart'].append((title, boxId, quantity, price))
         return [val for key, val in purchases.iteritems()]
 
     def mark_purchase_deleted(self, syncId):
         syncStr= str(syncId)
         success = self.update("purchases", {"status": 2}, False, "WHERE syncId="+syncStr)
-        success = success and self.update("cart", {"status": 2}, False, "WHERE syncId="+syncStr)
         if success:
             self.db.commit()
-        else:
-            self.db.rollback()
         return success
 
     def delete_purchase(self, syncId, delete_cart=False):
@@ -176,35 +169,6 @@ class CgBase:
             raise
             return False
         return True
-
-    def delete_cart(self, syncId, boxId):
-        syncStr = str(syncId)
-        boxStr = str(boxId)
-        try:
-            self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr + " AND boxId = " + boxStr)
-            self.db.commit()
-        except e:
-            self.db.rollback()
-            raise
-            return False
-        return True
-
-    def sync_cart(self, syncId, status, boxId, quantity, price):
-        result = self.fetchone("cart", ["syncId"], "WHERE syncId="+str(syncId) + " AND boxId=" + str(boxId))
-        if status == 0:
-            if result is None:
-                self.insert_cart(syncId, boxId, quantity, price)
-            return True
-        elif status == 1: # edited entry
-            pass
-        elif status == 2: # deleted entry 
-            if result is not None:
-                return self.delete_cart(syncId, boxId)
-            else:
-                return True
-        elif status == 3: # synced entry 
-            pass
-        return False
 
     def sync_purchase(self, syncId, status, country, card, discount, date):
         result = self.fetchone("purchases", ["status"], "WHERE syncId="+str(syncId))
@@ -223,11 +187,9 @@ class CgBase:
             pass
         return False
 
-    def mark_synced(self, syncId, boxId=None):
-        if boxId is None:
-            self.update("purchases", {"status": 3}, True, "WHERE syncId="+str(syncId))
-        else:
-            self.update("cart", {"status": 3}, True, "WHERE syncId="+str(syncId)+" AND boxId=" + str(boxId))
+    def mark_synced(self, syncId, boxId):
+        self.update("purchases", {"status": 3}, True, "WHERE syncId="+str(syncId))
+        self.update("cart", {"status": 3}, True, "WHERE syncId="+str(syncId)+" AND boxId=" + str(boxId))
 
     def get_boxes(self):
         boxes = OrderedDict()
@@ -254,3 +216,9 @@ class CgBase:
             except:
                 stats[date][boxId] = quantity 
         return stats
+
+    def update_last_sync(self, date):
+        self.update("config", {"last_sync": util.datestring(date)}, False, "")
+    
+    def get_last_sync(self):
+        return self.fetchone("config", ["last_sync"], "")
