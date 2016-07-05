@@ -12,6 +12,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 import util
+from dbdetails import dbdetails
 form = cgi.FieldStorage()
 
 def save_purchase(boxes):
@@ -64,7 +65,7 @@ def sync_down():
 def sync_up():
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
     jsonstr = json.dumps(ps)
-    r = requests.post("http://46.101.112.121/api.py", params={"action": "syncUp"}, data={"data": jsonstr})
+    r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr})
     try:
         jresponse = r.json()
     except ValueError as e:
