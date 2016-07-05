@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 04, 2016 at 11:16 PM
+-- Generation Time: Jul 05, 2016 at 11:23 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `cart` (
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL COMMENT 'in cents',
   `status` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB AUTO_INCREMENT=245 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=271 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `cart`
@@ -332,7 +332,33 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`, `stat
 (241, 129636253, 3, 1, 2195, 0),
 (242, 928053648, 55, 2, 1895, 0),
 (243, 928053648, 54, 2, 1395, 0),
-(244, 936626649, 26, 4, 695, 0);
+(244, 936626649, 26, 4, 695, 0),
+(245, 484832333, 55, 1, 1895, 0),
+(246, 156137046, 2, 1, 1595, 0),
+(247, 463355939, 1, 1, 895, 0),
+(248, 613723927, 1, 1, 895, 0),
+(249, 410655382, 3, 1, 2195, 0),
+(250, 557074022, 20, 1, 1195, 2),
+(251, 557074022, 26, 3, 695, 2),
+(252, 557074022, 15, 1, 795, 2),
+(253, 826844119, 20, 1, 1195, 0),
+(254, 826844119, 26, 3, 695, 0),
+(255, 826844119, 15, 1, 795, 0),
+(256, 826844119, 52, 1, 1395, 0),
+(257, 361002418, 16, 4, 795, 0),
+(258, 941856237, 1, 1, 895, 0),
+(259, 782623923, 28, 2, 695, 0),
+(260, 116203716, 26, 1, 695, 0),
+(261, 165261831, 56, 1, 100, 0),
+(262, 570574871, 56, 1, 100, 0),
+(263, 565361596, 54, 2, 1395, 0),
+(264, 565361596, 34, 1, 995, 0),
+(265, 762582191, 1, 1, 895, 0),
+(266, 762582191, 7, 1, 495, 0),
+(267, 756833121, 8, 1, 495, 0),
+(268, 756833121, 7, 1, 495, 0),
+(269, 937840683, 55, 2, 1895, 0),
+(270, 937840683, 56, 2, 100, 0);
 
 -- --------------------------------------------------------
 
@@ -348,7 +374,7 @@ CREATE TABLE IF NOT EXISTS `purchases` (
   `discount` int(11) NOT NULL,
   `date` datetime NOT NULL,
   `status` int(11) NOT NULL DEFAULT '0'
-) ENGINE=InnoDB AUTO_INCREMENT=180 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=197 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `purchases`
@@ -521,7 +547,24 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (176, 373152827, 'xx', 0, 0, '2016-07-04 21:00:00', 2),
 (177, 129636253, 'xx', 0, 0, '2016-07-04 21:00:00', 0),
 (178, 928053648, 'fr', 1, 0, '2016-07-04 21:10:00', 0),
-(179, 936626649, 'de', 0, 0, '2016-07-04 22:00:00', 0);
+(179, 936626649, 'de', 0, 0, '2016-07-04 22:00:00', 0),
+(180, 484832333, 'gb', 0, 0, '2016-07-05 11:00:00', 0),
+(181, 156137046, 'fr', 0, 0, '2016-07-05 12:40:00', 0),
+(182, 463355939, 'gb', 0, 0, '2016-07-05 12:35:00', 0),
+(183, 613723927, 'gb', 0, 0, '2016-07-05 13:00:00', 0),
+(184, 410655382, 'de', 0, 0, '2016-07-05 14:00:00', 0),
+(185, 557074022, 'ne', 1, 0, '2016-07-05 14:30:00', 2),
+(186, 826844119, 'ne', 1, 0, '2016-07-05 14:30:00', 0),
+(187, 361002418, 'es', 0, 0, '2016-07-05 15:35:00', 0),
+(188, 941856237, 'de', 0, 0, '2016-07-05 15:00:00', 0),
+(189, 782623923, 'de', 1, 0, '2016-07-05 20:20:00', 0),
+(190, 116203716, 'gb', 0, 0, '2016-07-05 20:25:00', 0),
+(191, 165261831, 'gb', 0, 0, '2016-07-05 20:25:00', 0),
+(192, 570574871, 'gb', 0, 0, '2016-07-05 20:25:00', 0),
+(193, 565361596, 'xx', 1, 0, '2016-07-05 21:10:00', 0),
+(194, 762582191, 'xx', 0, 0, '2016-07-05 21:10:00', 0),
+(195, 756833121, 'de', 0, 0, '2016-07-05 21:19:00', 0),
+(196, 937840683, 'gb', 0, 0, '2016-07-05 21:45:00', 0);
 
 --
 -- Indexes for dumped tables
@@ -558,12 +601,12 @@ MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=65;
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=245;
+MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=271;
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=180;
+MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=197;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
