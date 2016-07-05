@@ -55,9 +55,11 @@ class CgBase:
                 first = False
             sqlstr += " " + extra
             self.cur.execute(sqlstr)
+            rows = self.cur.rowcount
             if commit:
                 self.db.commit()
-            return True
+            if rows > 0:
+                return True
         except:
             self.db.rollback()
             raise
@@ -69,11 +71,13 @@ class CgBase:
         data_str = self._list_to_str(columns_data.values(), '"')
         try:
             self.cur.execute("INSERT INTO " + table + " (" + column_str + ") VALUES (" + data_str + ") " + extra)
-            self.cur.execute("SELECT LAST_INSERT_ID()")
-            id = self.cur.fetchone()
+            rows = self.cur.rowcount
+            #self.cur.execute("SELECT LAST_INSERT_ID()")
+            #id = self.cur.fetchone()
             if commit:
                 self.db.commit()
-            return id
+            if rows == 1:
+                return True
         except:
             self.db.rollback()
             raise
@@ -161,16 +165,22 @@ class CgBase:
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
+            rows = self.cur.rowcount
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
+            rows = self.cur.rowcount
             self.db.commit()
+            if p_rows > 0 and c_rows > 0:
+                return True
         except:
             self.db.rollback()
             raise
-            return False
-        return True
+        return False
+
+    def change_status(self, syncId, status):
+        return self.update("purchases", {"status": status}, True, "WHERE syncId="+str(syncId))
 
     def mark_synced(self, syncId):
-        self.update("purchases", {"status": 3}, True, "WHERE syncId="+str(syncId))
+        return self.change_status(syncId, 3)
 
     def get_boxes(self):
         boxes = OrderedDict()

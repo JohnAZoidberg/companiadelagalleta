@@ -51,23 +51,29 @@ def delete_purchase():
     return False
 
 def sync():
-    #sync_down()
-    sync_up()
-    # TODO combine return values
-    return (False, "Not yet implemented")
+    downresult = sync_down()
+    upresult = sync_up()
+    generic_result = {"action": "sync"}
+    generic_result.update(upresult)
+    generic_result.update(downresult)
+    return (True, generic_result)
+
+def sync_down():
+    return {}
 
 def sync_up():
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
     jsonstr = json.dumps(ps)
     r = requests.post("http://46.101.112.121/api.py", params={"action": "syncUp"}, data={"data": jsonstr})
-    print_text("")
-    jresponse = r.json()
+    try:
+        jresponse = r.json()
+    except ValueError as e:
+        print_text(r.text)
     for syncId in jresponse["deleted"]:
         base.delete_purchase(syncId)
-        print "deleted: ", syncId, util.br
     for syncId in jresponse["added"]:
         base.mark_synced(syncId)
-        print "added: ", syncId, util.br
+    return {"deleted": jresponse['deleted'], "added": jresponse['added']}
 
 def receive_sync_up():
     result = {"action": "syncUp", "deleted": [], "added": []}
@@ -79,9 +85,14 @@ def receive_sync_up():
         cart = p['cart']
         status = purchase['status']
         syncId = purchase['syncId']
+        existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
-            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
-                result['added'].append(syncId)
+            if existing is None:
+                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                    result['added'].append(syncId)
+            elif existing == 2: # exists but was previously marked as deleted
+                if base.change_status(syncId, 3):
+                    result['added'].append(syncId)
         elif status == 2:
             if base.delete_purchase(syncId):
                 result['deleted'].append(syncId)
