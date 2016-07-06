@@ -63,7 +63,6 @@ def sync_down():
     edited = datetime.now()
     last_sync = base.get_last_sync()
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
-    print_text(r.text)
     ps = r.json()
     result= {'synced_down': {"added": [], "deleted": []}}
     if "purchases" not in ps.keys():
@@ -72,6 +71,7 @@ def sync_down():
         purchase = p['purchase']
         cart = p['cart']
         syncId = purchase['syncId']
+        status = purchase['status']
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if existing is None:
             if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
@@ -94,7 +94,7 @@ def sync_up():
         base.delete_purchase(syncId)
     for syncId in jresponse["added"]:
         base.mark_synced(syncId)
-    return {"deleted": jresponse['deleted'], "added": jresponse['added']}
+    return {"synced_up": {"deleted": jresponse['deleted'], "added": jresponse['added']}}
 
 def receive_sync_up():
     result = {"action": "syncUp", "deleted": [], "added": []}
