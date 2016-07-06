@@ -66,7 +66,7 @@ def sync_down():
     ps = r.json()
     print_text(ps)
     result= {'synced_down': []}
-    if "purchases" is not in ps.keys():
+    if "purchases" not in ps.keys():
         return result
     for p in ps:
         purchase = p['purchase']
