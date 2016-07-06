@@ -6,14 +6,13 @@ import cgi
 import json
 from datetime import datetime
 from dbconn import *
-import urllib2
-import urllib
-from asyncRequests import AsyncRequests
+import requests
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
 import util
+from dbdetails import dbdetails
 form = cgi.FieldStorage()
 
 def save_purchase(boxes):
@@ -30,14 +29,16 @@ def save_purchase(boxes):
         date_field = form.getfirst('datetime')
         if date_field is None:
             date = datetime.now() 
+            edited = date
         else:
             date = convert_date(date_field + ":00")
             if date is None:
                 return (False, "Not a valid datetime")
+            edited = datetime.now()
         discount_field = form.getfirst('discount')
         discount = 0 if discount_field is None else int(discount_field) 
         card = False if card is None else True
-        insert_success = base.insert_purchase(country, card, date, discount, cookies)
+        insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
         if insert_success:
             return (True, "Purchase saved")
     else:
@@ -51,76 +52,76 @@ def delete_purchase():
     return False
 
 def sync():
-    ps = base.get_purchases(True) 
-    urls = []
+    downresult = sync_down()
+    upresult = sync_up()
+    generic_result = {"action": "sync"}
+    generic_result.update(upresult)
+    generic_result.update(downresult)
+    return (True, generic_result)
+
+def sync_down():
+    edited = datetime.now()
+    last_sync = base.get_last_sync()
+    r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
+    ps = r.json()
+    result= {'synced_down': []}
     for p in ps:
-        (syncId, status, country, card, discount, date) = p['purchase']
-        datestring = date.strftime('%Y-%m-%d %H:%M:%S') 
-        if status == 0 or status == 2: # new entry or deleted entry
-            params = {"action": "syncPurchase", "syncId": str(syncId), "country": country, "card": str(card), "discount": str(discount), "date": datestring, "status": str(status)}
-            url = "http://46.101.112.121/api.py?" + urllib.urlencode(params)
-            urls.append(url)
-            for item in p['cart']:
-                (title, status, boxId, quantity, price) = item
-                cparams = {"action": "syncCart", "syncId": str(syncId), "status": str(status), "boxId": str(boxId), "quantity": str(quantity), "price": str(price)}
-                url =  "http://46.101.112.121/api.py?" + urllib.urlencode(cparams)
-                urls.append(url)
-    if not urls:
-        return (True, '{"result": "Nothing to sync"}')
-    results = []
-    for url in urls:
-        results.append(urllib2.urlopen(url))
-    synced = {}
-    synced['purchase'] = 0
-    synced['cart'] = 0
-    for result in results:
-        resultstr = result.read()
-        jresult = json.loads(resultstr)
-        result_type = jresult['result']
-        if result_type == "200 - SYNCED PURCHASE":
-            syncId = jresult['syncId'] 
-            base.mark_synced(syncId)
-            synced['purchase'] += 1
-        if result_type == "200 - SYNCED CART":
-            syncId = jresult['syncId'] 
-            base.mark_synced(syncId, jresult['boxId'])
-            synced['cart'] += 1
-        if result_type == "200 - DELETED PURCHASE":
-            syncId = jresult['syncId'] 
-            base.delete_purchase(syncId)
-            synced['purchase'] += 1
-        if result_type == "200 - DELETED CART":
-            syncId = jresult['syncId'] 
-            base.delete_cart(syncId, jresult['boxId'])
-            synced['cart'] += 1
-    if synced['cart'] + synced['purchase'] > 0:
-        return (True, '{"result": "SYNC completed (' + str(synced['purchase']) + ', ' + str(synced['cart']) + ')"}') 
-    return (False, "Unknown sync error")
+        purchase = p['purchase']
+        cart = p['cart']
+        syncId = purchase['syncId']
+        existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
+        if existing is None:
+            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                result['synced_down'].append(syncId)
+    base.update_last_sync(edited)
+    return result
 
-def sync_cart():
-    syncId = int(form.getfirst("syncId"))
-    status = int(form.getfirst("status"))
-    boxId  = int(form.getfirst("boxId"))
-    quantity = int(form.getfirst("quantity"))
-    price = int(form.getfirst("price"))
-    success = base.sync_cart(syncId, status, boxId, quantity, price)
-    msg = "DELETED" if status == 2 else "SYNCED"
-    return (success, '{"result": "200 - ' + msg + ' CART", "syncId": ' + str(syncId) + ', "boxId": ' + str(boxId) + '}')
+def sync_up():
+    ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
+    jsonstr = json.dumps(ps)
+    r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
+    try:
+        jresponse = r.json()
+    except ValueError as e:
+        print_text(r.text)
+    for syncId in jresponse["deleted"]:
+        base.delete_purchase(syncId)
+    for syncId in jresponse["added"]:
+        base.mark_synced(syncId)
+    return {"deleted": jresponse['deleted'], "added": jresponse['added']}
 
-def sync_purchase():
-    syncId = int(form.getfirst("syncId"))
-    country = form.getfirst("country")
-    card = bool(int(form.getfirst("card")))
-    discount = int(form.getfirst("discount"))
-    datestring = form.getfirst("date")
-    date = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
-    status = int(form.getfirst("status"))
-    success = base.sync_purchase(syncId, status, country, card, discount, date)
-    msg = "DELETED" if status == 2 else "SYNCED"
-    if success:
-        return (True, '{"result": "200 - ' + msg + ' PURCHASE", "syncId": ' + str(syncId) + '}')
-    else:
-        return (False, 'Unknown sync_purchase error')
+def receive_sync_up():
+    result = {"action": "syncUp", "deleted": [], "added": []}
+    data = form.getfirst("data")
+    edited = form.getfirst("edited")
+    if edited is None:
+        return (False, "You must have the edited thing set")
+    ps = json.loads(data)
+    for p in ps:
+        purchase = p['purchase']
+        cart = p['cart']
+        status = purchase['status']
+        syncId = purchase['syncId']
+        existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
+        if status == 0:
+            if existing is None:
+                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                    result['added'].append(syncId)
+            elif existing == 2: # exists but was previously marked as deleted
+                if base.change_status(syncId, 3):
+                    result['added'].append(syncId)
+        elif status == 2:
+            if existing is None or base.delete_purchase(syncId):
+                result['deleted'].append(syncId)
+    return (True, json.dumps(result))
+
+def get_purchases():
+    datestring = form.getfirst("last_update")
+    if datestring is None:
+        return (False, "You must give a date of the last update (last_update)")
+    last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True)
+    return (True, json.dumps(purchases))
 
 def convert_date(datestring):
     try:
@@ -141,11 +142,6 @@ def print_text(text):
     util.print_header()
     print text
 
-def chunk(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i+n]
-
 base = CgBase()
 action = form.getfirst("action")
 success = False
@@ -155,12 +151,12 @@ if action is not None:
         (success, response) = save_purchase(base.get_boxes())
     elif action == "delete_purchase":
         success = delete_purchase()
+    elif action == "get_purchases":
+        (success, response) = get_purchases()
     elif action == "sync":
         (success, response) = sync()
-    elif action == "syncCart":
-        (success, response) = sync_cart() 
-    elif action == "syncPurchase":
-        (success, response) = sync_purchase() 
+    elif action == "syncUp":
+        (success, response) = receive_sync_up() 
     else:
         print_text("No valid Action: " + str(action))
         action = None

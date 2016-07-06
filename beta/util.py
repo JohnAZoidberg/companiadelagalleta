@@ -7,6 +7,8 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 
+br = "<br>"
+
 country_list = OrderedDict([
     ('??', "Desconocido"),
     ('de', "Alemania"),
@@ -18,60 +20,20 @@ country_list = OrderedDict([
     ('it', "Italia"),
     ('fr', "Francia"),
     ('no', "Noruega"),
+    ('asia', "Asia"),
+    ('america', "America"),
+    ('africa', "África"),
     ('xx', "Otro")
 ])
-
-css = ("ul            { list-style-type: none; }"
-       "ul#details    { padding: 10; }"
-       "ul#details li { display: inline; margin-left: 10px; }"
-       "#details      { top: 0; width: 100%; margin: 0; background: white; }"
-       ".hidden       { visibility: hidden; }"
-       ".fixed        { position: fixed; }"
-      )
 
 def print_header(t="text/html"):
     print "Content-Type: "+ t + ";charset=utf-8"
     print
 
-
-def print_html_header(title, css=None, js=None):
-    print '<html>'
-    print '<head>'
-    print '<meta name="viewport" content="width=device-width, initial-scale=1">'
-    print '<title>' + title + '</title>'
-    if css is not None:
-        print '<style>' + css + '</style>'
-    if js is not None:
-        print '<script>' + js + '</script>'
-    print '</head>'
-    print '<body>'
-
-
-def print_html_footer():
-    print '</body>'
-    print '</html>'
-
-
 def println(*lns):
     for ln in lns:
         print ln
     print "<br>"
-
-def calc_daily_total(ps, shown_date):
-    cash_total = 0
-    card_total = 0
-    for p in ps:
-         (syncId, status, country, card, discount, date) = p['purchase']
-         if not is_same_day(date, shown_date):
-             continue
-         for item in p['cart']:
-            (title, status, boxId, quantity, price) = item
-            if card:
-                card_total += price * quantity
-            else:
-                cash_total  += price * quantity
-    daily_total = cash_total + card_total
-    return (daily_total, cash_total, card_total)
 
 def print_purchases(ps, shown_date, page):
     print "<ul>"
@@ -115,12 +77,24 @@ def calc_purchases_totals(ps):
                 cash_total += item['price'] * item['quantity']
     return ps, card_total, cash_total
 
+def datestring(date):
+    try:
+        return date.strftime('%Y-%m-%d %H:%M:%S')
+    except AttributeError as e:
+        if str(e) == "'unicode' object has no attribute 'strftime'":
+            return date
+        else:
+            raise
+
+def stringdate(string):
+    return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
 # Jinja Filters:
 def dateformat(value):
     return value.strftime('%Y-%m-%d')
 
 def datetimeformat(value):
-    return value.strftime('%Y-%m-%d %H:%M')
+    return datetime.strptime(string, '%Y-%m-%d %H:%M')
 
 def timeformat(value):
     return value.strftime('%H:%M')
