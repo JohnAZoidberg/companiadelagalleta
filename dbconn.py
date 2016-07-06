@@ -187,7 +187,7 @@ class CgBase:
         results = self.fetchall("boxes", ["boxesEntryId", "title", "price"])
         for result in results:
             (boxId, title, price) = result
-            boxes[boxId] = title
+            boxes[boxId] = {"title": title, "price": price}
         return boxes
 
     def get_box_stats(self):

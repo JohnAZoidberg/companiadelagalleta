@@ -100,7 +100,7 @@ def timeformat(value):
     return value.strftime('%H:%M')
 
 def moneyformat(value):
-    return str((value / 100.0)) + " €"
+    return str((value / 100.0)) + "€"
 
 def countryformat(value):
     return country_list[value]

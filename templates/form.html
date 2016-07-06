@@ -68,8 +68,8 @@
               <div class="col-sm-6 box-inputs">
                 <input type="text" class="form-control" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
-                {% for box in boxes %}
-                  <option data-value="{{ box[0] }}">{{ box[1] }}</option>
+                {% for boxId, box in boxes %}
+                  <option data-value="{{ boxId }}" data-price="{{ box['price']|moneyformat }}">{{ box['title'] }}</option>
                 {% endfor %}
                 </datalist>
                 <input type="hidden" name="current_box" id="box-hidden">
@@ -102,19 +102,21 @@
         </div>
         <div class="col-sm-6">
           <h2>Compras</h2>
+          <ul class="list-inline">
+            <li><form method="get"><input name="showndate" size="10" style="width: auto;" class="form-control" placeholder="{{ date|dateformat }}"  value="{{ date|dateformat }}"></input></form></li>
+            <li><a href="?showndate={{ date|adddays(-1)|dateformat }}" class="btn btn-default">Ant</a></li>
+            <li><a href="?" class="btn btn-default">Hoy</a></li>
+            <li><a href="?showndate={{ date|adddays(1)|dateformat }}" class="btn btn-default">Sig</a></li>
+          </ul>
           <table class="table table-hover">
             <thead>
+              <!--<tr>
+              </tr>-->
               <tr>
-                <td><form method="get"><input name="showndate" size="10" style="width: auto;" class="form-control" placeholder="{{ date|dateformat }}"  value="{{ date|dateformat }}"></input></form></td>
-              </tr>
-              <tr>
-                <td>
-                  <ul class="list-inline">
-                    <li><a href="?showndate={{ date|adddays(-1)|dateformat }}" class="btn btn-default">Ant</a></li>
-                    <li><a href="?" class="btn btn-default">Hoy</a></li>
-                    <li><a href="?showndate={{ date|adddays(1)|dateformat }}" class="btn btn-default">Sig</a></li>
-                  </ul>
-                </td>
+                <!--<td>
+                  
+                </td>-->
+                <td></td>
                 <td align="right" style="vertical-align:bottom" colspan="3">
                   <span title="VISA">{{ card_total|moneyformat }}</span> + <span title="efectivo">{{ cash_total|moneyformat }}</span> = {{ (card_total + cash_total)|moneyformat }}
                </td>
@@ -141,6 +143,7 @@
       </div>
     </div>
     <script>
+      lastPrice = "";
       // Turn label into data-value on datalist input
       $('input[list]').on('input', function(e) {
           var $input = $(e.target),
@@ -154,7 +157,8 @@
               var $option = $options.eq(i);
 
               if($option.text() === label) {
-                  $hiddenInput.val( $option.attr('data-value') );
+                  $hiddenInput.val($option.attr('data-value'));
+                  lastPrice = $option.attr('data-price');
                   break;
               }
           }
@@ -176,7 +180,7 @@
           $(".box-inputs").removeClass("has-error");
 
           input = '<input type="hidden" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">'
-          $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + '</span> ' + title + input + '</li>')
+          $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + 'x' + lastPrice + '</span> ' + title + input + '</li>')
           e.preventDefault();
       }); 
 
