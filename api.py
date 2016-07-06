@@ -64,7 +64,10 @@ def sync_down():
     last_sync = base.get_last_sync()
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
     ps = r.json()
+    print_text(ps)
     result= {'synced_down': []}
+    if "purchases" is not in ps.keys():
+        return result
     for p in ps:
         purchase = p['purchase']
         cart = p['cart']
@@ -121,7 +124,7 @@ def get_purchases():
         return (False, "You must give a date of the last update (last_update)")
     last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True)
-    return (True, json.dumps(purchases))
+    return (True, {"purchases": json.dumps(purchases)})
 
 def convert_date(datestring):
     try:
