@@ -63,6 +63,7 @@ def sync_down():
     edited = datetime.now()
     last_sync = base.get_last_sync()
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
+    print_text(r.text)
     ps = r.json()
     result= {'synced_down': {"added": [], "deleted": []}}
     if "purchases" not in ps.keys():
@@ -75,8 +76,8 @@ def sync_down():
         if existing is None:
             if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
                 result['synced_down']['added'].append(syncId)
-        else if status == 2:
-            if base.mark_purchase_deleted(syncId)
+        elif status == 2:
+            if base.mark_purchase_deleted(syncId):
                 result['synced_down']['deleted'].append(syncId)
     base.update_last_sync(edited)
     return result
