@@ -64,7 +64,7 @@ def sync_down():
     last_sync = base.get_last_sync()
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
     ps = r.json()
-    result= {'synced_down': []}
+    result= {'synced_down': {"added": [], "deleted": []}}
     if "purchases" not in ps.keys():
         return result
     for p in ps['purchases']:
@@ -74,7 +74,10 @@ def sync_down():
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if existing is None:
             if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
-                result['synced_down'].append(syncId)
+                result['synced_down']['added'].append(syncId)
+        else if status == 2:
+            if base.mark_purchase_deleted(syncId)
+                result['synced_down']['deleted'].append(syncId)
     base.update_last_sync(edited)
     return result
 
@@ -122,7 +125,7 @@ def get_purchases():
     if datestring is None:
         return (False, "You must give a date of the last update (last_update)")
     last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
-    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True)
+    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
     return (True, json.dumps({"purchases": purchases}))
 
 def convert_date(datestring):

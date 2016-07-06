@@ -156,7 +156,7 @@ class CgBase:
 
     def mark_purchase_deleted(self, syncId):
         syncStr= str(syncId)
-        success = self.update("purchases", {"status": 2}, False, "WHERE syncId="+syncStr)
+        success = self.update("purchases", {"status": 2, "edited":     util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
         if success:
             self.db.commit()
         return success
