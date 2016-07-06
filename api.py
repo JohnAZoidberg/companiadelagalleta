@@ -60,12 +60,26 @@ def sync():
     return (True, generic_result)
 
 def sync_down():
-    return {}
+    edited = datetime.now()
+    last_sync = base.get_last_sync()
+    r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
+    ps = r.json()
+    result= {'synced_down': []}
+    for p in ps:
+        purchase = p['purchase']
+        cart = p['cart']
+        syncId = purchase['syncId']
+        existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
+        if existing is None:
+            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                result['synced_down'].append(syncId)
+    base.update_last_sync(edited)
+    return result
 
 def sync_up():
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
     jsonstr = json.dumps(ps)
-    r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr})
+    r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
     try:
         jresponse = r.json()
     except ValueError as e:
@@ -80,6 +94,8 @@ def receive_sync_up():
     result = {"action": "syncUp", "deleted": [], "added": []}
     data = form.getfirst("data")
     edited = form.getfirst("edited")
+    if edited is None:
+        return (False, "You must have the edited thing set")
     ps = json.loads(data)
     for p in ps:
         purchase = p['purchase']
@@ -95,7 +111,7 @@ def receive_sync_up():
                 if base.change_status(syncId, 3):
                     result['added'].append(syncId)
         elif status == 2:
-            if base.delete_purchase(syncId):
+            if existing is None or base.delete_purchase(syncId):
                 result['deleted'].append(syncId)
     return (True, json.dumps(result))
 
@@ -104,7 +120,7 @@ def get_purchases():
     if datestring is None:
         return (False, "You must give a date of the last update (last_update)")
     last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
-    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True)
+    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True)
     return (True, json.dumps(purchases))
 
 def convert_date(datestring):
@@ -125,11 +141,6 @@ def print_json(text):
 def print_text(text):
     util.print_header()
     print text
-
-def chunk(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i+n]
 
 base = CgBase()
 action = form.getfirst("action")

@@ -208,7 +208,7 @@ class CgBase:
                 stats[date][boxId] = quantity 
         return stats
 
-    def update_last_sync(self, date):
+    def update_last_sync(self, date=datetime.now()):
         self.update("config", {"last_sync": util.datestring(date)}, False, "")
     
     def get_last_sync(self):
