@@ -17,5 +17,16 @@ form = cgi.FieldStorage()
 base = CgBase()
 util.print_header()
 
-print base.update("purchases", {"status": 0}, True, "")
-print base.cur.rowcount
+#print base.update("purchases", {"status": 0}, True, "WHERE status = 3")
+#print base.cur.rowcount
+db = MySQLdb.connect(host=dbdetails.host,
+                             user=dbdetails.user,
+                             passwd=dbdetails.passwd,
+                             db="backup",
+                             use_unicode=True,
+                             charset='utf8')
+cur = db.cursor()
+cur.execute("SELECT date FROM purchases GROUP BY date having count(*) >= 2")
+ps = cur.fetchall()
+for p in ps:
+    print p, util.br

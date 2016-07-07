@@ -156,7 +156,7 @@ class CgBase:
 
     def mark_purchase_deleted(self, syncId):
         syncStr= str(syncId)
-        success = self.update("purchases", {"status": 2}, False, "WHERE syncId="+syncStr)
+        success = self.update("purchases", {"status": 2, "edited":     util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
         if success:
             self.db.commit()
         return success
@@ -187,7 +187,7 @@ class CgBase:
         results = self.fetchall("boxes", ["boxesEntryId", "title", "price"])
         for result in results:
             (boxId, title, price) = result
-            boxes[boxId] = title
+            boxes[boxId] = {"title": title, "price": price}
         return boxes
 
     def get_box_stats(self):

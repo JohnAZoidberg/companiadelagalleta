@@ -12,11 +12,15 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 import util
+import subprocess
 form = cgi.FieldStorage()
 
 base = CgBase()
 util.print_header()
+
+subprocess.call("./update.sh")
 new_version = None
+version = 0
 try:
     base.cur.execute("SELECT version FROM config")
     result = base.cur.fetchone()
@@ -24,7 +28,28 @@ try:
 except Exception as e:
     if str(e) == "(1146, \"Table 'cg.config' doesn't exist\")":
         version = 0 # 0.0.0
-if version < 10: # 0.1.0
+if version < 10 or True: # 0.1.0
+    carts = base.fetchall("cart", ["syncId"], "")
+    purchases = base.fetchall("purchases", ["syncId"], "") 
+    for cart in carts:
+        if cart not in purchases:
+            print cart, (cart in purchases), util.br
+            sql = "DELETE FROM cart WHERE syncId=" + str(cart[0])
+            base.cur.execute(sql)
+    base.cur.execute("DELETE FROM cart WHERE syncId=482836353 AND boxId=17 LIMIT 1")
+    try:
+        base.cur.execute("ALTER TABLE cart DROP COLUMN edited")
+    except:
+       pass
+    try:
+        base.cur.execute("ALTER TABLE cart DROP COLUMN status")
+    except:
+       pass
+    try:
+        base.cur.execute("DROP TABLE config")
+    except:
+        pass
+    base.db.commit()
     try:
         sql = (
               "CREATE TABLE config ("
@@ -39,6 +64,7 @@ if version < 10: # 0.1.0
     except:
         base.db.rollback()
         raise
+    base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
     base.db.commit()
     new_version = 10
 if new_version is not None:
