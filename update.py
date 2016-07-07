@@ -64,6 +64,7 @@ if version < 10 or True: # 0.1.0
     except:
         base.db.rollback()
         raise
+    base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
     base.db.commit()
     new_version = 10
 if new_version is not None:
