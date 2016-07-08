@@ -14,8 +14,8 @@ import util
 from dbconn import CgBase
 from datetime import datetime
 import api
-import checkUpdate
 from dbdetails import dbdetails
+import update
 
 def print_html():
     # cgi
@@ -28,8 +28,12 @@ def print_html():
     # printing
     util.print_header()
 
-    updatestr = checkUpdate.update()
-    print "Updates:", util.br, updatestr
+    # update git
+    gitupdatestr = update.git_update()
+    print "Updates:", util.br, gitupdatestr, util.br
+    # update db
+    update.db_update()
+
     if not dbdetails.server:
         success, syncstr = api.sync()
         print util.br, "Sync:", util.br, syncstr
