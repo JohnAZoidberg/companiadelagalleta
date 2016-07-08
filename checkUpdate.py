@@ -10,5 +10,9 @@ def redirect():
     print "Location: update.py"
     print 
 
-output = subprocess.check_output("./update.sh")
-redirect()
+def update():
+    return subprocess.check_output("./update.sh")
+
+if __name__ == "__main__":
+    update()
+    redirect()

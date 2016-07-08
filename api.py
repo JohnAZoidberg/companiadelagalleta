@@ -14,6 +14,7 @@ except ImportError:
 import util
 from dbdetails import dbdetails
 form = cgi.FieldStorage()
+base = CgBase()
 
 def save_purchase(boxes):
     cookies = {} 
@@ -148,33 +149,33 @@ def print_text(text):
     util.print_header()
     print text
 
-base = CgBase()
-action = form.getfirst("action")
-success = False
-response = '{"result": "200 - OK"}'
-if action is not None:
-    if action == "save_purchase":
-        (success, response) = save_purchase(base.get_boxes())
-    elif action == "delete_purchase":
-        success = delete_purchase()
-    elif action == "get_purchases":
-        (success, response) = get_purchases()
-    elif action == "sync":
-        (success, response) = sync()
-    elif action == "syncUp":
-        (success, response) = receive_sync_up() 
+if __name__ == "__main__":
+    action = form.getfirst("action")
+    success = False
+    response = '{"result": "200 - OK"}'
+    if action is not None:
+        if action == "save_purchase":
+            (success, response) = save_purchase(base.get_boxes())
+        elif action == "delete_purchase":
+            success = delete_purchase()
+        elif action == "get_purchases":
+            (success, response) = get_purchases()
+        elif action == "sync":
+            (success, response) = sync()
+        elif action == "syncUp":
+            (success, response) = receive_sync_up() 
+        else:
+            print_text("No valid Action: " + str(action))
+            action = None
     else:
-        print_text("No valid Action: " + str(action))
-        action = None
-else:
-    print_text('{"result": "No Action"}')
-
-if success:
-    redirect = form.getfirst('redirect')
-    if redirect is None:
-        print_text(response)
-    else:
-        print "Location: " + redirect
-        print 
-elif action is not None:
-    print_text('{"result": "No success - ' + response + '", "action": "' + action + '"}')
+        print_text('{"result": "No Action"}')
+    
+    if success:
+        redirect = form.getfirst('redirect')
+        if redirect is None:
+            print_text(response)
+        else:
+            print "Location: " + redirect
+            print 
+    elif action is not None:
+        print_text('{"result": "No success - ' + response + '", "action": "' + action + '"}')
