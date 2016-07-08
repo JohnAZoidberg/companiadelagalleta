@@ -18,7 +18,6 @@ form = cgi.FieldStorage()
 base = CgBase()
 util.print_header()
 
-subprocess.call("./update.sh")
 new_version = None
 version = 0
 try:
@@ -28,7 +27,7 @@ try:
 except Exception as e:
     if str(e) == "(1146, \"Table 'cg.config' doesn't exist\")":
         version = 0 # 0.0.0
-if version < 10 or True: # 0.1.0
+if version < 10: # 0.1.0
     carts = base.fetchall("cart", ["syncId"], "")
     purchases = base.fetchall("purchases", ["syncId"], "") 
     for cart in carts:
@@ -67,6 +66,8 @@ if version < 10 or True: # 0.1.0
     base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
     base.db.commit()
     new_version = 10
+if version < 11:
+    print "This version does add anything new :P", util.br
 if new_version is not None:
     print "Updated to version: " + str(new_version)
 else:
