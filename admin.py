@@ -28,6 +28,7 @@ def print_html():
 
     print "Updates:", util.br, gitupdatestr
     # update db
+    reload(update)
     update.db_update()
 
     if not dbdetails.server:
