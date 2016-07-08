@@ -18,8 +18,6 @@ from dbdetails import dbdetails
 import update
 
 def print_html():
-    util.print_header()
-    print "Hello World", util.br
     # update git
     try:
         gitupdatestr = update.git_update()
@@ -29,9 +27,8 @@ def print_html():
     if not gitupdatestr == "Already up-to-date.\n":
         print "Location: admin.py"
         exit()
-    else:
-        util.print_header()
 
+    util.print_header()
     print "Updates:", util.br
     # update db
     update.db_update()
