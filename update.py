@@ -13,13 +13,12 @@ except ImportError:
     from ordereddict import OrderedDict
 import util
 import subprocess
-form = cgi.FieldStorage()
 
-base = CgBase()
 def git_update():
     return subprocess.check_output("./update.sh")
 
 def db_update():
+    base = CgBase()
     new_version = 15 # 0.1.5
     version = 0
     try:

@@ -18,18 +18,14 @@ from dbdetails import dbdetails
 import update
 
 def print_html():
-    # cgi
-    form = cgi.FieldStorage()
-    action = form.getfirst("action")
-
-    # data
-    base = CgBase()
-
-    # printing
-    util.print_header()
-
     # update git
     gitupdatestr = update.git_update()
+    if not gitupdatestr == "Already up-to-date.\n":
+        print "Location: admin.py"
+        exit()
+    else:
+        util.print_header()
+
     print "Updates:", util.br, gitupdatestr, util.br
     # update db
     update.db_update()
