@@ -6,6 +6,9 @@ cgitb.enable()
 import subprocess
 import util
 
-subprocess.call("./update.sh")
-print "Location: update.py"
-print 
+def redirect():
+    print "Location: update.py"
+    print 
+
+output = subprocess.check_output("./update.sh")
+redirect()

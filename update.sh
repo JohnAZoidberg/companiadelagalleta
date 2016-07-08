@@ -1,2 +1,3 @@
 #!/bin/bash
-sudo git pull
+git checkout -- .
+git pull
