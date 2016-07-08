@@ -118,7 +118,7 @@ def receive_sync_up():
                 if base.change_status(syncId, 3):
                     result['added'].append(syncId)
         elif status == 2:
-            if existing is None or base.delete_purchase(syncId):
+            if existing is None or base.mark_purchase_deleted(syncId):
                 result['deleted'].append(syncId)
     return (True, json.dumps(result))
 
