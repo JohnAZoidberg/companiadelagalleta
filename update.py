@@ -19,7 +19,7 @@ def git_update():
 
 def db_update():
     base = CgBase()
-    new_version = 115 # 0.1.15
+    new_version = 116 # 0.1.16
     version = 0
     try:
         base.cur.execute("SELECT version FROM config")
