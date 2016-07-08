@@ -15,6 +15,7 @@ from dbconn import CgBase
 from datetime import datetime
 import api
 import checkUpdate
+from dbdetails import dbdetails
 
 def print_html():
     # cgi
@@ -28,9 +29,10 @@ def print_html():
     util.print_header()
 
     updatestr = checkUpdate.update()
-    print "Updates:", util.br, updatestr, util.br
-    success, syncstr = api.sync()
-    print "Sync:", util.br, syncstr
+    print "Updates:", util.br, updatestr
+    if not dbdetails.server:
+        success, syncstr = api.sync()
+        print util.br, "Sync:", util.br, syncstr
 
 if __name__ == "__main__":
     print_html()
