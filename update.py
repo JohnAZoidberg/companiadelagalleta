@@ -68,7 +68,8 @@ if version < 10: # 0.1.0
 if version < 11:
     print "This version does not add anything new :P", util.br
 if new_version is not None:
-    base.update("config", {"version": new_version}, True, "WHERE constant = 'X')
+    base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
+if version != new_version:
     print "Updated to version: " + str(new_version)
 else:
-    print "No update"
+    print "No update available"
