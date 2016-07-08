@@ -19,7 +19,11 @@ import update
 
 def print_html():
     # update git
-    gitupdatestr = update.git_update()
+    try:
+        gitupdatestr = update.git_update()
+    except:
+        util.print_header()
+        update.git_update()
     if not gitupdatestr == "Already up-to-date.\n":
         print "Location: admin.py"
         exit()
