@@ -18,7 +18,7 @@ form = cgi.FieldStorage()
 base = CgBase()
 util.print_header()
 
-new_version = 11 
+new_version = 12 
 version = 0
 try:
     base.cur.execute("SELECT version FROM config")
@@ -65,7 +65,7 @@ if version < 10: # 0.1.0
         raise
     base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
     base.db.commit()
-if version < 11:
+if version < 12:
     print "This version does not add anything new :P", util.br
 if new_version is not None:
     base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
