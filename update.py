@@ -18,7 +18,7 @@ form = cgi.FieldStorage()
 base = CgBase()
 util.print_header()
 
-new_version = 12 
+new_version = 13 
 version = 0
 try:
     base.cur.execute("SELECT version FROM config")
