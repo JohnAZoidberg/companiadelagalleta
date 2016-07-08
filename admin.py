@@ -26,7 +26,7 @@ def print_html():
     else:
         util.print_header()
 
-    print "Updates:", util.br, gitupdatestr, util.br
+    print "Updates:", util.br
     # update db
     update.db_update()
 
