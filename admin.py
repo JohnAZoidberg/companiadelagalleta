@@ -18,6 +18,7 @@ from dbdetails import dbdetails
 import update
 
 def print_html():
+    util.print_header()
     # update git
     try:
         gitupdatestr = update.git_update()
