@@ -20,7 +20,7 @@ def git_update():
     return subprocess.check_output("./update.sh")
 
 def db_update():
-    new_version = 14 # 0.1.4
+    new_version = 15 # 0.1.5
     version = 0
     try:
         base.cur.execute("SELECT version FROM config")
