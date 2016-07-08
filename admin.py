@@ -20,18 +20,13 @@ import update
 def print_html():
     util.print_header()
     # update git
-    try:
-        gitupdatestr = update.git_update()
-    except:
-        util.print_header()
-        print "Error"
-        update.git_update()
-    if not gitupdatestr == "Already up-to-date.\n":
-        print "Location: admin.py"
-        exit()
+    gitupdatestr = update.git_update()
+    if gitupdatestr == "Already up-to-date.\n":
+        gitupdatestr = ""
+    else:
+        gitupdatestr += util.br
 
-    util.print_header()
-    print "Updates:", util.br
+    print "Updates:", util.br, gitupdatestr
     # update db
     update.db_update()
 
