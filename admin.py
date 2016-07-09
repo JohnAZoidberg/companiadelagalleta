@@ -19,6 +19,9 @@ import update
 
 def print_html():
     util.print_header()
+    if not util.checkConnection():
+        print "No internet connection!"
+        exit()
     # update git
     gitupdatestr = update.git_update()
     if gitupdatestr == "Already up-to-date.\n":
