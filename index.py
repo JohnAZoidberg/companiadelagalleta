@@ -29,12 +29,14 @@ def print_html():
     j2_env = Environment(loader=FileSystemLoader(THIS_DIR),
                          trim_blocks=True)
     j2_env.filters['dateformat'] = util.dateformat
+    j2_env.filters['datetimeformat'] = util.datetimeformat
     j2_env.filters['timeformat'] = util.timeformat
     j2_env.filters['moneyformat'] = util.moneyformat
     j2_env.filters['countryformat'] = util.countryformat
     j2_env.filters['cardformat'] = util.cardformat
     j2_env.filters['discountformat'] = util.discountformat
     j2_env.filters['adddays'] = util.adddays
+    j2_env.filters['uniqueId'] = util.uniqueId
 
     # printing
     util.print_header()
@@ -45,8 +47,8 @@ def print_html():
         boxes=boxes.items(),
         purchases=purchases,
         card_total=card_total,
-        cash_total=cash_total,
-        random_name=util.uniqueId()
+        cash_total=cash_total
+        #random_prefix=util.uniqueId()
     )
 
 if __name__ == "__main__":

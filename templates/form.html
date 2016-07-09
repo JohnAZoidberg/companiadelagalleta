@@ -42,7 +42,11 @@
             <div class="form-group">
               <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date">Fecha:</label>
               <div class="col-sm-5">
-                <input type="text" class="form-control" name="datetime" id="date" placeholder="18:04" required>
+                <input type="text" class="form-control" name="datetime" id="date" placeholder="18:04" list="dates" required>
+                <datalist id="dates">
+                    <option value="{{ date|timeformat }}"></option>
+                    <option value="{{ date|datetimeformat }}"></option>
+                </datalist>
               </div>
             </div>
             <div class="form-group">
@@ -66,7 +70,7 @@
             <div class="form-group">
               <label class="control-label col-sm-2" for="box">Caja:</label>
               <div class="col-sm-6 box-inputs">
-                <input type="text" class="form-control" name="{{ random_name }}" id="box" placeholder="Box" list="boxes">
+                <input type="text" class="form-control" name="{{ foo|uniqueId }}" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
                 {% for boxId, box in boxes %}
                   <option data-value="{{ boxId }}" data-price="{{ box['price']|moneyformat }}">{{ box['title'] }}</option>

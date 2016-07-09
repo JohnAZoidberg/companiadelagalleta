@@ -78,7 +78,7 @@ def calc_purchases_totals(ps):
                 cash_total += item['price'] * item['quantity']
     return ps, card_total, cash_total
 
-def uniqueId():
+def uniqueId(*args):
     return randint(100000000, 999999999)
 
 def datestring(date):
@@ -98,7 +98,7 @@ def dateformat(value):
     return value.strftime('%Y-%m-%d')
 
 def datetimeformat(value):
-    return datetime.strptime(string, '%Y-%m-%d %H:%M')
+    return value.strftime('%Y-%m-%d %H:%M')
 
 def timeformat(value):
     return value.strftime('%H:%M')
