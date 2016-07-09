@@ -19,7 +19,7 @@ def git_update():
 
 def db_update():
     base = CgBase()
-    new_version = 116 # 0.1.16
+    new_version = 117 # 0.1.17
     version = 0
     try:
         base.cur.execute("SELECT version FROM config")
@@ -68,9 +68,15 @@ def db_update():
         base.db.commit()
     if version < 12:
         print "This version does not add anything new :P", util.br
+    if version < 117:
+        base.insert("boxes", {"title": "Bolsa Merienda", "price": 275, "boxesEntryId": 66}, True)
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
     if version != new_version:
         print "Updated to version: " + str(new_version)
     else:
         print "No update available"
+
+if __name__ == "__main__":
+    util.print_header()
+    db_update()
