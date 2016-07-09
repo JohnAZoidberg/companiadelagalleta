@@ -45,7 +45,8 @@ def print_html():
         boxes=boxes.items(),
         purchases=purchases,
         card_total=card_total,
-        cash_total=cash_total
+        cash_total=cash_total,
+        random_name=util.uniqueId()
     )
 
 if __name__ == "__main__":

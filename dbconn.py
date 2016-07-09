@@ -88,7 +88,7 @@ class CgBase:
         # a unique id to identify entries: unixtimestamp + 4 random digits
         success = False
         if syncId is None:
-            syncId = str(randint(100000000, 999999999))
+            syncId = str(util.uniqueId())
         if len(cart) == 0:
             success = True
         for boxId, quantity in cart.iteritems():

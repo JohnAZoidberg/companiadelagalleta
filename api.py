@@ -26,7 +26,7 @@ def save_purchase(boxes):
             cookies[boxId] = count
     if cookies:
         country  = form.getfirst('country')
-        card     = form.getvalue('tarjeta')
+        card     = form.getvalue('payment')
         date_field = form.getfirst('datetime')
         if date_field is None:
             date = datetime.now() 
@@ -38,7 +38,7 @@ def save_purchase(boxes):
             edited = datetime.now()
         discount_field = form.getfirst('discount')
         discount = 0 if discount_field is None else int(discount_field) 
-        card = False if card is None else True
+        card = True if card == "card" else False
         insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
         if insert_success:
             return (True, "Purchase saved")

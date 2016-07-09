@@ -40,9 +40,9 @@
             <input type="hidden" name="action" value="save_purchase">
             <input type="hidden" name="redirect" value="index.py?showndate={{ date|dateformat }}">
             <div class="form-group">
-              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date" required>Fecha:</label>
+              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date">Fecha:</label>
               <div class="col-sm-5">
-                <input type="text" class="form-control" name="datetime" id="date" placeholder="18:04">
+                <input type="text" class="form-control" name="datetime" id="date" placeholder="18:04" required>
               </div>
             </div>
             <div class="form-group">
@@ -66,7 +66,7 @@
             <div class="form-group">
               <label class="control-label col-sm-2" for="box">Caja:</label>
               <div class="col-sm-6 box-inputs">
-                <input type="text" class="form-control" id="box" placeholder="Box" list="boxes">
+                <input type="text" class="form-control" name="{{ random_name }}" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
                 {% for boxId, box in boxes %}
                   <option data-value="{{ boxId }}" data-price="{{ box['price']|moneyformat }}">{{ box['title'] }}</option>
@@ -82,15 +82,18 @@
               </div>
             </div>
             <div class="form-group">
-              <div class="control-label col-sm-2" for="box"></div>
+              <div class="control-label col-sm-2"></div>
               <ul id="added-boxes" class="col-sm-10">
               </ul>
             </div>
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10">
-                <div class="checkbox">
-                  <label><input type="checkbox" name="tarjeta">Tarjeta</label>
-                </div>
+                  <div class="radio">
+                      <label><input type="radio" name="payment" value="card" required>&nbsp;Tarjeta</label>
+                  </div>
+                  <div class="radio">
+                      <label><input type="radio" name="payment" value="cash" required>&nbsp;Efectivo</label>
+                  </div>
               </div>
             </div>
             <div class="form-group">

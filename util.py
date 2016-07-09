@@ -2,6 +2,7 @@
 import json
 from datetime import datetime, timedelta
 from dbdetails import dbdetails
+from random import randint
 try:
     from collections import OrderedDict
 except ImportError:
@@ -76,6 +77,9 @@ def calc_purchases_totals(ps):
             else:
                 cash_total += item['price'] * item['quantity']
     return ps, card_total, cash_total
+
+def uniqueId():
+    return randint(100000000, 999999999)
 
 def datestring(date):
     try:
