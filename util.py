@@ -22,6 +22,7 @@ country_list = OrderedDict([
     ('it', "Italia"),
     ('fr', "Francia"),
     ('no', "Noruega"),
+    ('eu', "Europa"),
     ('asia', "Asia"),
     ('america', "America"),
     ('africa', "África"),
