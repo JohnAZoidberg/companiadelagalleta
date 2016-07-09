@@ -80,13 +80,13 @@ def db_update():
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         base.db.commit()
-        print "Removed the 'window' from the names of the Pyramid boxes"
+        print "Removed the 'window' from the names of the Pyramid boxes", util.br
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
     if version != new_version:
-        print "Updated to version: " + str(new_version)
+        print "Updated to version: ", new_version, util.br
     else:
-        print "No update available"
+        print "No update available", util.br
 
 if __name__ == "__main__":
     util.print_header()
