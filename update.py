@@ -70,6 +70,17 @@ def db_update():
         print "This version does not add anything new :P", util.br
     if version < 117:
         base.insert("boxes", {"title": "Bolsa Merienda", "price": 275, "boxesEntryId": 66}, True)
+    if version < 118:
+        box_update = {
+            25: "Pyramid box - Tropicales",
+            26: "Pyramid box - Sabores de Canarias",
+            27: "Pyramid box - Chocolate",
+            28: "Pyramid box - Clásica",
+        }
+        for old_title, new_title in box_update.iteritems():
+            base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
+        base.db.commit()
+        print "Removed the 'window' from the names of the Pyramid boxes"
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
     if version != new_version:
