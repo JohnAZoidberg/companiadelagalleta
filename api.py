@@ -74,12 +74,12 @@ def sync_down():
         syncId = purchase['syncId']
         status = purchase['status']
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
-        if existing is None:
-            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
-                result['synced_down']['added'].append(syncId)
-        elif status == 2:
+        if status == 2:
             if base.mark_purchase_deleted(syncId):
                 result['synced_down']['deleted'].append(syncId)
+        elif existing is None:
+            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                result['synced_down']['added'].append(syncId)
     base.update_last_sync(edited)
     return result
 

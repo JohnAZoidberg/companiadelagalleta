@@ -19,7 +19,7 @@ def git_update():
 
 def db_update():
     base = CgBase()
-    new_version = 118 # 0.1.18
+    new_version = 119 # 0.1.19
     version = 0
     try:
         base.cur.execute("SELECT version FROM config")
@@ -75,12 +75,36 @@ def db_update():
             25: "Pyramid box - Tropicales",
             26: "Pyramid box - Sabores de Canarias",
             27: "Pyramid box - Chocolate",
-            28: "Pyramid box - Clásica",
+            28: "Pyramid box - Clásica"
         }
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         base.db.commit()
         print "Removed the 'window' from the names of the Pyramid boxes", util.br
+    if version < 119:
+        box_update = {
+             5: "Basic bag pequeña - Frutas",
+             6: "Basic bag pequeña - Canarias",
+            10: "Basic bag grande - Frutas",
+            11: "Basic bag grande - Canarias",
+            15: "Cube pequeña - Frutas",
+            16: "Cube pequeña - Canarias",
+            17: "Cube pequeña - Chocolate",
+            18: "Cube pequeña - Clásica",
+            20: "Cube grande - Frutas",
+            21: "Cube grande - Canarias",
+            22: "Cube grande - Chocolate",
+            23: "Cube grande - Clásica",
+            25: "Pyramid - Frutas",
+            26: "Pyramid - Canarias",
+            27: "Pyramid - Chocolate",
+            28: "Pyramid - Clásica"
+        }
+        for old_title, new_title in box_update.iteritems():
+            base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
+        base.db.commit()
+        print "Shorter names for the boxes", util.br
+
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
     if version != new_version:
