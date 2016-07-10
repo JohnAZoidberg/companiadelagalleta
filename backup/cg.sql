@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.5.4.1deb2ubuntu1
+-- version 4.2.12deb2+deb8u1
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Erstellungszeit: 08. Jul 2016 um 01:45
--- Server-Version: 5.7.12-0ubuntu1.1
--- PHP-Version: 7.0.4-7ubuntu2.1
+-- Generation Time: Jul 10, 2016 at 02:30 PM
+-- Server version: 5.5.49-0+deb8u1
+-- PHP Version: 5.6.22-0+deb8u1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
@@ -14,26 +14,26 @@ SET time_zone = "+00:00";
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8 */;
 
 --
--- Datenbank: `cg`
+-- Database: `cg`
 --
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `boxes`
+-- Table structure for table `boxes`
 --
 
-CREATE TABLE `boxes` (
-  `boxesEntryId` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `boxes` (
+`boxesEntryId` int(11) NOT NULL,
   `title` varchar(100) COLLATE utf8_bin NOT NULL,
   `price` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=67 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
--- Daten für Tabelle `boxes`
+-- Dumping data for table `boxes`
 --
 
 INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
@@ -56,10 +56,10 @@ INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
 (21, 'Cube box grande - Sabores de Canarias', 1195),
 (22, 'Cube box grande - Chocolate', 1195),
 (23, 'Cube box grande - Clásica', 1195),
-(25, 'Pyramid window box - Tropicales', 695),
-(26, 'Pyramid window box - Sabores de Canarias', 695),
-(27, 'Pyramid window box - Chocolate', 695),
-(28, 'Pyramid window box - Clásica', 695),
+(25, 'Pyramid box - Tropicales', 695),
+(26, 'Pyramid box - Sabores de Canarias', 695),
+(27, 'Pyramid box - Chocolate', 695),
+(28, 'Pyramid box - Clásica', 695),
 (30, 'Elegant box 1 verde - Chocolate', 995),
 (31, 'Elegant box 1 verde - Baño de chocolate', 995),
 (33, 'Elegant box 1 crema - Frutas tropicales', 995),
@@ -88,24 +88,25 @@ INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
 (62, 'Strelitzia box - vegano', 1495),
 (63, 'Galletas a la Carta 18 - vegano', 1645),
 (64, 'Mango Box - vegano', 1495),
-(65, 'Basic bag pequeña - GRATIS', 0);
+(65, 'Basic bag pequeña - GRATIS', 0),
+(66, 'Bolsa Merienda', 275);
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `cart`
+-- Table structure for table `cart`
 --
 
-CREATE TABLE `cart` (
-  `cartEntryId` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `cart` (
+`cartEntryId` int(11) NOT NULL,
   `syncId` int(11) NOT NULL,
   `boxId` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL COMMENT 'in cents'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=346 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
--- Daten für Tabelle `cart`
+-- Dumping data for table `cart`
 --
 
 INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`) VALUES
@@ -381,37 +382,84 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`) VALUE
 (282, 938880072, 46, 1, 2195),
 (283, 672183571, 25, 1, 695),
 (284, 672183571, 13, 1, 995),
-(288, 262847414, 1, 1, 895),
-(289, 783516220, 2, 1, 1595),
-(290, 783516220, 5, 2, 495);
+(286, 262847414, 1, 1, 895),
+(287, 783516220, 2, 1, 1595),
+(288, 783516220, 5, 2, 495),
+(290, 377735863, 13, 1, 995),
+(291, 377735863, 28, 1, 695),
+(292, 606160127, 5, 1, 495),
+(293, 861790252, 26, 2, 695),
+(294, 570211527, 38, 1, 1595),
+(295, 675363863, 1, 4, 895),
+(296, 731767253, 26, 1, 695),
+(297, 518173199, 18, 1, 795),
+(298, 518173199, 16, 1, 795),
+(299, 867154414, 6, 1, 495),
+(300, 361300438, 28, 1, 695),
+(301, 104518868, 27, 1, 695),
+(302, 833203524, 1, 1, 895),
+(303, 833203524, 3, 1, 2195),
+(304, 833203524, 2, 1, 1595),
+(305, 272027127, 55, 1, 1895),
+(306, 272027127, 52, 1, 1395),
+(307, 272027127, 65, 1, 0),
+(308, 272027127, 6, 2, 495),
+(310, 333543612, 3, 1, 2195),
+(311, 106262706, 3, 1, 2195),
+(312, 925868961, 54, 2, 1395),
+(313, 925868961, 2, 1, 1595),
+(314, 925868961, 20, 1, 1195),
+(315, 925868961, 6, 1, 495),
+(316, 544138311, 1, 1, 895),
+(317, 379130006, 1, 1, 895),
+(319, 302663661, 1, 1, 895),
+(320, 862582383, 3, 1, 2195),
+(322, 616037631, 1, 2, 895),
+(323, 716744132, 1, 1, 895),
+(324, 716744132, 15, 1, 795),
+(325, 716744132, 40, 1, 1595),
+(326, 531977847, 25, 1, 695),
+(327, 792202333, 3, 1, 2195),
+(328, 792202333, 2, 1, 1595),
+(329, 432117679, 34, 1, 995),
+(332, 943790635, 25, 1, 695),
+(333, 943790635, 21, 1, 1195),
+(334, 786576814, 26, 1, 695),
+(335, 786576814, 16, 1, 795),
+(336, 483049208, 1, 1, 895),
+(337, 483049208, 66, 1, 275),
+(338, 292808727, 15, 1, 795),
+(339, 292808727, 66, 1, 275),
+(340, 563610036, 3, 1, 2195),
+(343, 103337213, 11, 2, 995);
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `config`
+-- Table structure for table `config`
 --
 
-CREATE TABLE `config` (
+CREATE TABLE IF NOT EXISTS `config` (
   `constant` char(1) NOT NULL DEFAULT 'X',
   `version` int(11) NOT NULL DEFAULT '10',
   `last_sync` datetime NOT NULL DEFAULT '2016-01-01 00:00:00'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Daten für Tabelle `config`
+-- Dumping data for table `config`
 --
 
 INSERT INTO `config` (`constant`, `version`, `last_sync`) VALUES
-('X', 10, '2016-07-08 00:23:37');
+('X', 118, '2016-07-10 13:10:36');
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `purchases`
+-- Table structure for table `purchases`
 --
 
-CREATE TABLE `purchases` (
-  `purchaseEntryId` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `purchases` (
+`purchaseEntryId` int(11) NOT NULL,
   `syncId` int(11) NOT NULL,
   `country` varchar(3) COLLATE utf8_bin NOT NULL,
   `card` tinyint(1) NOT NULL DEFAULT '0',
@@ -419,10 +467,10 @@ CREATE TABLE `purchases` (
   `date` datetime NOT NULL,
   `status` int(11) NOT NULL DEFAULT '0',
   `edited` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=257 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
--- Daten für Tabelle `purchases`
+-- Dumping data for table `purchases`
 --
 
 INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discount`, `date`, `status`, `edited`) VALUES
@@ -632,57 +680,86 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (211, 934292569, 'gb', 0, 0, '2016-07-07 21:17:00', 3, '2016-07-07 22:04:43'),
 (212, 938880072, 'gb', 0, 0, '2016-07-07 21:12:00', 3, '2016-07-07 22:04:43'),
 (213, 672183571, 'de', 0, 0, '2016-07-07 21:00:00', 3, '2016-07-07 22:04:43'),
-(216, 262847414, 'de', 0, 0, '2016-07-04 22:30:00', 3, '2016-07-08 00:21:53'),
-(217, 783516220, 'fr', 1, 0, '2016-07-04 15:00:00', 3, '2016-07-08 00:22:48');
+(215, 262847414, 'de', 0, 0, '2016-07-04 22:30:00', 3, '2016-07-08 00:23:18'),
+(216, 783516220, 'fr', 1, 0, '2016-07-04 15:00:00', 3, '2016-07-08 00:23:18'),
+(218, 377735863, 'gb', 0, 0, '2016-07-08 13:41:00', 3, '2016-07-08 19:18:02'),
+(219, 606160127, 'ne', 0, 0, '2016-07-08 11:45:00', 3, '2016-07-08 19:18:02'),
+(220, 861790252, 'de', 0, 0, '2016-07-08 20:15:00', 3, '2016-07-08 20:09:13'),
+(221, 570211527, 'es', 0, 0, '2016-07-08 20:20:00', 3, '2016-07-08 20:15:31'),
+(222, 675363863, 'de', 0, 0, '2016-07-08 20:45:00', 3, '2016-07-08 20:41:13'),
+(223, 731767253, 'can', 0, 0, '2016-07-08 20:55:00', 3, '2016-07-08 20:49:56'),
+(224, 518173199, 'de', 0, 0, '2016-07-08 20:58:00', 3, '2016-07-08 20:53:57'),
+(225, 867154414, 'de', 0, 0, '2016-07-08 21:20:00', 3, '2016-07-08 21:17:11'),
+(226, 361300438, 'gb', 0, 0, '2016-07-08 21:30:00', 3, '2016-07-08 21:24:44'),
+(227, 104518868, 'gb', 0, 0, '2016-07-08 21:45:00', 3, '2016-07-08 21:41:42'),
+(228, 833203524, 'can', 0, 0, '2016-07-08 22:15:00', 3, '2016-07-08 22:17:58'),
+(229, 272027127, 'de', 0, 0, '2016-07-08 22:20:00', 3, '2016-07-08 22:20:16'),
+(231, 333543612, 'de', 0, 0, '2016-07-09 10:30:00', 3, '2016-07-09 13:23:40'),
+(232, 106262706, 'es', 1, 0, '2016-07-09 10:39:00', 3, '2016-07-09 13:24:17'),
+(233, 925868961, 'fr', 0, 0, '2016-07-09 11:34:00', 3, '2016-07-09 13:25:11'),
+(234, 544138311, 'gb', 0, 0, '2016-07-09 12:34:00', 3, '2016-07-09 13:25:39'),
+(235, 379130006, 'gb', 0, 0, '2016-07-09 12:36:00', 3, '2016-07-09 13:26:00'),
+(237, 302663661, 'gb', 0, 0, '2016-07-09 13:10:00', 3, '2016-07-09 13:26:48'),
+(238, 862582383, 'can', 1, 0, '2016-07-09 12:52:00', 3, '2016-07-09 13:27:36'),
+(240, 616037631, '??', 0, 0, '2016-07-08 20:50:00', 3, '2016-07-09 13:48:15'),
+(241, 716744132, 'eu', 1, 0, '2016-07-09 19:45:00', 3, '2016-07-09 20:00:22'),
+(242, 531977847, 'es', 0, 0, '2016-07-09 20:11:00', 3, '2016-07-09 20:18:44'),
+(243, 792202333, 'can', 0, 0, '2016-07-09 20:17:00', 3, '2016-07-09 20:19:23'),
+(244, 432117679, 'gb', 0, 0, '2016-07-09 21:00:00', 3, '2016-07-09 21:01:33'),
+(247, 943790635, 'can', 0, 0, '2016-07-09 21:30:00', 3, '2016-07-09 21:30:26'),
+(248, 786576814, 'de', 0, 0, '2016-07-09 21:55:00', 3, '2016-07-09 21:56:49'),
+(249, 483049208, 'de', 0, 0, '2016-07-09 21:20:00', 3, '2016-07-10 10:18:45'),
+(250, 292808727, 'can', 0, 0, '2016-07-09 21:25:00', 3, '2016-07-10 10:19:41'),
+(251, 563610036, 'gb', 1, 0, '2016-07-09 23:10:00', 3, '2016-07-10 10:20:38'),
+(254, 103337213, 'es', 0, 0, '2016-07-10 11:36:00', 3, '2016-07-10 11:52:29');
 
 --
--- Indizes der exportierten Tabellen
+-- Indexes for dumped tables
 --
 
 --
--- Indizes für die Tabelle `boxes`
+-- Indexes for table `boxes`
 --
 ALTER TABLE `boxes`
-  ADD PRIMARY KEY (`boxesEntryId`);
+ ADD PRIMARY KEY (`boxesEntryId`);
 
 --
--- Indizes für die Tabelle `cart`
+-- Indexes for table `cart`
 --
 ALTER TABLE `cart`
-  ADD PRIMARY KEY (`cartEntryId`);
+ ADD PRIMARY KEY (`cartEntryId`);
 
 --
--- Indizes für die Tabelle `config`
+-- Indexes for table `config`
 --
 ALTER TABLE `config`
-  ADD PRIMARY KEY (`constant`);
+ ADD PRIMARY KEY (`constant`);
 
 --
--- Indizes für die Tabelle `purchases`
+-- Indexes for table `purchases`
 --
 ALTER TABLE `purchases`
-  ADD PRIMARY KEY (`purchaseEntryId`),
-  ADD UNIQUE KEY `syncId` (`syncId`);
+ ADD PRIMARY KEY (`purchaseEntryId`), ADD UNIQUE KEY `syncId` (`syncId`);
 
 --
--- AUTO_INCREMENT für exportierte Tabellen
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT für Tabelle `boxes`
+-- AUTO_INCREMENT for table `boxes`
 --
 ALTER TABLE `boxes`
-  MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
+MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=67;
 --
--- AUTO_INCREMENT für Tabelle `cart`
+-- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-  MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=291;
+MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=346;
 --
--- AUTO_INCREMENT für Tabelle `purchases`
+-- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=218;
+MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=257;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
