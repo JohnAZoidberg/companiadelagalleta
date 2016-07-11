@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Jul 10, 2016 at 02:30 PM
+-- Generation Time: Jul 11, 2016 at 07:25 PM
 -- Server version: 5.5.49-0+deb8u1
 -- PHP Version: 5.6.22-0+deb8u1
 
@@ -40,26 +40,26 @@ INSERT INTO `boxes` (`boxesEntryId`, `title`, `price`) VALUES
 (1, 'Galletas a la carta - 10', 895),
 (2, 'Galletas a la carta - 20', 1595),
 (3, 'Galletas a la carta - 30', 2195),
-(5, 'Basic bag pequeña - Frutas Tropicales', 495),
-(6, 'Basic bag pequeña - Sabores de Canarias', 495),
+(5, 'Basic bag pequeña - Frutas', 495),
+(6, 'Basic bag pequeña - Canarias', 495),
 (7, 'Basic bag pequeña - Chocolate', 495),
 (8, 'Basic bag pequeña - Clasica', 495),
-(10, 'Basic bag grande - Frutas Tropicales', 995),
-(11, 'Basic bag grande - Sabores de Canarias', 995),
+(10, 'Basic bag grande - Frutas', 995),
+(11, 'Basic bag grande - Canarias', 995),
 (12, 'Basic bag grande - Chocolate', 995),
 (13, 'Basic bag grande - Clásica', 995),
-(15, 'Cube box pequeña - Frutas Tropicales', 795),
-(16, 'Cube box pequeña - Sabores de Canarias', 795),
-(17, 'Cube box pequeña - Chocolate', 795),
-(18, 'Cube box pequeña - Clásica', 795),
-(20, 'Cube box grande - Frutas Tropicales', 1195),
-(21, 'Cube box grande - Sabores de Canarias', 1195),
-(22, 'Cube box grande - Chocolate', 1195),
-(23, 'Cube box grande - Clásica', 1195),
-(25, 'Pyramid box - Tropicales', 695),
-(26, 'Pyramid box - Sabores de Canarias', 695),
-(27, 'Pyramid box - Chocolate', 695),
-(28, 'Pyramid box - Clásica', 695),
+(15, 'Cube pequeña - Frutas', 795),
+(16, 'Cube pequeña - Canarias', 795),
+(17, 'Cube pequeña - Chocolate', 795),
+(18, 'Cube pequeña - Clásica', 795),
+(20, 'Cube grande - Frutas', 1195),
+(21, 'Cube grande - Canarias', 1195),
+(22, 'Cube grande - Chocolate', 1195),
+(23, 'Cube grande - Clásica', 1195),
+(25, 'Pyramid - Frutas', 695),
+(26, 'Pyramid - Canarias', 695),
+(27, 'Pyramid - Chocolate', 695),
+(28, 'Pyramid - Clásica', 695),
 (30, 'Elegant box 1 verde - Chocolate', 995),
 (31, 'Elegant box 1 verde - Baño de chocolate', 995),
 (33, 'Elegant box 1 crema - Frutas tropicales', 995),
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS `cart` (
   `boxId` int(11) NOT NULL,
   `quantity` int(11) NOT NULL,
   `price` int(11) NOT NULL COMMENT 'in cents'
-) ENGINE=InnoDB AUTO_INCREMENT=346 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=380 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `cart`
@@ -431,7 +431,39 @@ INSERT INTO `cart` (`cartEntryId`, `syncId`, `boxId`, `quantity`, `price`) VALUE
 (338, 292808727, 15, 1, 795),
 (339, 292808727, 66, 1, 275),
 (340, 563610036, 3, 1, 2195),
-(343, 103337213, 11, 2, 995);
+(343, 103337213, 11, 2, 995),
+(346, 332834361, 56, 2, 100),
+(347, 332834361, 5, 1, 495),
+(348, 538927797, 15, 1, 795),
+(349, 565909725, 28, 2, 695),
+(352, 347111201, 33, 1, 995),
+(353, 319844182, 56, 2, 100),
+(354, 158555786, 1, 1, 895),
+(355, 107257129, 1, 1, 895),
+(356, 359360854, 55, 1, 1895),
+(357, 150369362, 12, 1, 995),
+(358, 150369362, 21, 1, 1195),
+(359, 655776135, 8, 1, 495),
+(360, 655776135, 5, 1, 495),
+(361, 655776135, 7, 1, 495),
+(362, 471778584, 46, 2, 2195),
+(363, 471778584, 52, 1, 1395),
+(364, 858476358, 1, 1, 895),
+(365, 358329088, 25, 1, 695),
+(366, 780043638, 1, 2, 895),
+(367, 780043638, 55, 1, 1895),
+(368, 780043638, 30, 1, 995),
+(369, 746759315, 3, 3, 2195),
+(370, 265139970, 1, 2, 895),
+(371, 392995522, 3, 1, 2195),
+(372, 837304574, 54, 2, 1395),
+(373, 837304574, 2, 2, 1595),
+(374, 837304574, 17, 1, 795),
+(375, 236198481, 7, 1, 495),
+(376, 390603425, 2, 1, 1595),
+(377, 211032888, 56, 4, 100),
+(378, 211032888, 64, 1, 1495),
+(379, 356896400, 1, 1, 895);
 
 -- --------------------------------------------------------
 
@@ -450,7 +482,7 @@ CREATE TABLE IF NOT EXISTS `config` (
 --
 
 INSERT INTO `config` (`constant`, `version`, `last_sync`) VALUES
-('X', 118, '2016-07-10 13:10:36');
+('X', 119, '2016-07-11 18:20:52');
 
 -- --------------------------------------------------------
 
@@ -467,7 +499,7 @@ CREATE TABLE IF NOT EXISTS `purchases` (
   `date` datetime NOT NULL,
   `status` int(11) NOT NULL DEFAULT '0',
   `edited` datetime NOT NULL
-) ENGINE=InnoDB AUTO_INCREMENT=257 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Dumping data for table `purchases`
@@ -711,7 +743,29 @@ INSERT INTO `purchases` (`purchaseEntryId`, `syncId`, `country`, `card`, `discou
 (249, 483049208, 'de', 0, 0, '2016-07-09 21:20:00', 3, '2016-07-10 10:18:45'),
 (250, 292808727, 'can', 0, 0, '2016-07-09 21:25:00', 3, '2016-07-10 10:19:41'),
 (251, 563610036, 'gb', 1, 0, '2016-07-09 23:10:00', 3, '2016-07-10 10:20:38'),
-(254, 103337213, 'es', 0, 0, '2016-07-10 11:36:00', 3, '2016-07-10 11:52:29');
+(254, 103337213, 'es', 0, 0, '2016-07-10 11:36:00', 3, '2016-07-10 11:52:29'),
+(257, 332834361, 'gb', 0, 0, '2016-07-10 14:01:00', 3, '2016-07-10 14:13:02'),
+(258, 538927797, 'gb', 0, 0, '2016-07-10 14:04:00', 3, '2016-07-10 14:13:46'),
+(259, 565909725, 'gb', 0, 0, '2016-07-10 14:06:00', 3, '2016-07-10 14:14:21'),
+(262, 347111201, 'de', 0, 0, '2016-07-10 14:20:00', 3, '2016-07-10 14:25:17'),
+(263, 319844182, 'es', 0, 0, '2016-07-10 18:00:00', 3, '2016-07-10 18:53:21'),
+(264, 158555786, 'es', 0, 0, '2016-07-10 18:50:00', 3, '2016-07-10 18:53:57'),
+(265, 107257129, 'gb', 0, 0, '2016-07-10 18:55:00', 3, '2016-07-10 18:57:00'),
+(266, 359360854, 'gb', 0, 0, '2016-07-10 19:35:00', 3, '2016-07-10 20:46:50'),
+(267, 150369362, 'es', 0, 0, '2016-07-10 20:20:00', 3, '2016-07-10 20:47:56'),
+(268, 655776135, 'de', 0, 0, '2016-07-10 20:34:00', 3, '2016-07-10 20:59:24'),
+(269, 471778584, 'es', 1, 0, '2016-07-10 20:53:00', 3, '2016-07-10 21:00:17'),
+(270, 858476358, 'can', 1, 0, '2016-07-10 21:08:00', 3, '2016-07-10 21:11:25'),
+(271, 358329088, 'gb', 0, 0, '2016-07-11 10:20:00', 3, '2016-07-11 11:07:16'),
+(272, 780043638, 'ne', 0, 0, '2016-07-11 10:53:00', 3, '2016-07-11 11:07:57'),
+(273, 746759315, 'de', 0, 0, '2016-07-11 11:02:00', 3, '2016-07-11 11:08:24'),
+(274, 265139970, 'es', 1, 0, '2016-07-11 11:35:00', 3, '2016-07-11 11:50:24'),
+(275, 392995522, 'fr', 0, 0, '2016-07-11 11:45:00', 3, '2016-07-11 11:50:49'),
+(276, 837304574, 'de', 0, 0, '2016-07-11 13:20:00', 3, '2016-07-11 13:36:57'),
+(277, 236198481, 'de', 0, 0, '2016-07-11 13:15:00', 3, '2016-07-11 13:37:24'),
+(278, 390603425, 'can', 0, 0, '2016-07-11 13:25:00', 3, '2016-07-11 13:37:53'),
+(279, 211032888, 'de', 0, 0, '2016-07-11 14:35:00', 3, '2016-07-11 15:23:58'),
+(280, 356896400, 'de', 0, 0, '2016-07-11 18:05:00', 3, '2016-07-11 18:19:37');
 
 --
 -- Indexes for dumped tables
@@ -754,12 +808,12 @@ MODIFY `boxesEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=67;
 -- AUTO_INCREMENT for table `cart`
 --
 ALTER TABLE `cart`
-MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=346;
+MODIFY `cartEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=380;
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=257;
+MODIFY `purchaseEntryId` int(11) NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=281;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
