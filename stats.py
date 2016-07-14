@@ -1,0 +1,69 @@
+#!/usr/bin/python -u
+# coding=utf-8
+import sys
+reload(sys)
+sys.setdefaultencoding("utf8")
+import cgitb
+cgitb.enable()
+import cgi
+import json
+from datetime import datetime
+from dbconn import *
+from random import randint
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
+import util
+from openpyxl import load_workbook
+form = cgi.FieldStorage()
+
+
+base = CgBase()
+util.print_header()
+purchases = base.get_purchases(prettydict=True)
+boxes = base.get_boxes()
+
+def colnum_string(n):
+    div = n
+    string = ""
+    temp = 0
+    while div > 0:
+        module = (div-1) % 26
+        string = chr(65+module) + string
+        div = int((div-module) / 26)
+    return string
+
+def day_to_datetime(day):
+    return datetime.strptime(day, '%Y-%m-%d')
+
+
+br = "<br>"
+wb = load_workbook('stats.xlsx')
+ventas = wb.get_sheet_by_name("Ventas")
+for i, p in enumerate(reversed(purchases)):
+    row = str(i + 2)
+    purchase = p['purchase']
+    cart = p['cart']
+    ventas["A" + row] = purchase['date']
+    ventas["B" + row] = util.country_list[purchase['country']]
+    ventas["C" + row] = purchase['discount']
+    ventas["D" + row] = purchase['card']
+    for item in cart:
+        col = 6 + item['boxId']
+        # TODO handle changed price as 0.9 or something like that
+        ventas[colnum_string(col) + row] = item['quantity']
+
+cajas = wb.get_sheet_by_name("Cajas")
+for boxId, box in boxes.iteritems():
+    row = str(boxId+1)
+    title = box['title']
+    price = box['price'] / 100.0
+    cajas["A" + row] = boxId
+    cajas["B" + row] = title
+    cajas["C" + row] = price
+#print ws.title, br
+#print ws.cell("A2").value, br
+#print ws["A2"].value, br
+
+wb.save("estadisticas.xlsx")
