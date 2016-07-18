@@ -12,21 +12,32 @@ except ImportError:
 br = "<br>"
 
 country_list = OrderedDict([
-    ('??', "Desconocido"),
+    ('_??', "Desconocido"),
+    ('_eu', "Europa"),
     ('de', "Alemania"),
     ('es', "España"),
     ('can', "Islas Canarias"),
+    ('can_foreigners', "Extranjeros en Canarias"),
     ('ne', "Países Bajos"),
     ('gb', "Gran Bretaña"),
-    ('us', "EE.UU."),
     ('it', "Italia"),
     ('fr', "Francia"),
     ('no', "Noruega"),
-    ('eu', "Europa"),
-    ('asia', "Asia"),
-    ('america', "America"),
-    ('africa', "África"),
-    ('xx', "Otro")
+    ('poland', "Poland"),
+    ('sweden', "Suecia"),
+    ('switzerland', "Suiza"),
+    ('austria', "Austria"),
+    ('belgium', "Belgia"),
+    ('_asia', "Asia"),
+    ('china', "China"),
+    ('japan', "Japan"),
+    ('korea', "Korea"),
+    ('india', "India"),
+    ('_america', "America"),
+    ('us', "EE.UU."),
+    ('_southamerica', "Sur-America"),
+    ('_africa', "África"),
+    ('_xx', "Otro")
 ])
 
 def print_header(t="text/html"):
@@ -134,3 +145,6 @@ def discountformat(value):
 
 def adddays(date, summand):
     return date + timedelta(days=summand)
+# Jinja Tests:
+def is_continent(value):
+    return value[0] == "_"
