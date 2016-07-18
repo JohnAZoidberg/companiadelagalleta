@@ -114,6 +114,7 @@ def db_update():
         }
         for old, new in country_changes.iteritems():
             base.update("purchases", {"country": new}, False, "WHERE country='"+old+"'")
+        base.cur.execute("ALTER TABLE purchases MODIFY country VARCHAR(255)")
         base.db.commit()
         print "More countries and continents", util.br
 
