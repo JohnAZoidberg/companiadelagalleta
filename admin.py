@@ -17,7 +17,7 @@ import api
 from dbdetails import dbdetails
 import update
 
-def print_html():
+def perform_updates():
     util.print_header()
     if not util.checkConnection():
         print "No internet connection!"
@@ -32,11 +32,18 @@ def print_html():
     print "Updates:", util.br, gitupdatestr
     # update db
     reload(update)
-    update.db_update()
+    updatemsg = update.db_update()
 
     if not dbdetails.server:
         success, syncstr = api.sync()
-        print util.br, "Sync:", util.br, syncstr
+        with open('log.txt', 'a') as f:
+            f.writelines('\n'.join([
+                    util.datetimeformat(datetime.now()),
+                    str((success, syncstr)),
+                    "-----", ""
+            ]))
+    return success
 
 if __name__ == "__main__":
-    print_html()
+    if perform_updates():
+        print "Location: index.py"

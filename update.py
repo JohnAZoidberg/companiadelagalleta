@@ -22,9 +22,7 @@ def db_update():
     new_version = 120 # 0.1.20
     version = 0
     try:
-        base.cur.execute("SELECT version FROM config")
-        result = base.cur.fetchone()
-        version = result[0]
+        version = base.get_version() 
     except Exception as e:
         if str(e) == "(1146, \"Table 'cg.config' doesn't exist\")":
             version = 0 # 0.0.0
