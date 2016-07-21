@@ -37,6 +37,7 @@ def print_html():
     j2_env.filters['discountformat'] = util.discountformat
     j2_env.filters['adddays'] = util.adddays
     j2_env.filters['uniqueId'] = util.uniqueId
+    j2_env.tests['continent'] = util.is_continent
 
     # printing
     util.print_header()

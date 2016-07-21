@@ -19,7 +19,7 @@ def git_update():
 
 def db_update():
     base = CgBase()
-    new_version = 119 # 0.1.19
+    new_version = 120 # 0.1.20
     version = 0
     try:
         base.cur.execute("SELECT version FROM config")
@@ -104,6 +104,18 @@ def db_update():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         base.db.commit()
         print "Shorter names for the boxes", util.br
+    if version < 120:
+        country_changes = {
+            "??": "_??",
+            "eu": "_eu",
+            "asia": "_asia",
+            "america": "_america",
+            "xx": "_xx"
+        }
+        for old, new in country_changes.iteritems():
+            base.update("purchases", {"country": new}, False, "WHERE country='"+old+"'")
+        base.db.commit()
+        print "More countries and continents", util.br
 
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
