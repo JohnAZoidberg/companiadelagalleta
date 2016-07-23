@@ -22,12 +22,9 @@ def perform_updates():
     if not util.checkConnection():
         print "No internet connection!"
         exit()
+
     # update git
     gitupdatestr = update.git_update()
-    if gitupdatestr == "Already up-to-date.\n":
-        gitupdatestr = ""
-    else:
-        gitupdatestr += util.br
 
     print "Updates:", util.br, gitupdatestr
     # update db
@@ -39,9 +36,12 @@ def perform_updates():
         with open('log.txt', 'a') as f:
             f.writelines('\n'.join([
                     util.datetimeformat(datetime.now()),
+                    str(gitupdatestr),
+                    str(updatemsg),
                     str((success, syncstr)),
-                    "-----", ""
+                    "-----\n"
             ]))
+            print "written"
     return success
 
 if __name__ == "__main__":
