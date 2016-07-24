@@ -27,7 +27,7 @@ def save_purchase(boxes):
     if cookies:
         country  = form.getfirst('country')
         card     = form.getvalue('payment')
-        date_field = form.getfirst('datetime')
+        date_field = form.getfirst('date')  + " " + form.getfirst('time')
         if date_field is None:
             date = datetime.now() 
             edited = date

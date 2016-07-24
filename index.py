@@ -17,7 +17,7 @@ from datetime import datetime
 def print_html():
     # cgi
     form = cgi.FieldStorage()
-    showndate = form.getfirst("showndate")
+    showndate = form.getfirst("date")
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase()

@@ -37,15 +37,13 @@
           <h2>Nueva compra</h2>
           <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
             <input type="hidden" name="action" value="save_purchase">
-            <input type="hidden" name="redirect" value="index.py?showndate={{ date|dateformat }}">
+            <input type="hidden" name="redirect" value="index.py?date={{ date|dateformat }}">
             <div class="form-group">
-              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="date">Fecha:</label>
-              <div class="col-sm-5">
-                <input type="text" class="form-control" name="datetime" id="date" placeholder="18:04" list="dates" required>
-                <datalist id="dates">
-                    <option value="{{ date|timeformat }}"></option>
-                    <option value="{{ date|datetimeformat }}"></option>
-                </datalist>
+              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="time">Fecha:</label>
+              <div class="col-sm-5 input-group" style="padding: 0 15px;">
+                <label for="change-date" class="input-group-addon">{{ date|dateformat }}</label>
+                <input type="hidden" name="date" value="{{ date|dateformat }}">
+                <input type="text" class="form-control" name="time" id="time" placeholder="18:04" list="dates" required>
               </div>
             </div>
             <div class="form-group">
@@ -109,10 +107,14 @@
         <div class="col-sm-6"><!-- Sales list -->
           <h2>Compras</h2>
           <ul class="list-inline">
-            <li><form method="get"><input name="showndate" size="10" style="width: auto;" class="form-control" placeholder="{{ date|dateformat }}"  value="{{ date|dateformat }}"></input></form></li>
-            <li><a href="?showndate={{ date|adddays(-1)|dateformat }}" class="btn btn-default">Ant</a></li>
+            <li>
+              <form method="get">
+                <input id="change-date" name="date" size="10" style="width: auto;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}"></input>
+              </form>
+            </li>
+            <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default"><span>Ant</span></a></li>
             <li><a href="?" class="btn btn-default">Hoy</a></li>
-            <li><a href="?showndate={{ date|adddays(1)|dateformat }}" class="btn btn-default">Sig</a></li>
+            <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default"><span>Sig</span></a></li>
           </ul>
           <table class="table table-hover">
             <thead>
@@ -125,7 +127,7 @@
             </thead>
             <tbody>
               {% for purchase in purchases %}
-              <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py?showndate={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
+              <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
                 <td>{{ purchase['purchase']['date']|timeformat }}</td>
                 <td>{{ purchase['purchase']['country']|countryformat }}</td>
                 <td>{{ purchase['purchase']['card']|cardformat }}</td>
