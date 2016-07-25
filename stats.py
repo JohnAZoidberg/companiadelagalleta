@@ -46,10 +46,16 @@ def create_stats_file():
         ventas["B" + row] = util.country_list[purchase['country']]
         ventas["C" + row] = purchase['discount']
         ventas["D" + row] = purchase['card']
+        total_price = 0
+        total_boxes = 0
         for item in cart:
             col = 6 + item['boxId']
+            total_price += item['price']
+            total_boxes += 1
             # TODO handle changed price as 0.9 or something like that
             ventas[colnum_string(col) + row] = item['quantity']
+        ventas['E' + row] = total_boxes
+        ventas['F' + row] = total_price / 100.0
 
     cajas = wb.get_sheet_by_name("Cajas")
     for boxId, box in boxes.iteritems():
