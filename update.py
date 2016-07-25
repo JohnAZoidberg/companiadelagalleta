@@ -48,7 +48,6 @@ def db_update():
             base.cur.execute("DROP TABLE config")
         except:
             pass
-        base.db.commit()
         try:
             sql = (
                   "CREATE TABLE config ("
@@ -64,7 +63,6 @@ def db_update():
             base.db.rollback()
             raise
         base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
-        base.db.commit()
     if version < 12:
         result += "This version does not add anything new :P\n",
     if version < 117:
@@ -78,7 +76,6 @@ def db_update():
         }
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
-        base.db.commit()
         result += "Removed the 'window' from the names of the Pyramid boxes\n"
     if version < 119:
         box_update = {
@@ -101,7 +98,6 @@ def db_update():
         }
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
-        base.db.commit()
         result += "Shorter names for the boxes\n"
     if version < 120:
         country_changes = {
@@ -114,7 +110,6 @@ def db_update():
         for old, new in country_changes.iteritems():
             base.update("purchases", {"country": new}, False, "WHERE country='"+old+"'")
         base.cur.execute("ALTER TABLE purchases MODIFY country VARCHAR(255)")
-        base.db.commit()
         result += "More countries and continents\n"
 
     if version < 121:
@@ -122,6 +117,8 @@ def db_update():
 
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
+        base.db.commit()
+    base.db.rollback()
     if version != new_version:
         result += "Updated from " + version + " to " + new_version+"\n"
     else:
