@@ -16,13 +16,6 @@ except ImportError:
     from ordereddict import OrderedDict
 import util
 from openpyxl import load_workbook
-form = cgi.FieldStorage()
-
-
-base = CgBase()
-util.print_header()
-purchases = base.get_purchases(prettydict=True)
-boxes = base.get_boxes()
 
 def colnum_string(n):
     div = n
@@ -37,33 +30,44 @@ def colnum_string(n):
 def day_to_datetime(day):
     return datetime.strptime(day, '%Y-%m-%d')
 
+def create_stats_file():
+    form = cgi.FieldStorage()
+    base = CgBase()
+    purchases = base.get_purchases(prettydict=True)
+    boxes = base.get_boxes()
 
-br = "<br>"
-wb = load_workbook('stats.xlsx')
-ventas = wb.get_sheet_by_name("Ventas")
-for i, p in enumerate(reversed(purchases)):
-    row = str(i + 2)
-    purchase = p['purchase']
-    cart = p['cart']
-    ventas["A" + row] = purchase['date']
-    ventas["B" + row] = util.country_list[purchase['country']]
-    ventas["C" + row] = purchase['discount']
-    ventas["D" + row] = purchase['card']
-    for item in cart:
-        col = 6 + item['boxId']
-        # TODO handle changed price as 0.9 or something like that
-        ventas[colnum_string(col) + row] = item['quantity']
+    wb = load_workbook('stats.xlsx')
+    ventas = wb.get_sheet_by_name("Ventas")
+    for i, p in enumerate(reversed(purchases)):
+        row = str(i + 2)
+        purchase = p['purchase']
+        cart = p['cart']
+        ventas["A" + row] = purchase['date']
+        ventas["B" + row] = util.country_list[purchase['country']]
+        ventas["C" + row] = purchase['discount']
+        ventas["D" + row] = purchase['card']
+        total_price = 0
+        total_boxes = 0
+        for item in cart:
+            col = 6 + item['boxId']
+            total_price += item['price']
+            total_boxes += 1
+            # TODO handle changed price as 0.9 or something like that
+            ventas[colnum_string(col) + row] = item['quantity']
+        ventas['E' + row] = total_boxes
+        ventas['F' + row] = total_price / 100.0
 
-cajas = wb.get_sheet_by_name("Cajas")
-for boxId, box in boxes.iteritems():
-    row = str(boxId+1)
-    title = box['title']
-    price = box['price'] / 100.0
-    cajas["A" + row] = boxId
-    cajas["B" + row] = title
-    cajas["C" + row] = price
-#print ws.title, br
-#print ws.cell("A2").value, br
-#print ws["A2"].value, br
+    cajas = wb.get_sheet_by_name("Cajas")
+    for boxId, box in boxes.iteritems():
+        row = str(boxId+1)
+        title = box['title']
+        price = box['price'] / 100.0
+        cajas["A" + row] = boxId
+        cajas["B" + row] = title
+        cajas["C" + row] = price
 
-wb.save("estadisticas.xlsx")
+    wb.save("estadisticas.xlsx")
+    print "Location: estadisticas.xlsx\n"
+
+if __name__ == "__main__":
+    create_stats_file()

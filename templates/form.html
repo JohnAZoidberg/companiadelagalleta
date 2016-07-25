@@ -3,43 +3,47 @@
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="bootstrap.min.css">
-    <script src="jquery-2.2.4.min.js"></script>
-    <script src="bootstrap.min.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/jquery-2.2.4.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <style>
-        .clickable {
-                cursor: pointer;
-        }
-
-        .list-group-horizontal .list-group-item {
-                display: inline-block;
-        }
-        .list-group-horizontal .list-group-item {
-        	margin-bottom: 0;
-        	margin-left:-4px;
-        	margin-right: 0;
-        }
-        .list-group-horizontal .list-group-item:first-child {
-        	border-top-right-radius:0;
-        	border-bottom-left-radius:4px;
-        }
-        .list-group-horizontal .list-group-item:last-child {
-        	border-top-right-radius:4px;
-        	border-bottom-left-radius:0;
-        }
     </style>
     <title>{{ title }}</title>
   </head>
   <body>
-    <div class="container">
+    <div class="container-fluid">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Ventas (v{{ version }})</a>
+          </div>
+          <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="admin.py"><span class="glyphicon glyphicon-refresh"></span> Update&Sync</a></li>
+              <li><a href="stats.py"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      {% if msg != None %}
+      <div class="alert alert-info fade in">
+        <a href="?" class="close">&times;</a>
+        {{ msg }}
+      </div>
+      {% endif %}
       <div class="row">
         <div class="col-sm-6"><!-- Input form -->
-          <h2>Nueva compra</h2>
           <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
             <input type="hidden" name="action" value="save_purchase">
             <input type="hidden" name="redirect" value="index.py?date={{ date|dateformat }}">
             <div class="form-group">
-              <label title="2016-07-01 18:04" class="control-label col-sm-2" for="time">Fecha:</label>
+              <label title="18:04" class="control-label col-sm-2" for="date">Hora:</label>
               <div class="col-sm-5 input-group" style="padding: 0 15px;">
                 <label for="change-date" class="input-group-addon">{{ date|dateformat }}</label>
                 <input type="hidden" name="date" value="{{ date|dateformat }}">
@@ -66,7 +70,7 @@
             </div>
             <div class="form-group">
               <label class="control-label col-sm-2" for="box">Caja:</label>
-              <div class="col-sm-6 box-inputs">
+              <div class="col-sm-7 box-inputs padding-sm-right">
                 <input type="text" class="form-control" name="{{ foo|uniqueId }}" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
                 {% for boxId, box in boxes %}
@@ -75,11 +79,11 @@
                 </datalist>
                 <input type="hidden" name="current_box" id="box-hidden">
               </div>
-              <div class="col-sm-2 box-inputs">
+              <div class="col-sm-2 box-inputs padding-sm">
                 <input type="number" class="form-control" name="quantity" id="quantity" value="1">
               </div>
-              <div class="col-sm-2 box-inputs">
-                <input type="button" class="form-control" id="add-box" value="Add">
+              <div class="col-sm-1 box-inputs padding-sm">
+                <span class="clickable glyphicon glyphicon-plus btn btn-default" id="add-box"></span>
               </div>
             </div>
             <div class="form-group">
@@ -105,16 +109,15 @@
           </form>
         </div>
         <div class="col-sm-6"><!-- Sales list -->
-          <h2>Compras</h2>
           <ul class="list-inline">
             <li>
               <form method="get">
                 <input id="change-date" name="date" size="10" style="width: auto;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}"></input>
               </form>
             </li>
-            <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default"><span>Ant</span></a></li>
+            <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span></a></li>
             <li><a href="?" class="btn btn-default">Hoy</a></li>
-            <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default"><span>Sig</span></a></li>
+            <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-right"></a></li>
           </ul>
           <table class="table table-hover">
             <thead>
@@ -127,7 +130,7 @@
             </thead>
             <tbody>
               {% for purchase in purchases %}
-              <tr class="info clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
+              <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
                 <td>{{ purchase['purchase']['date']|timeformat }}</td>
                 <td>{{ purchase['purchase']['country']|countryformat }}</td>
                 <td>{{ purchase['purchase']['card']|cardformat }}</td>
@@ -174,7 +177,7 @@
           boxId = $('#box-hidden').val()
           quantity = $('#quantity').val()
           // TODO: show errors
-          
+
           if (title == "" || quantity == 0 || boxId == "" || $('#box_'+boxId).length > 0) return;
           // clear fields
           $('#box').val("")
@@ -186,7 +189,7 @@
           input = '<input type="hidden" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">'
           $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + 'x' + lastPrice + '</span> ' + title + input + '</li>')
           e.preventDefault();
-      }); 
+      });
 
       // remove added boxes by onclick
       $('#added-boxes').on('click', '.added-box', function() {

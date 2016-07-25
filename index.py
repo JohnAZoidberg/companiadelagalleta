@@ -18,11 +18,13 @@ def print_html():
     # cgi
     form = cgi.FieldStorage()
     showndate = form.getfirst("date")
+    msg = form.getfirst("msg")
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase()
     boxes = base.get_boxes()
     purchases, card_total, cash_total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
+    version = base.get_version()
 
     # env
     THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -48,7 +50,9 @@ def print_html():
         boxes=boxes.items(),
         purchases=purchases,
         card_total=card_total,
-        cash_total=cash_total
+        cash_total=cash_total,
+        msg=msg,
+        version=version
         #random_prefix=util.uniqueId()
     )
 

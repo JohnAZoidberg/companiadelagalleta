@@ -16,27 +16,36 @@ from datetime import datetime
 import api
 from dbdetails import dbdetails
 import update
+import urllib
 
-def print_html():
-    util.print_header()
+def perform_updates():
     if not util.checkConnection():
-        print "No internet connection!"
-        exit()
+        return "No internet connection!"
+
     # update git
     gitupdatestr = update.git_update()
-    if gitupdatestr == "Already up-to-date.\n":
-        gitupdatestr = ""
-    else:
-        gitupdatestr += util.br
 
-    print "Updates:", util.br, gitupdatestr
     # update db
     reload(update)
-    update.db_update()
+    updatemsg = update.db_update()
 
     if not dbdetails.server:
         success, syncstr = api.sync()
-        print util.br, "Sync:", util.br, syncstr
+    else:
+        success = True
+        syncstr = "Server -> no sync"
+    with open('log.txt', 'a') as f:
+        f.writelines('\n'.join([
+                util.datetimeformat(datetime.now()),
+                str(gitupdatestr),
+                str(updatemsg),
+                str((success, syncstr)),
+                "-----\n"
+        ]))
+    return updatemsg
 
 if __name__ == "__main__":
-    print_html()
+    msg = perform_updates()
+    msg = urllib.quote(msg, safe='')
+    print "Location: index.py?msg="+msg
+    print

@@ -213,3 +213,6 @@ class CgBase:
     
     def get_last_sync(self):
         return self.fetchone("config", ["last_sync"], "")
+
+    def get_version(self):
+        return self.fetchone("config", ["version"])
