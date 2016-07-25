@@ -31,14 +31,17 @@ def perform_updates():
 
     if not dbdetails.server:
         success, syncstr = api.sync()
-        with open('log.txt', 'a') as f:
-            f.writelines('\n'.join([
-                    util.datetimeformat(datetime.now()),
-                    str(gitupdatestr),
-                    str(updatemsg),
-                    str((success, syncstr)),
-                    "-----\n"
-            ]))
+    else:
+        success = True
+        syncstr = "Server -> no sync"
+    with open('log.txt', 'a') as f:
+        f.writelines('\n'.join([
+                util.datetimeformat(datetime.now()),
+                str(gitupdatestr),
+                str(updatemsg),
+                str((success, syncstr)),
+                "-----\n"
+        ]))
     return updatemsg
 
 if __name__ == "__main__":

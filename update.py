@@ -20,7 +20,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase()
-    new_version = 120 # 0.1.20
+    new_version = 121 # 0.1.21
     version = 0
     try:
         version = base.get_version()
@@ -116,6 +116,9 @@ def db_update():
         base.cur.execute("ALTER TABLE purchases MODIFY country VARCHAR(255)")
         base.db.commit()
         result += "More countries and continents\n"
+
+    if version < 121:
+        result += "Just an logging update for the server - don't worry\n"
 
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
