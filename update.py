@@ -59,14 +59,17 @@ def db_update():
                   )
             base.cur.execute(sql)
             base.cur.execute("INSERT INTO config () VALUES ()")
+            base.db.commit()
         except:
             base.db.rollback()
             raise
         base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
+        base.db.commit()
     if version < 12:
         result += "This version does not add anything new :P\n",
     if version < 117:
         base.insert("boxes", {"title": "Bolsa Merienda", "price": 275, "boxesEntryId": 66}, True)
+        base.db.commit()
     if version < 118:
         box_update = {
             25: "Pyramid box - Tropicales",
@@ -77,6 +80,7 @@ def db_update():
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         result += "Removed the 'window' from the names of the Pyramid boxes\n"
+        base.db.commit()
     if version < 119:
         box_update = {
              5: "Basic bag pequeña - Frutas",
@@ -99,6 +103,7 @@ def db_update():
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
+        base.db.commit()
     if version < 120:
         country_changes = {
             "??": "_??",
@@ -111,7 +116,7 @@ def db_update():
             base.update("purchases", {"country": new}, False, "WHERE country='"+old+"'")
         base.cur.execute("ALTER TABLE purchases MODIFY country VARCHAR(255)")
         result += "More countries and continents\n"
-
+        base.db.commit()
     if version < 121:
         result += "Just an logging update for the server - don't worry\n"
 
@@ -120,7 +125,7 @@ def db_update():
         base.db.commit()
     base.db.rollback()
     if version != new_version:
-        result += "Updated from " + version + " to " + new_version+"\n"
+        result += "Updated from " + str(version) + " to " + str(new_version)+"\n"
     else:
         result += "No update available("+str(version)+")\n"
     return result
