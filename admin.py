@@ -16,12 +16,11 @@ from datetime import datetime
 import api
 from dbdetails import dbdetails
 import update
+import urllib
 
 def perform_updates():
-    util.print_header()
     if not util.checkConnection():
-        print "No internet connection!"
-        exit()
+        return "No internet connection!"
 
     # update git
     gitupdatestr = update.git_update()
@@ -40,9 +39,10 @@ def perform_updates():
                     str((success, syncstr)),
                     "-----\n"
             ]))
-            print "written"
-    return success
+    return updatemsg
 
 if __name__ == "__main__":
-    if perform_updates():
-        print "Location: index.py"
+    msg = perform_updates()
+    msg = urllib.quote(msg, safe='')
+    print "Location: index.py?msg="+msg
+    print

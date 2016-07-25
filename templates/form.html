@@ -31,6 +31,12 @@
           </div>
         </div>
       </nav>
+      {% if msg != None %}
+      <div class="alert alert-info fade in">
+        <a href="?" class="close">&times;</a>
+        {{ msg }}
+      </div>
+      {% endif %}
       <div class="row">
         <div class="col-sm-6"><!-- Input form -->
           <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">

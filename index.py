@@ -18,6 +18,7 @@ def print_html():
     # cgi
     form = cgi.FieldStorage()
     showndate = form.getfirst("showndate")
+    msg = form.getfirst("msg")
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase()
@@ -50,6 +51,7 @@ def print_html():
         purchases=purchases,
         card_total=card_total,
         cash_total=cash_total,
+        msg=msg,
         version=version
         #random_prefix=util.uniqueId()
     )
