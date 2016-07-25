@@ -26,7 +26,6 @@ def perform_updates():
     # update git
     gitupdatestr = update.git_update()
 
-    print "Updates:", util.br, gitupdatestr
     # update db
     reload(update)
     updatemsg = update.db_update()
