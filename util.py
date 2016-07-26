@@ -148,3 +148,5 @@ def adddays(date, summand):
 # Jinja Tests:
 def is_continent(value):
     return value[0] == "_"
+def is_today(value):
+    return is_same_day(datetime.now(), value)

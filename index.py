@@ -20,6 +20,8 @@ def print_html():
     form = cgi.FieldStorage()
     showndate = form.getfirst("date")
     msg = form.getfirst("msg")
+    if msg is not None:
+        msg = msg.replace("\n", "<br>")
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase()
@@ -41,6 +43,7 @@ def print_html():
     j2_env.filters['adddays'] = util.adddays
     j2_env.filters['uniqueId'] = util.uniqueId
     j2_env.tests['continent'] = util.is_continent
+    j2_env.tests['today'] = util.is_today
 
     # printing
     util.print_header()

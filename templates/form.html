@@ -43,9 +43,9 @@
             <input type="hidden" name="action" value="save_purchase">
             <input type="hidden" name="redirect" value="index.py?date={{ date|dateformat }}">
             <div class="form-group">
-              <label title="18:04" class="control-label col-sm-2" for="date">Hora:</label>
+              <label class="control-label col-sm-2" for="date">Hora:</label>
               <div class="col-sm-5 input-group" style="padding: 0 15px;">
-                <label for="change-date" class="input-group-addon">{{ date|dateformat }}</label>
+                <label for="change-date" class="input-group-addon">{{ 'Hoy' if date is today else date|dateformat }}</label>
                 <input type="hidden" name="date" value="{{ date|dateformat }}">
                 <input type="text" class="form-control" name="time" id="time" placeholder="18:04" list="dates" required>
               </div>
