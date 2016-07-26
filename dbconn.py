@@ -85,8 +85,10 @@ class CgBase:
 
     def insert_purchase(self, country, card, date, discount, cart, edited, status=0, syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
-        # a unique id to identify entries: unixtimestamp + 4 random digits
         success = False
+        if dbdetails.server:
+            status = 3
+        # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
         if len(cart) == 0:
@@ -96,7 +98,7 @@ class CgBase:
             if price is None:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
-            price = int(price * ((100 - discount) / 100.0)) 
+            price = int(price * ((100 - discount) / 100.0))
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart", {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price}, False)
         success = success and self.insert("purchases",
@@ -105,7 +107,7 @@ class CgBase:
         if success:
             self.db.commit()
         else:
-            self.db.rollback() 
+            self.db.rollback()
         return success
 
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False, simplecart=False):

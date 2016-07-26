@@ -13,6 +13,7 @@ import cgi
 import util
 from dbconn import CgBase
 from datetime import datetime
+from dbdetails import *
 
 def print_html():
     # cgi
@@ -52,6 +53,7 @@ def print_html():
         card_total=card_total,
         cash_total=cash_total,
         msg=msg,
+        server=dbdetails.server,
         version=version
         #random_prefix=util.uniqueId()
     )
