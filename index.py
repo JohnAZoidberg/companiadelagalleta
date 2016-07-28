@@ -26,7 +26,7 @@ def print_html():
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase()
     boxes = base.get_boxes()
-    purchases, card_total, cash_total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
+    purchases, total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
     version = base.get_version()
 
     # env
@@ -53,8 +53,7 @@ def print_html():
         countries=util.country_list.items(),
         boxes=boxes.items(),
         purchases=purchases,
-        card_total=card_total,
-        cash_total=cash_total,
+        total=total,
         msg=msg,
         server=dbdetails.server,
         version=version

@@ -78,18 +78,40 @@ def print_purchases(ps, shown_date, page):
 def is_same_day(date1, date2):
     return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
 
+def earlier_than(hour, minute, dt):
+    return dt < dt.replace(hour=hour, minute=minute)
+
+def split_purchases(purchases):
+    morning = {"ps":[], "total": {"cash": 0, "card": 0}}
+    evening = {"ps":[], "total": {"cash": 0, "card": 0}}
+    for p in purchases:
+        if not earlier_than(16, 0, p['purchase']['date']):
+            morning['ps'].append(p)
+        else:
+            evening['ps'].append(p)
+    return (morning, evening)
+
 def calc_purchases_totals(ps):
+    split_ps = split_purchases(ps)
     cash_total = 0
     card_total = 0
-    for pk, p in enumerate(ps):
-        ps[pk]['purchase']['total'] = 0
-        for ik, item in enumerate(p['cart']):
-            ps[pk]['purchase']['total'] += item['price'] * item['quantity']
-            if p['purchase']['card']:
-                card_total += item['price'] * item['quantity']
-            else:
-                cash_total += item['price'] * item['quantity']
-    return ps, card_total, cash_total
+    for i, _ps in enumerate(split_ps):
+        card_sum = 0
+        cash_sum = 0
+        ps = _ps['ps']
+        for pk, p in enumerate(ps):
+            ps[pk]['purchase']['total'] = 0
+            for ik, item in enumerate(p['cart']):
+                ps[pk]['purchase']['total'] += item['price'] * item['quantity']
+                if p['purchase']['card']:
+                    card_sum += item['price'] * item['quantity']
+                else:
+                    cash_sum += item['price'] * item['quantity']
+        split_ps[i]['total']['card'] = card_sum
+        split_ps[i]['total']['cash'] = cash_sum
+        cash_total += cash_sum
+        card_total += card_sum
+    return split_ps, (card_total, cash_total)
 
 def uniqueId(*args):
     return randint(100000000, 999999999)

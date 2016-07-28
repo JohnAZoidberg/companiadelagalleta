@@ -122,14 +122,14 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <td></td>
-                <td align="right" style="vertical-align:bottom" colspan="3">
-                  <span title="VISA">{{ card_total|moneyformat }}</span> + <span title="efectivo">{{ cash_total|moneyformat }}</span> = {{ (card_total + cash_total)|moneyformat }}
+                <td align="right" style="font-weight: bold; vertical-align:bottom" colspan="4">
+                  Total: <span title="VISA">{{ total[0]|moneyformat }}</span> + <span title="efectivo">{{ total[1]|moneyformat }}</span> = {{ (total[0] + total[1])|moneyformat }}<br>
                </td>
               </tr>
             </thead>
             <tbody>
-              {% for purchase in purchases %}
+              {% for daytime in purchases %}
+              {% for purchase in daytime['ps'] %}
               <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=index.py?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
                 <td>{{ purchase['purchase']['date']|timeformat }}</td>
                 <td>{{ purchase['purchase']['country']|countryformat }}</td>
@@ -143,6 +143,12 @@
                 <td align="right">{{ item['price']|moneyformat }}</td>
               </tr>
               {% endfor %}
+              {% endfor %}
+              {% if daytime['ps'] %}
+              <tr style="font-weight: bold;">
+                <td align="right" colspan="4"><span title="VISA">{{ daytime['total']["card"]|moneyformat }}</span> + <span title="efectivo">{{ daytime['total']["cash"]|moneyformat }}</span> = {{ (daytime['total']["card"] + daytime['total']["cash"])|moneyformat }}</td>
+              </tr>
+              {% endif %}
               {% endfor %}
             </tbody>
           </table>
