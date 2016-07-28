@@ -13,12 +13,15 @@ import cgi
 import util
 from dbconn import CgBase
 from datetime import datetime
+from dbdetails import *
 
 def print_html():
     # cgi
     form = cgi.FieldStorage()
     showndate = form.getfirst("date")
     msg = form.getfirst("msg")
+    if msg is not None:
+        msg = msg.replace("\n", "<br>")
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase()
@@ -40,6 +43,7 @@ def print_html():
     j2_env.filters['adddays'] = util.adddays
     j2_env.filters['uniqueId'] = util.uniqueId
     j2_env.tests['continent'] = util.is_continent
+    j2_env.tests['today'] = util.is_today
 
     # printing
     util.print_header()
@@ -52,6 +56,7 @@ def print_html():
         card_total=card_total,
         cash_total=cash_total,
         msg=msg,
+        server=dbdetails.server,
         version=version
         #random_prefix=util.uniqueId()
     )

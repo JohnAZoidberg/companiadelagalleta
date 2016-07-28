@@ -31,14 +31,28 @@ def perform_updates():
 
     if not dbdetails.server:
         success, syncstr = api.sync()
+        sync_json = syncstr
+        if not sync_json['synced_down']['deleted']\
+           and not sync_json['synced_down']['deleted']\
+           and not sync_json['synced_down']['deleted']\
+           and not sync_json['synced_down']['deleted']:
+               updatemsg += "\nNothing to sync"
+        elif success:
+            updatemsg += "\nSync done"
+        else:
+            updatemsg += "\nSync problem!!!"
+
     else:
         success = True
         syncstr = "Server -> no sync"
     with open('log.txt', 'a') as f:
         f.writelines('\n'.join([
                 util.datetimeformat(datetime.now()),
+                "gitupdate:",
                 str(gitupdatestr),
+                "updatemsg",
                 str(updatemsg),
+                "sync",
                 str((success, syncstr)),
                 "-----\n"
         ]))
