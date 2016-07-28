@@ -112,7 +112,7 @@
           <ul class="list-inline">
             <li>
               <form method="get">
-                <input id="change-date" name="date" size="10" style="width: auto;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}"></input>
+                <input id="change-date" name="date" size="10" style="width: auto; display: inline;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}"></input>
               </form>
             </li>
             <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span></a></li>
