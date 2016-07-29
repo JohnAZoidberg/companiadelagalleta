@@ -56,6 +56,7 @@ def print_html():
         total=total,
         msg=msg,
         server=dbdetails.server,
+        workers=util.workers,
         version=version
         #random_prefix=util.uniqueId()
     )

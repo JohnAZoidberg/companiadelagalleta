@@ -21,10 +21,22 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Ventas (v{{ version }})</a>
+            <span class="navbar-brand">Ventas (v{{ version }})</span>
+            <span class="navbar-brand" id="working-now"></span>
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
+              <li>
+              <div class="dropdown">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                  {% for worker in workers %}
+                  <li><a href="#" class="begin-work" data-worker="{{ worker }}">{{ worker }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+              </li>
               <li><a href="admin.py"><span class="glyphicon glyphicon-refresh"></span>{{ "Update" if server else "Update&Sync" }}</a></li>
               <li><a href="stats.py"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
             </ul>
@@ -201,6 +213,7 @@
       $('#added-boxes').on('click', '.added-box', function() {
           $(this).remove();
       });
+      // Ask for delete confirmation for boxes in statistic
       $(".deletable-row").click(function() {
           if (confirm("Really delete?")) {
               window.document.location = $(this).data("href");
@@ -214,6 +227,38 @@
           } else {
               $("#submit").attr("disabled", "true");
           }
+      });
+      // manage working status
+      var working = []
+      function updateWorkingStr() {
+          workingstr = "";
+          for (i = 0; i < working.length; i++) {
+              workingstr += '<span class="end-work" data-worker="' + working[i] + '">' + working[i] + "</span>";
+              if (i + 1 < working.length) {
+                  workingstr += ", "
+              }
+          }
+          $("#working-now").html(workingstr);
+      }
+      function remove(arr, item) {
+          for(var i = arr.length; i--;) {
+              if(arr[i] === item) {
+                  arr.splice(i, 1);
+              }
+          }
+      }
+      // start work
+      $(".begin-work").click(function() {
+          worker = $(this).data("worker");
+          working.push(worker);
+          updateWorkingStr()
+      });
+      // end work
+      $(".end-work").click(function() {
+          worker = $(this).data("worker");
+          remove(working, worker);
+          console.log(working)
+          updateWorkingStr()
       });
     </script>
   </body>
