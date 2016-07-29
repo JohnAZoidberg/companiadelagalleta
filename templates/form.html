@@ -254,7 +254,7 @@
           updateWorkingStr()
       });
       // end work
-      $(".end-work").click(function() {
+      $("#working-now").on('click', '.end-work', function() {
           worker = $(this).data("worker");
           remove(working, worker);
           console.log(working)
