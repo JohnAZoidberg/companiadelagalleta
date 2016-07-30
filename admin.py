@@ -32,10 +32,10 @@ def perform_updates():
     if not dbdetails.server:
         success, syncstr = api.sync()
         sync_json = syncstr
-        if not sync_json['synced_down']['deleted']\
+        if not sync_json['synced_down']['added']\
            and not sync_json['synced_down']['deleted']\
-           and not sync_json['synced_down']['deleted']\
-           and not sync_json['synced_down']['deleted']:
+           and not sync_json['synced_up']['added']\
+           and not sync_json['synced_up']['deleted']:
                updatemsg += "\nNothing to sync"
         elif success:
             updatemsg += "\nSync done"
