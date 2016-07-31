@@ -249,3 +249,9 @@ class CgBase:
         except:
             # TODO write error to log
             return False
+
+    def get_workers(self):
+        working = self.fetchall("shifts", ["workerId"], "WHERE end IS NULL")
+        working = [w[0] for w in working] if working else []
+        workers = {wid: {"name": wname, "working": wid in working} for wid, wname in util.workers.iteritems()}
+        return workers

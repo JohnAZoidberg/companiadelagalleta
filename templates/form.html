@@ -22,7 +22,11 @@
               <span class="icon-bar"></span>
             </button>
             <span class="navbar-brand">Ventas (v{{ version }})</span>
-            <span class="navbar-brand" id="working-now"></span>
+            <span class="navbar-brand" id="working-now">
+            {% for wid, worker in workers.iteritems() if worker["working"] %}
+              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
+            {% endfor %}
+            </span>
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
@@ -30,9 +34,9 @@
               <div class="dropdown">
                 <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                  {% for workerId, worker in workers.iteritems() %}
-                  <li><a href="#" class="begin-work" data-worker="{{ workerId }}">{{ worker }}</a></li>
+                <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                  {% for wid, worker in workers.iteritems() if not worker["working"] %}
+                  <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
                   {% endfor %}
                 </ul>
               </div>
@@ -229,19 +233,24 @@
           }
       });
       // manage working status
-      var working = {};
+      var workers = {{ workers|json }}
       function updateWorkingStr() {
           workingstr = "";
-          $.each( working, function( index, value ){
-              workingstr += '<span class="end-work" data-worker="' + index + '">' + value + "</span>";
+          not_workingstr = ""
+          $.each( workers, function( index, value ){
+              if (value["working"]) {
+                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
+              } else {
+                  not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> '
+              }
           });
-          $("#working-now").html(workingstr);
+          $("#not-working-now").html(not_workingstr);
       }
       // start work
-      $(".begin-work").click(function() {
+      $("#not-working-now").on('click', '.begin-work', function() {
           worker = $(this).html();
           workerId = $(this).data("worker");
-          working[workerId] = worker;
+          workers[workerId]["working"] = true;
           $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
               console.log(result)
               console.log(JSON.parse(result)["work_started"]==workerId);
@@ -252,7 +261,7 @@
       $("#working-now").on('click', '.end-work', function() {
           worker = $(this).html();
           workerId = $(this).data("worker");
-          delete working[workerId]
+          workers[workerId]["working"] = false;
           $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
               console.log(result)
               console.log(JSON.parse(result)["work_ended"]==workerId);
