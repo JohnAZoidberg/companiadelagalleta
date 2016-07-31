@@ -127,6 +127,7 @@ def db_update():
               "end datetime,"
               "syncId int(11) NOT NULL PRIMARY KEY,"
               "status int NOT NULL,"
+              "edited datetime DEFAULT '2016-01-01 00:00:00' NOT NULL,"
               "location int NOT NULL"
               ")"
         )

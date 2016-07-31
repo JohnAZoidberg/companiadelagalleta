@@ -113,6 +113,22 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def insert_shift(self, workerId, start, end, edited, location, status=0, syncId=None):
+        success = False
+        if dbdetails.server:
+            status = 3
+        # a unique id to identify entries: unixtimestamp + 4 random digits
+        if syncId is None:
+            syncId = str(util.uniqueId())
+        success = self.insert("shifts",
+                {"workerId": workerId, "start": util.datestring(start), "end": util.datestring(end), "location": location, "status": status, "syncId": syncId, "edited": edited},
+                    False)
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
+
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False, simplecart=False):
         pt = "purchases"
         ct = "cart"
@@ -161,7 +177,14 @@ class CgBase:
 
     def mark_purchase_deleted(self, syncId):
         syncStr= str(syncId)
-        success = self.update("purchases", {"status": 2, "edited":     util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
+        success = self.update("purchases", {"status": 2, "edited": util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
+        if success:
+            self.db.commit()
+        return success
+
+    def mark_shift_deleted(self, syncId):
+        syncStr= str(syncId)
+        success = self.update("shift", {"status": 2, "edited": util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
         if success:
             self.db.commit()
         return success
@@ -181,11 +204,27 @@ class CgBase:
             raise
         return False
 
-    def change_status(self, syncId, status):
+    def delete_shift(self, syncId):
+        syncStr = str(syncId)
+        try:
+            self.cur.execute("DELETE FROM shifts WHERE syncId = " + syncStr)
+            return True
+        except:
+            self.db.rollback()
+            raise
+        return False
+
+    def change_purchase_status(self, syncId, status):
         return self.update("purchases", {"status": status}, True, "WHERE syncId="+str(syncId))
 
-    def mark_synced(self, syncId):
-        return self.change_status(syncId, 3)
+    def mark_purchase_synced(self, syncId):
+        return self.change_purchase_status(syncId, 3)
+
+    def change_shift_status(self, syncId, status):
+        return self.update("shifts", {"status": status}, True, "WHERE syncId="+str(syncId))
+
+    def mark_shift_synced(self, syncId):
+        return self.change_shift_status(syncId, 3)
 
     def get_boxes(self):
         boxes = OrderedDict()
@@ -255,3 +294,17 @@ class CgBase:
         working = [w[0] for w in working] if working else []
         workers = {wid: {"name": wname, "working": wid in working} for wid, wname in util.workers.iteritems()}
         return workers
+
+    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False):
+        where =  "WHERE status <> 3" if notsynced else ""
+        result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "location"], where)
+        shifts = {}
+        for row in result:
+            (workerId, start, end, syncId, status, location) = row
+            if datestring:
+                start = util.datestring(start)
+                end = "null" if end is None else util.datestring(end)
+            if not getDeleted and status == 2:
+                continue
+            shifts[syncId] = {"workerId": workerId, "start": start, "end": end, "status": status, "location": location}
+        return shifts
