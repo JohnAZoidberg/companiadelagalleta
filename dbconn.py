@@ -120,8 +120,10 @@ class CgBase:
         # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
+        if end is not None:
+            end = util.datestring(end)
         success = self.insert("shifts",
-                {"workerId": workerId, "start": util.datestring(start), "end": util.datestring(end), "location": location, "status": status, "syncId": syncId, "edited": edited},
+                {"workerId": workerId, "start": util.datestring(start), "end": end, "location": location, "status": status, "syncId": syncId, "edited": edited},
                     False)
         if success:
             self.db.commit()
@@ -265,21 +267,8 @@ class CgBase:
         res = self.fetchone("shifts", ["workerId"], "WHERE workerId = " + workerId + " AND end IS NULL")
         if res is not None:
             return True
-        try:
-            self.insert(
-                "shifts", {
-                    "workerId": workerId,
-                    "start": util.datestring(datetime.now()),
-                    "end": None,
-                    "syncId": util.uniqueId(),
-                    "status": 0,
-                    "location": 0
-                },
-                True
-            )
-            return True
-        except:
-            return False
+        now = datetime.now()
+        return self.insert_shift(workerId, now, None, now, 0)
 
     def end_work(self, workerId):
         try:
@@ -296,7 +285,8 @@ class CgBase:
         return workers
 
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False):
-        where =  "WHERE status <> 3" if notsynced else ""
+        where = "WHERE end IS NOT NULL"
+        where += " AND status <> 3" if notsynced else ""
         result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "location"], where)
         shifts = {}
         for row in result:

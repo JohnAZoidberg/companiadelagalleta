@@ -53,7 +53,7 @@ def delete_purchase():
     return False
 
 def sync():
-    #downresult = sync_down()
+    downresult = {'synced_down': {"added": [], "deleted": []}}#sync_down()
     upresult = sync_up()
     generic_result = {"action": "sync"}
     generic_result.update(upresult)
@@ -91,9 +91,12 @@ def sync_up():
     r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
     try:
         jres = r.json()
+        foo = jres["purchases"]
     except ValueError as e:
         print_text("ERROR ON SERVERSIDE!<br>"+r.text)
         exit()
+    except TypeError:
+        jres = json.loads(jres)
     # handle result - mark deleted or as synced
     for syncId in jres["purchases"]["deleted"]:
         base.delete_purchase(syncId)
