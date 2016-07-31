@@ -244,29 +244,36 @@
                   not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> '
               }
           });
+          $("#working-now").html(workingstr);
           $("#not-working-now").html(not_workingstr);
       }
       // start work
       $("#not-working-now").on('click', '.begin-work', function() {
           worker = $(this).html();
-          workerId = $(this).data("worker");
-          workers[workerId]["working"] = true;
-          $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
-              console.log(result)
-              console.log(JSON.parse(result)["work_started"]==workerId);
-          });
-          updateWorkingStr()
+          if (confirm("Comenzar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = true;
+              $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
+                  console.log(result)
+                  success = JSON.parse(result)["work_started"]==workerId
+                  console.log(success);
+                  if (success) updateWorkingStr()
+              });
+          }
       });
       // end work
       $("#working-now").on('click', '.end-work', function() {
           worker = $(this).html();
-          workerId = $(this).data("worker");
-          workers[workerId]["working"] = false;
-          $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
-              console.log(result)
-              console.log(JSON.parse(result)["work_ended"]==workerId);
-          });
-          updateWorkingStr()
+          if (confirm("Acabar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = false;
+              $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
+                  console.log(result)
+                  success = JSON.parse(result)["work_ended"]==workerId
+                  console.log(success);
+                  if (success) updateWorkingStr()
+              });
+          }
       });
     </script>
   </body>
