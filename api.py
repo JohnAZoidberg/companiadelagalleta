@@ -129,7 +129,7 @@ def receive_sync_up():
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
             if existing is None:
-                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
+                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, status=3, syncId=syncId):
                     result["purchases"]['added'].append(syncId)
             elif existing == 2: # exists but was previously marked as deleted
                 if base.change_purchase_status(syncId, 3):
@@ -139,11 +139,12 @@ def receive_sync_up():
                 result["purchases"]['deleted'].append(syncId)
 
     shifts = res["shifts"]
-    for shift in shifts:
+    for syncId, shift in shifts.iteritems():
+        status = shift['status']
         existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
             if existing is None:
-                if base.insert_shift():
+                if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
                     result["shifts"]['added'].append(syncId)
             elif existing == 2: # exists but was previously marked as deleted
                 if base.change_shift_status(syncId, 3):
