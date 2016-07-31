@@ -40,12 +40,12 @@ country_list = OrderedDict([
     ('_xx', "Otro")
 ])
 
-workers = [
-    "Daniel",
-    "Patricia",
-    "Raquel",
-    "Roberta"
-]
+workers = OrderedDict([
+    (0, "Daniel"),
+    (1, "Patricia"),
+    (2, "Raquel"),
+    (3, "Roberta")
+])
 
 def print_header(t="text/html"):
     print "Content-Type: "+ t + ";charset=utf-8"

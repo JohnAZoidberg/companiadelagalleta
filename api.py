@@ -130,6 +130,16 @@ def get_purchases():
     purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
     return (True, json.dumps({"purchases": purchases}))
 
+def begin_work():
+    workerId = form.getfirst("workerId")
+    workres = base.begin_work(workerId)
+    return (workres, {"work_started": workerId})
+
+def end_work():
+    workerId = form.getfirst("workerId")
+    workres = base.end_work(workerId)
+    return (workres, {"work_ended": workerId})
+
 def convert_date(datestring):
     try:
         return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
@@ -164,6 +174,10 @@ if __name__ == "__main__":
             (success, response) = sync()
         elif action == "syncUp":
             (success, response) = receive_sync_up() 
+        elif action == "begin_work":
+            (success, response) = begin_work()
+        elif action == "end_work":
+            (success, response) = end_work()
         else:
             print_text("No valid Action: " + str(action))
             action = None
@@ -173,9 +187,9 @@ if __name__ == "__main__":
     if success:
         redirect = form.getfirst('redirect')
         if redirect is None:
-            print_text(response)
+            print_text(json.dumps(response))
         else:
             print "Location: " + redirect
             print 
     elif action is not None:
-        print_text('{"result": "No success - ' + response + '", "action": "' + action + '"}')
+        print_text('{"result": "No success - ' + str(response) + '", "action": "' + action + '"}')

@@ -23,10 +23,13 @@ class CgBase:
     def close_connection(self):
         self.db.close()
 
-    def _list_to_str(self, xs, quote=""):
+    def _list_to_str(self, xs, quote=""):# TODO rename to _list_to_sql_str
         str_value = quote + str(xs[0]) + quote 
         for x in xs[1:]:
-            str_value += ", " + quote + str(x) + quote
+            if x is None:
+                str_value += ", NULL"
+            else:
+                str_value += ", " + quote + str(x) + quote
         return str_value
 
     def _fetch(self, table, columns, extra=""):
@@ -218,3 +221,31 @@ class CgBase:
 
     def get_version(self):
         return self.fetchone("config", ["version"])
+
+    def begin_work(self, workerId):
+        res = self.fetchone("shifts", ["workerId"], "WHERE workerId = " + workerId + " AND end IS NULL")
+        if res is not None:
+            return True
+        try:
+            self.insert(
+                "shifts", {
+                    "workerId": workerId,
+                    "start": util.datestring(datetime.now()),
+                    "end": None,
+                    "syncId": util.uniqueId(),
+                    "status": 0,
+                    "location": 0
+                },
+                True
+            )
+            return True
+        except:
+            return False
+
+    def end_work(self, workerId):
+        try:
+            self.update("shifts", {"end": util.datestring(datetime.now())}, True, "WHERE workerId = " + workerId + " AND end IS NULL")
+            return True
+        except:
+            # TODO write error to log
+            return False
