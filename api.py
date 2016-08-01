@@ -17,10 +17,10 @@ form = cgi.FieldStorage()
 base = CgBase()
 
 def save_purchase(boxes):
-    cookies = {} 
+    cookies = {}
     for boxId, box in boxes.iteritems():
         boxId = str(boxId)
-        count_field = form.getvalue('box_'+boxId) 
+        count_field = form.getvalue('box_'+boxId)
         count = 0 if count_field is None else int(count_field)
         if count > 0:
             cookies[boxId] = count
@@ -29,7 +29,7 @@ def save_purchase(boxes):
         card     = form.getvalue('payment')
         date_field = form.getfirst('date')  + " " + form.getfirst('time')
         if date_field is None:
-            date = datetime.now() 
+            date = datetime.now()
             edited = date
         else:
             date = convert_date(date_field + ":00")
@@ -37,7 +37,7 @@ def save_purchase(boxes):
                 return (False, "Not a valid datetime")
             edited = datetime.now()
         discount_field = form.getfirst('discount')
-        discount = 0 if discount_field is None else int(discount_field) 
+        discount = 0 if discount_field is None else int(discount_field)
         card = True if card == "card" else False
         insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
         if insert_success:
@@ -234,7 +234,7 @@ if __name__ == "__main__":
         elif action == "sync":
             (success, response) = sync()
         elif action == "syncUp":
-            (success, response) = receive_sync_up() 
+            (success, response) = receive_sync_up()
         elif action == "begin_work":
             (success, response) = begin_work()
         elif action == "end_work":
@@ -244,13 +244,13 @@ if __name__ == "__main__":
             action = None
     else:
         print_text('{"result": "No Action"}')
-    
+
     if success:
         redirect = form.getfirst('redirect')
         if redirect is None:
             print_text(json.dumps(response))
         else:
             print "Location: " + redirect
-            print 
+            print
     elif action is not None:
         print_text('{"result": "No success - ' + str(response) + '", "action": "' + action + '"}')

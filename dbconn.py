@@ -24,7 +24,7 @@ class CgBase:
         self.db.close()
 
     def _list_to_str(self, xs, quote=""):# TODO rename to _list_to_sql_str
-        str_value = quote + str(xs[0]) + quote 
+        str_value = quote + str(xs[0]) + quote
         for x in xs[1:]:
             if x is None:
                 str_value += ", NULL"
@@ -84,7 +84,7 @@ class CgBase:
         except:
             self.db.rollback()
             raise
-            return False 
+            return False
 
     def insert_purchase(self, country, card, date, discount, cart, edited, status=0, syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
@@ -152,7 +152,7 @@ class CgBase:
             if notsynced and status == 3:
                 continue
             if not getDeleted and status == 2:
-                continue 
+                continue
             if datestring:
                 date = util.datestring(date)
                 edited = util.datestring(edited)
@@ -162,15 +162,15 @@ class CgBase:
             except:
                 purchases[key] = {}
                 if prettydict:
-                    purchases[key]['purchase'] = {"syncId": key, "status": status, "country": country, "card": card, "discount": discount, "date": date, "edited": edited} 
+                    purchases[key]['purchase'] = {"syncId": key, "status": status, "country": country, "card": card, "discount": discount, "date": date, "edited": edited}
                 else:
                     purchases[key]['purchase'] = (key, status, country, card, discount, date)
                 if simplecart:
                     purchases[key]['cart'] = {}
                 else:
-                    purchases[key]['cart'] = [] 
+                    purchases[key]['cart'] = []
             if simplecart:
-                purchases[key]['cart'][boxId] = quantity 
+                purchases[key]['cart'][boxId] = quantity
             elif prettydict:
                 purchases[key]['cart'].append({"title": title, "boxId": boxId, "quantity": quantity, "price": price})
             else:
@@ -240,8 +240,8 @@ class CgBase:
         return boxes
 
     def get_box_stats(self):
-        stats = {} 
-        results = self.fetchall("cart, purchases", 
+        stats = {}
+        results = self.fetchall("cart, purchases",
                                 ["cart.boxId", "cart.quantity", "purchases.date"],
                                 "WHERE cart.syncId = purchases.syncId AND cart.status != 2 ORDER BY date ASC")
         for (boxId, quantity, date) in results:
@@ -251,10 +251,10 @@ class CgBase:
             except:
                 stats[date] = {}
             try:
-                foo = stats[date][boxId] 
-                stats[date][boxId] += quantity 
+                foo = stats[date][boxId]
+                stats[date][boxId] += quantity
             except:
-                stats[date][boxId] = quantity 
+                stats[date][boxId] = quantity
         return stats
 
     def update_last_sync(self, date=datetime.now()):
