@@ -186,7 +186,7 @@ class CgBase:
 
     def mark_shift_deleted(self, syncId):
         syncStr= str(syncId)
-        success = self.update("shift", {"status": 2, "edited": util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
+        success = self.update("shifts", {"status": 2, "edited": util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
         if success:
             self.db.commit()
         return success
