@@ -284,7 +284,7 @@ class CgBase:
         workers = {wid: {"name": wname, "working": wid in working} for wid, wname in util.workers.iteritems()}
         return workers
 
-    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False):
+    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None):
         where = "WHERE end IS NOT NULL"
         where += " AND status <> 3" if notsynced else ""
         result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "location"], where)
@@ -296,5 +296,8 @@ class CgBase:
                 end = "null" if end is None else util.datestring(end)
             if not getDeleted and status == 2:
                 continue
+            if newerthan is not None:
+                if newerthan > edited:
+                    continue
             shifts[syncId] = {"workerId": workerId, "start": start, "end": end, "status": status, "location": location}
         return shifts

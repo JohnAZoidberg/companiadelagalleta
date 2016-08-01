@@ -66,6 +66,8 @@ def sync_down():
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "sync_down", "last_update": last_sync})
     try:
         jres = r.json()
+        print_text(jres)
+        exit()
         foo = jres["purchases"]
     except ValueError as e:
         print_text("ERROR ON SERVERSIDE!<br>"+r.text)
@@ -78,7 +80,7 @@ def sync_down():
     }}
 
     ps = jres["purchases"]
-    for p in ps['purchases']:
+    for p in ps:
         purchase = p['purchase']
         cart = p['cart']
         syncId = purchase['syncId']
@@ -86,10 +88,10 @@ def sync_down():
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 2:
             if base.mark_purchase_deleted(syncId):
-                result['purchases']['synced_down']['deleted'].append(syncId)
+                result['synced_down']['purchases']['deleted'].append(syncId)
         elif existing is None:
             if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited,status=3, syncId=syncId):
-                result['purchases']['synced_down']['added'].append(syncId)
+                result['synced_down']['purchases']['added'].append(syncId)
 
     shifts = jres["shifts"]
     for syncId, shift in shifts.iteritems():
@@ -97,17 +99,21 @@ def sync_down():
         existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
         if status == 2:
             if base.mark_shift_deleted(syncId):
-                result['shifts']['synced_down']['deleted'].append(syncId)
+                result['synced_down']['shifts']['deleted'].append(syncId)
         elif existing is None:
             if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
-                result['shifts']['synced_down']['added'].append(syncId)
+                result['synced_down']['shifts']['added'].append(syncId)
     base.update_last_sync(edited)
     return result
 
 def receive_sync_down():
+    datestring = form.getfirst("last_update")
+    if datestring is None:
+        return (False, "You must give a date of the last update (last_update)")
+    last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     result = {}
-    result['purchases'] = get_purchases()
-    result['shifts'] = base.get_shifts(getDeleted=True, datestring=True, notsynced=True)
+    result['purchases'] = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
+    result['shifts'] = base.get_shifts(getDeleted=True, datestring=True, newerthan=last_update)
     return (True, json.dumps(result))
 
 def sync_up():
@@ -184,14 +190,6 @@ def receive_sync_up():
                 result["shifts"]['deleted'].append(syncId)
 
     return (True, json.dumps(result))
-
-def get_purchases():
-    datestring = form.getfirst("last_update")
-    if datestring is None:
-        return (False, "You must give a date of the last update (last_update)")
-    last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
-    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
-    return purchases
 
 def begin_work():
     workerId = form.getfirst("workerId")
