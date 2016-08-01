@@ -66,6 +66,8 @@ def sync_down():
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "sync_down", "last_update": last_sync})
     try:
         jres = r.json()
+        print_text(jres)
+        exit()
         foo = jres["purchases"]
     except ValueError as e:
         print_text("ERROR ON SERVERSIDE!<br>"+r.text)
@@ -92,7 +94,8 @@ def sync_down():
                 result['synced_down']['purchases']['added'].append(syncId)
 
     shifts = jres["shifts"]
-    for syncId, shift in shifts.iteritems():
+    for shift in shifts:
+        syncId = shift['syncId']
         status = shift['status']
         existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
         if status == 2:
@@ -173,7 +176,8 @@ def receive_sync_up():
                 result["purchases"]['deleted'].append(syncId)
 
     shifts = res["shifts"]
-    for syncId, shift in shifts.iteritems():
+    for shift in shifts:
+        syncId = shift['syncId']
         status = shift['status']
         existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:

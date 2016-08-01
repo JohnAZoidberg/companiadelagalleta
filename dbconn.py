@@ -284,11 +284,11 @@ class CgBase:
         workers = {wid: {"name": wname, "working": wid in working} for wid, wname in util.workers.iteritems()}
         return workers
 
-    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None):
+    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None, returndict=False):
         where = "WHERE end IS NOT NULL"
         where += " AND status <> 3" if notsynced else ""
         result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "edited", "location"], where)
-        shifts = {}
+        shifts = []
         for row in result:
             (workerId, start, end, syncId, status, edited, location) = row
             key = int(syncId)
@@ -300,5 +300,5 @@ class CgBase:
             if newerthan is not None:
                 if newerthan > edited:
                     continue
-            shifts[key] = {"workerId": workerId, "start": start, "end": end, "status": status, "location": location}
-        return shifts
+            shifts.append({"syncId": key, "workerId": workerId, "start": start, "end": end, "status": status, "location": location})
+        return {shift["syncId"]: shift for shift in shifts} if returndict else shifts
