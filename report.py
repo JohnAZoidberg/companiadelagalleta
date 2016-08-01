@@ -15,7 +15,7 @@ try:
 except ImportError:
     from ordereddict import OrderedDict
 import util
-from openpyxl import load_workbook 
+from openpyxl import load_workbook
 form = cgi.FieldStorage()
 
 
@@ -33,7 +33,7 @@ box_mapping = {
      6: 10,
      7:  9,
      8:  8,
-    10: 15, 
+    10: 15,
     11: 14,
     12: 13,
     13: 12,
@@ -45,7 +45,7 @@ box_mapping = {
     21: 23,
     22: 22,
     23: 21,
-    25: 30, 
+    25: 30,
     26: 29,
     27: 28,
     28: 27,
@@ -114,4 +114,4 @@ wb.save("report.xlsx")
 
 #util.print_html_footer()
 print "Location: report.xlsx"
-print 
+print

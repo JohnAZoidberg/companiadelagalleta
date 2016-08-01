@@ -21,10 +21,26 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Ventas (v{{ version }})</a>
+            <span class="navbar-brand">Ventas (v{{ version }})</span>
+            <span class="navbar-brand" id="working-now">
+            {% for wid, worker in workers.iteritems() if worker["working"] %}
+              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
+            {% endfor %}
+            </span>
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
+              <li>
+              <div class="dropdown">
+                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
+                </button>
+                <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                  {% for wid, worker in workers.iteritems() if not worker["working"] %}
+                  <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+              </li>
               <li><a href="admin.py"><span class="glyphicon glyphicon-refresh"></span>{{ "Update" if server else "Update&Sync" }}</a></li>
               <li><a href="stats.py"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
             </ul>
@@ -201,6 +217,7 @@
       $('#added-boxes').on('click', '.added-box', function() {
           $(this).remove();
       });
+      // Ask for delete confirmation for boxes in statistic
       $(".deletable-row").click(function() {
           if (confirm("Really delete?")) {
               window.document.location = $(this).data("href");
@@ -213,6 +230,49 @@
               e.preventDefault();
           } else {
               $("#submit").attr("disabled", "true");
+          }
+      });
+      // manage working status
+      var workers = {{ workers|json }}
+      function updateWorkingStr() {
+          workingstr = "";
+          not_workingstr = ""
+          $.each( workers, function( index, value ){
+              if (value["working"]) {
+                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
+              } else {
+                  not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> '
+              }
+          });
+          $("#working-now").html(workingstr);
+          $("#not-working-now").html(not_workingstr);
+      }
+      // start work
+      $("#not-working-now").on('click', '.begin-work', function() {
+          worker = $(this).html();
+          if (confirm("Comenzar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = true;
+              $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
+                  console.log(result)
+                  success = JSON.parse(result)["work_started"]==workerId
+                  console.log(success);
+                  if (success) updateWorkingStr()
+              });
+          }
+      });
+      // end work
+      $("#working-now").on('click', '.end-work', function() {
+          worker = $(this).html();
+          if (confirm("Acabar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = false;
+              $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
+                  console.log(result)
+                  success = JSON.parse(result)["work_ended"]==workerId
+                  console.log(success);
+                  if (success) updateWorkingStr()
+              });
           }
       });
     </script>

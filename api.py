@@ -17,10 +17,10 @@ form = cgi.FieldStorage()
 base = CgBase()
 
 def save_purchase(boxes):
-    cookies = {} 
+    cookies = {}
     for boxId, box in boxes.iteritems():
         boxId = str(boxId)
-        count_field = form.getvalue('box_'+boxId) 
+        count_field = form.getvalue('box_'+boxId)
         count = 0 if count_field is None else int(count_field)
         if count > 0:
             cookies[boxId] = count
@@ -29,7 +29,7 @@ def save_purchase(boxes):
         card     = form.getvalue('payment')
         date_field = form.getfirst('date')  + " " + form.getfirst('time')
         if date_field is None:
-            date = datetime.now() 
+            date = datetime.now()
             edited = date
         else:
             date = convert_date(date_field + ":00")
@@ -37,7 +37,7 @@ def save_purchase(boxes):
                 return (False, "Not a valid datetime")
             edited = datetime.now()
         discount_field = form.getfirst('discount')
-        discount = 0 if discount_field is None else int(discount_field) 
+        discount = 0 if discount_field is None else int(discount_field)
         card = True if card == "card" else False
         insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
         if insert_success:
@@ -63,47 +63,99 @@ def sync():
 def sync_down():
     edited = datetime.now()
     last_sync = base.get_last_sync()
-    r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "get_purchases", "last_update": last_sync})
-    ps = r.json()
-    result= {'synced_down': {"added": [], "deleted": []}}
-    if "purchases" not in ps.keys():
-        return result
-    for p in ps['purchases']:
+    r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "sync_down", "last_update": last_sync})
+    try:
+        jres = r.json()
+        foo = jres["purchases"]
+    except ValueError as e:
+        print_text("ERROR ON SERVERSIDE!<br>"+r.text)
+        exit()
+    except TypeError:
+        jres = json.loads(jres)
+    result = {'synced_down': {
+        "purchases": {"added": [], "deleted": []},
+        "shifts":    {"added": [], "deleted": []}
+    }}
+
+    ps = jres["purchases"]
+    for p in ps:
         purchase = p['purchase']
         cart = p['cart']
         syncId = purchase['syncId']
         status = purchase['status']
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 2:
-            if base.mark_purchase_deleted(syncId):
-                result['synced_down']['deleted'].append(syncId)
+            if base.delete_purchase(syncId):
+                result['synced_down']['purchases']['deleted'].append(syncId)
         elif existing is None:
-            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
-                result['synced_down']['added'].append(syncId)
+            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited,status=3, syncId=syncId):
+                result['synced_down']['purchases']['added'].append(syncId)
+
+    shifts = jres["shifts"]
+    for shift in shifts:
+        syncId = shift['syncId']
+        status = shift['status']
+        existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
+        if status == 2:
+            if base.delete_shift(syncId):
+                result['synced_down']['shifts']['deleted'].append(syncId)
+        elif existing is None:
+            if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
+                result['synced_down']['shifts']['added'].append(syncId)
     base.update_last_sync(edited)
     return result
 
+def receive_sync_down():
+    datestring = form.getfirst("last_update")
+    if datestring is None:
+        return (False, "You must give a date of the last update (last_update)")
+    last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+    result = {}
+    result['purchases'] = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
+    result['shifts'] = base.get_shifts(getDeleted=True, datestring=True, newerthan=last_update)
+    return (True, json.dumps(result))
+
 def sync_up():
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
-    jsonstr = json.dumps(ps)
+    shifts = base.get_shifts(getDeleted=True, datestring=True, notsynced=True)
+    syncdata = {"purchases": ps, "shifts": shifts}
+    jsonstr = json.dumps(syncdata)
     r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
     try:
-        jresponse = r.json()
+        jres = r.json()
+        foo = jres["purchases"]
     except ValueError as e:
-        print_text(r.text)
-    for syncId in jresponse["deleted"]:
+        print_text("ERROR ON SERVERSIDE!<br>"+r.text)
+        exit()
+    except TypeError:
+        jres = json.loads(jres)
+    # handle result - mark deleted or as synced
+    for syncId in jres["purchases"]["deleted"]:
         base.delete_purchase(syncId)
-    for syncId in jresponse["added"]:
-        base.mark_synced(syncId)
-    return {"synced_up": {"deleted": jresponse['deleted'], "added": jresponse['added']}}
+    for syncId in jres["purchases"]["added"]:
+        base.mark_purchase_synced(syncId)
+
+    for syncId in jres["shifts"]["deleted"]:
+        base.delete_shift(syncId)
+    for syncId in jres["shifts"]["added"]:
+        base.mark_shift_synced(syncId)
+    return {"synced_up": {
+        "purchases": {"deleted": jres["purchases"]['deleted'], "added": jres["purchases"]['added']},
+        "shifts": {"deleted": jres["shifts"]['deleted'], "added": jres["shifts"]['added']}
+    }}
 
 def receive_sync_up():
-    result = {"action": "syncUp", "deleted": [], "added": []}
+    result = {"action": "syncUp",
+        "purchases": {"deleted": [], "added": []},
+        "shifts":    {"deleted": [], "added": []}
+    }
     data = form.getfirst("data")
     edited = form.getfirst("edited")
     if edited is None:
         return (False, "You must have the edited thing set")
-    ps = json.loads(data)
+
+    res = json.loads(data)
+    ps = res["purchases"]
     for p in ps:
         purchase = p['purchase']
         cart = p['cart']
@@ -112,23 +164,42 @@ def receive_sync_up():
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
             if existing is None:
-                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, 3, syncId=syncId):
-                    result['added'].append(syncId)
+                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, status=3, syncId=syncId):
+                    result["purchases"]['added'].append(syncId)
             elif existing == 2: # exists but was previously marked as deleted
-                if base.change_status(syncId, 3):
-                    result['added'].append(syncId)
+                if base.change_purchase_status(syncId, 3):
+                    result["purchases"]['added'].append(syncId)
         elif status == 2:
             if existing is None or base.mark_purchase_deleted(syncId):
-                result['deleted'].append(syncId)
+                result["purchases"]['deleted'].append(syncId)
+
+    shifts = res["shifts"]
+    for shift in shifts:
+        syncId = shift['syncId']
+        status = shift['status']
+        existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
+        if status == 0:
+            if existing is None:
+                if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
+                    result["shifts"]['added'].append(syncId)
+            elif existing == 2: # exists but was previously marked as deleted
+                if base.change_shift_status(syncId, 3):
+                    result["shifts"]['added'].append(syncId)
+        elif status == 2:
+            if existing is None or base.mark_shift_deleted(syncId):
+                result["shifts"]['deleted'].append(syncId)
+
     return (True, json.dumps(result))
 
-def get_purchases():
-    datestring = form.getfirst("last_update")
-    if datestring is None:
-        return (False, "You must give a date of the last update (last_update)")
-    last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
-    purchases = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
-    return (True, json.dumps({"purchases": purchases}))
+def begin_work():
+    workerId = form.getfirst("workerId")
+    workres = base.begin_work(workerId)
+    return (workres, {"work_started": workerId})
+
+def end_work():
+    workerId = form.getfirst("workerId")
+    workres = base.end_work(workerId)
+    return (workres, {"work_ended": workerId})
 
 def convert_date(datestring):
     try:
@@ -158,24 +229,28 @@ if __name__ == "__main__":
             (success, response) = save_purchase(base.get_boxes())
         elif action == "delete_purchase":
             success = delete_purchase()
-        elif action == "get_purchases":
-            (success, response) = get_purchases()
+        elif action == "sync_down":
+            (success, response) = receive_sync_down()
         elif action == "sync":
             (success, response) = sync()
         elif action == "syncUp":
-            (success, response) = receive_sync_up() 
+            (success, response) = receive_sync_up()
+        elif action == "begin_work":
+            (success, response) = begin_work()
+        elif action == "end_work":
+            (success, response) = end_work()
         else:
             print_text("No valid Action: " + str(action))
             action = None
     else:
         print_text('{"result": "No Action"}')
-    
+
     if success:
         redirect = form.getfirst('redirect')
         if redirect is None:
-            print_text(response)
+            print_text(json.dumps(response))
         else:
             print "Location: " + redirect
-            print 
+            print
     elif action is not None:
-        print_text('{"result": "No success - ' + response + '", "action": "' + action + '"}')
+        print_text('{"result": "No success - ' + str(response) + '", "action": "' + action + '"}')
