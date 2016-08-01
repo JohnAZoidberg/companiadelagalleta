@@ -210,7 +210,10 @@ class CgBase:
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM shifts WHERE syncId = " + syncStr)
-            return True
+            rows = self.cur.rowcount
+            self.db.commit()
+            if rows > 0:
+                return True
         except:
             self.db.rollback()
             raise
@@ -255,8 +258,8 @@ class CgBase:
         return stats
 
     def update_last_sync(self, date=datetime.now()):
-        self.update("config", {"last_sync": util.datestring(date)}, False, "")
-    
+        self.update("config", {"last_sync": util.datestring(date)}, True, "")
+
     def get_last_sync(self):
         return self.fetchone("config", ["last_sync"], "")
 

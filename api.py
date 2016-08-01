@@ -66,8 +66,6 @@ def sync_down():
     r = requests.get(dbdetails.serverroot+"/api.py", params={"action": "sync_down", "last_update": last_sync})
     try:
         jres = r.json()
-        print_text(jres)
-        exit()
         foo = jres["purchases"]
     except ValueError as e:
         print_text("ERROR ON SERVERSIDE!<br>"+r.text)
