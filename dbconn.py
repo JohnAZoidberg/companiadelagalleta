@@ -287,10 +287,10 @@ class CgBase:
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None):
         where = "WHERE end IS NOT NULL"
         where += " AND status <> 3" if notsynced else ""
-        result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "location"], where)
+        result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "edited", "location"], where)
         shifts = {}
         for row in result:
-            (workerId, start, end, syncId, status, location) = row
+            (workerId, start, end, syncId, status, edited, location) = row
             if datestring:
                 start = util.datestring(start)
                 end = "null" if end is None else util.datestring(end)
