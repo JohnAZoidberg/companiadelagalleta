@@ -20,7 +20,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase()
-    new_version = 130 # 0.1.30
+    new_version = 131 # 0.1.31
     version = 0
     try:
         version = base.get_version()
@@ -133,6 +133,42 @@ def db_update():
         )
         base.cur.execute(sql)
         result += "New tracking for work hours\n"
+    if version < 131:
+        box_update = {
+            15: "Cube pequeño - Frutas",
+            16: "Cube pequeño - Canarias",
+            17: "Cube pequeño - Chocolate",
+            18: "Cube pequeño - Clásica",
+            30: "Elegant 1 verde - Chocolate",
+            31: "Elegant 1 verde - Baño",
+            33: "Elegant 1 crema - Frutas",
+            34: "Elegant 1 crema - Canarias",
+            36: "Elegant 2 verde - Chocolate",
+            37: "Elegant 2 verde - Baño",
+            38: "Elegant 2 verde - Excelencia",
+            40: "Elegant 2 crema - Frutas",
+            42: "Elegant 2 crema - Clásica",
+            41: "Elegant 2 crema - Canarias",
+            44: "Elegant 3 verde - Chocolate",
+            45: "Elegant 3 verde - Baño",
+            46: "Elegant 3 verde - Excelencia",
+            48: "Elegant 3 crema - Frutas",
+            49: "Elegant 3 crema - Canarias",
+            50: "Elegant 3 crema - Clásica",
+            52: "Strelitzia - Canarias",
+            54: "Mango - Excelencia",
+            55: "Plumeria - Excelencia",
+            58: "Cube pequeño - Vegano",
+            59: "Cube grande - Vegano",
+            60: "Elegant 1 verde - Vegano",
+            61: "Elegant 1 crema - Vegano",
+            62: "Strelitzia - Vegano",
+            64: "Mango - Vegano",
+        }
+        for old_title, new_title in box_update.iteritems():
+            base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
+        result += "Shorter names for the boxes\n"
+        base.db.commit()
 
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
