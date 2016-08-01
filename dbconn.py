@@ -291,6 +291,7 @@ class CgBase:
         shifts = {}
         for row in result:
             (workerId, start, end, syncId, status, edited, location) = row
+            key = int(syncId)
             if datestring:
                 start = util.datestring(start)
                 end = "null" if end is None else util.datestring(end)
@@ -299,5 +300,5 @@ class CgBase:
             if newerthan is not None:
                 if newerthan > edited:
                     continue
-            shifts[syncId] = {"workerId": workerId, "start": start, "end": end, "status": status, "location": location}
+            shifts[key] = {"workerId": workerId, "start": start, "end": end, "status": status, "location": location}
         return shifts

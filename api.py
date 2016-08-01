@@ -85,7 +85,7 @@ def sync_down():
         status = purchase['status']
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 2:
-            if base.mark_purchase_deleted(syncId):
+            if base.delete_purchase(syncId):
                 result['synced_down']['purchases']['deleted'].append(syncId)
         elif existing is None:
             if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited,status=3, syncId=syncId):
@@ -96,7 +96,7 @@ def sync_down():
         status = shift['status']
         existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
         if status == 2:
-            if base.mark_shift_deleted(syncId):
+            if base.delete_shift(syncId):
                 result['synced_down']['shifts']['deleted'].append(syncId)
         elif existing is None:
             if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
