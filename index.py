@@ -9,6 +9,7 @@ cgitb.enable() # Displays any errors
 from jinja2 import Environment, FileSystemLoader
 import os
 import cgi
+import json
 
 import util
 from dbconn import CgBase
@@ -27,6 +28,7 @@ def print_html():
     base = CgBase()
     boxes = base.get_boxes()
     purchases, total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
+    workers = base.get_workers()
     version = base.get_version()
 
     # env
@@ -42,6 +44,7 @@ def print_html():
     j2_env.filters['discountformat'] = util.discountformat
     j2_env.filters['adddays'] = util.adddays
     j2_env.filters['uniqueId'] = util.uniqueId
+    j2_env.filters['json'] = json.dumps
     j2_env.tests['continent'] = util.is_continent
     j2_env.tests['today'] = util.is_today
 
@@ -56,6 +59,7 @@ def print_html():
         total=total,
         msg=msg,
         server=dbdetails.server,
+        workers=workers,
         version=version
         #random_prefix=util.uniqueId()
     )

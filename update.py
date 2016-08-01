@@ -20,7 +20,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase()
-    new_version = 121 # 0.1.21
+    new_version = 130 # 0.1.30
     version = 0
     try:
         version = base.get_version()
@@ -119,6 +119,20 @@ def db_update():
         base.db.commit()
     if version < 121:
         result += "Just an logging update for the server - don't worry\n"
+    if version < 130:
+        sql = (
+              "CREATE TABLE shifts ("
+              "workerId int NOT NULL,"
+              "start datetime,"
+              "end datetime,"
+              "syncId int(11) NOT NULL PRIMARY KEY,"
+              "status int NOT NULL,"
+              "edited datetime DEFAULT '2016-01-01 00:00:00' NOT NULL,"
+              "location int NOT NULL"
+              ")"
+        )
+        base.cur.execute(sql)
+        result += "New tracking for work hours\n"
 
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
