@@ -20,7 +20,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(util.get_location())
-    new_version = 140 # 0.1.40
+    new_version = 400 # 0.4.0
     version = 0
     success = False
     try:
@@ -188,7 +188,7 @@ def db_update():
         base.db.rollback()
     if version != new_version:
         if success:
-            result += "Updated from " + str(version) + " to " + str(new_version)+"\n"
+            result += "Updated from " + util.readable_version(version) + " to " + util.readable_version(new_version)+"\n"
         else:
             result += "FAILURE!\n"
     else:

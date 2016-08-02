@@ -21,7 +21,7 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <span class="navbar-brand">Ventas (v{{ version }})</span>
+            <span class="navbar-brand">Ventas (v{{ version|readable_version }})</span>
             <span class="navbar-brand" id="working-now">
             {% for wid, worker in workers.iteritems() if worker["working"] %}
               <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>

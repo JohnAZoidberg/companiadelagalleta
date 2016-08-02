@@ -181,6 +181,16 @@ def discountformat(value):
 
 def adddays(date, summand):
     return date + timedelta(days=summand)
+
+def readable_version(value):
+    version_str = str(value % 100)
+    for i in xrange(1):
+        value = value / 100
+        version_str = str(value % 100) + "." + version_str
+    value = value / 100
+    version_str = str(value) + "." + version_str
+    return version_str
+
 # Jinja Tests:
 def is_continent(value):
     return value[0] == "_"
