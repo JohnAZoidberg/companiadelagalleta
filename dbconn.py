@@ -255,7 +255,7 @@ class CgBase:
         if res is not None:
             return True
         now = datetime.now()
-        return self.insert_shift(workerId, now, None, now, 0)
+        return self.insert_shift(workerId, now, None, now)
 
     def end_work(self, workerId):
         try:
@@ -271,9 +271,10 @@ class CgBase:
         workers = {wid: {"name": wname, "working": wid in working} for wid, wname in util.workers.iteritems()}
         return workers
 
-    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None, returndict=False):
+    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None, returndict=False, allLocations=False):
         where = "WHERE end IS NOT NULL"
         where += " AND status <> 3" if notsynced else ""
+        where += " AND location = " + str(self.location) if not allLocations else ""
         result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "edited", "location"], where)
         shifts = []
         for row in result:
