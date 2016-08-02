@@ -19,7 +19,7 @@ def git_update():
 
 def db_update():
     result = ""
-    base = CgBase()
+    base = CgBase(util.get_location())
     new_version = 131 # 0.1.31
     version = 0
     try:
@@ -169,6 +169,12 @@ def db_update():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
+    if version < 140:
+        base.cur.execute("ALTER TABLE purchases ADD location INT")
+        base.cur.execute("UPDATE purchases SET location = 0")
+        base.cur.execute("ALTER TABLE purchases ALTER COLUMN location INT NOT NULL")
+        base.db.commit()
+        result += "New feature for choosing location.\n"
 
     if new_version is not None:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
@@ -182,4 +188,4 @@ def db_update():
 
 if __name__ == "__main__":
     util.print_header()
-    db_update()
+    print db_update()

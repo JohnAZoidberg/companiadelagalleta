@@ -23,9 +23,22 @@ def print_html():
     msg = form.getfirst("msg")
     if msg is not None:
         msg = msg.replace("\n", "<br>")
+    location = form.getfirst("location")
+    # cookies
+    cookies = util.get_cookies()
+    new_cookies = {}
+    if location is None:
+        try:
+            location = int(cookies['location'])
+        except:
+            location = 0
+            new_cookies = {"location": location}
+    else:
+        location = int(location)
+        new_cookies = {"location": location}
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
-    base = CgBase()
+    base = CgBase(location)
     boxes = base.get_boxes()
     purchases, total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
     workers = base.get_workers()
@@ -49,7 +62,7 @@ def print_html():
     j2_env.tests['today'] = util.is_today
 
     # printing
-    util.print_header()
+    util.print_header(cookies=new_cookies)
     print j2_env.get_template('/templates/form.html').render(
         title='Herramienta',
         date=now,
@@ -60,6 +73,8 @@ def print_html():
         msg=msg,
         server=dbdetails.server,
         workers=workers,
+        location=location,
+        locations=util.locations,
         version=version
         #random_prefix=util.uniqueId()
     )

@@ -19,7 +19,7 @@ from openpyxl import load_workbook
 form = cgi.FieldStorage()
 
 
-base = CgBase()
+base = CgBase(util.get_location())
 #util.print_header()
 #util.print_html_header("Test")
 purchases = base.get_purchases()

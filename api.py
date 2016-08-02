@@ -14,7 +14,7 @@ except ImportError:
 import util
 from dbdetails import dbdetails
 form = cgi.FieldStorage()
-base = CgBase()
+base = CgBase(util.get_location())
 
 def save_purchase(boxes):
     cookies = {}

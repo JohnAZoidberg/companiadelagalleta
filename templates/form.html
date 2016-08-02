@@ -31,15 +31,25 @@
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
               <li>
-              <div class="dropdown">
-                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
-                </button>
-                <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                  {% for wid, worker in workers.iteritems() if not worker["working"] %}
-                  <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
-                  {% endfor %}
-                </ul>
-              </div>
+                <div class="dropdown margin-5">
+                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
+                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
+                    {% for lid, location in locations.iteritems() %}
+                    <li><a href="index.py?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <div class="dropdown margin-5">
+                  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
+                  </button>
+                  <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    {% for wid, worker in workers.iteritems() if not worker["working"] %}
+                    <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
               </li>
               <li><a href="admin.py"><span class="glyphicon glyphicon-refresh"></span> {{ "Update" if server else "Update&Sync" }}</a></li>
               <li><a href="stats.py"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
@@ -128,12 +138,12 @@
           <ul class="list-inline">
             <li>
               <form method="get">
-                <input id="change-date" name="date" size="10" style="width: auto; display: inline;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}"></input>
+                <input id="change-date" name="date" size="10" style="width: auto; display: inline;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}">
               </form>
             </li>
-            <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-left"></span></a></li>
+            <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default glyphicon glyphicon-chevron-left"></a></li>
             <li><a href="?" class="btn btn-default">Hoy</a></li>
-            <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default"><span class="glyphicon glyphicon-chevron-right"></a></li>
+            <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default glyphicon glyphicon-chevron-right"></a></li>
           </ul>
           <table class="table table-hover">
             <thead>
