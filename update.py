@@ -22,7 +22,7 @@ def db_update():
     base = CgBase(util.get_location())
     new_version = 400 # 0.4.0
     version = 0
-    success = False
+    failure = False
     try:
         version = base.get_version()
     except Exception as e:
@@ -177,17 +177,19 @@ def db_update():
             base.cur.execute("ALTER TABLE purchases MODIFY COLUMN location INT NOT NULL")
             base.db.commit()
             result += "New feature for choosing location.\n"
-            success = True
         except:
             base.db.rollback()
+            failure = True
+    if version < 400:
+      result += "New versioning\n"
 
-    if new_version is not None and success:
+    if new_version is not None and not failure:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
         base.db.commit()
     else:
         base.db.rollback()
     if version != new_version:
-        if success:
+        if not failure:
             result += "Updated from " + util.readable_version(version) + " to " + util.readable_version(new_version)+"\n"
         else:
             result += "FAILURE!\n"
