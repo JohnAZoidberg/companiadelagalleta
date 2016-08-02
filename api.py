@@ -164,7 +164,7 @@ def receive_sync_up():
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
             if existing is None:
-                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, location=purchase['location']status=3, syncId=syncId):
+                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, location=purchase['location'], status=3, syncId=syncId):
                     result["purchases"]['added'].append(syncId)
             elif existing == 2: # exists but was previously marked as deleted
                 if base.change_purchase_status(syncId, 3):

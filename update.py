@@ -20,8 +20,9 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(util.get_location())
-    new_version = 131 # 0.1.31
+    new_version = 140 # 0.1.40
     version = 0
+    success = False
     try:
         version = base.get_version()
     except Exception as e:
@@ -170,18 +171,26 @@ def db_update():
         result += "Shorter names for the boxes\n"
         base.db.commit()
     if version < 140:
-        base.cur.execute("ALTER TABLE purchases ADD location INT")
-        base.cur.execute("UPDATE purchases SET location = 0")
-        base.cur.execute("ALTER TABLE purchases ALTER COLUMN location INT NOT NULL")
-        base.db.commit()
-        result += "New feature for choosing location.\n"
+        try:
+            base.cur.execute("ALTER TABLE purchases ADD location INT")
+            base.cur.execute("UPDATE purchases SET location = 0")
+            base.cur.execute("ALTER TABLE purchases MODIFY COLUMN location INT NOT NULL")
+            base.db.commit()
+            result += "New feature for choosing location.\n"
+            success = True
+        except:
+            base.db.rollback()
 
-    if new_version is not None:
+    if new_version is not None and success:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
         base.db.commit()
-    base.db.rollback()
+    else:
+        base.db.rollback()
     if version != new_version:
-        result += "Updated from " + str(version) + " to " + str(new_version)+"\n"
+        if success:
+            result += "Updated from " + str(version) + " to " + str(new_version)+"\n"
+        else:
+            result += "FAILURE!\n"
     else:
         result += "No update available("+str(version)+")\n"
     return result
