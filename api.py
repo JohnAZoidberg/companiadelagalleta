@@ -88,7 +88,7 @@ def sync_down():
             if base.delete_purchase(syncId):
                 result['synced_down']['purchases']['deleted'].append(syncId)
         elif existing is None:
-            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited,status=3, syncId=syncId):
+            if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, location=purchase['location'], status=3, syncId=syncId):
                 result['synced_down']['purchases']['added'].append(syncId)
 
     shifts = jres["shifts"]
@@ -100,7 +100,7 @@ def sync_down():
             if base.delete_shift(syncId):
                 result['synced_down']['shifts']['deleted'].append(syncId)
         elif existing is None:
-            if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
+            if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, location=shift["location"], status=3, syncId=syncId):
                 result['synced_down']['shifts']['added'].append(syncId)
     base.update_last_sync(edited)
     return result
@@ -111,13 +111,13 @@ def receive_sync_down():
         return (False, "You must give a date of the last update (last_update)")
     last_update = datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
     result = {}
-    result['purchases'] = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True)
-    result['shifts'] = base.get_shifts(getDeleted=True, datestring=True, newerthan=last_update)
+    result['purchases'] = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True, allLocations=True)
+    result['shifts'] = base.get_shifts(getDeleted=True, datestring=True, newerthan=last_update, allLocations=True)
     return (True, json.dumps(result))
 
 def sync_up():
-    ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True)
-    shifts = base.get_shifts(getDeleted=True, datestring=True, notsynced=True)
+    ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True, allLocations=True)
+    shifts = base.get_shifts(getDeleted=True, datestring=True, notsynced=True, allLocations=True)
     syncdata = {"purchases": ps, "shifts": shifts}
     jsonstr = json.dumps(syncdata)
     r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
@@ -164,7 +164,7 @@ def receive_sync_up():
         existing = base.fetchone("purchases", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
             if existing is None:
-                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, status=3, syncId=syncId):
+                if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, location=purchase['location']status=3, syncId=syncId):
                     result["purchases"]['added'].append(syncId)
             elif existing == 2: # exists but was previously marked as deleted
                 if base.change_purchase_status(syncId, 3):
@@ -180,7 +180,7 @@ def receive_sync_up():
         existing = base.fetchone("shifts", ["status"], "WHERE syncId=" + str(syncId))
         if status == 0:
             if existing is None:
-                if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, shift["location"], status=3, syncId=syncId):
+                if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, location=shift["location"], status=3, syncId=syncId):
                     result["shifts"]['added'].append(syncId)
             elif existing == 2: # exists but was previously marked as deleted
                 if base.change_shift_status(syncId, 3):
