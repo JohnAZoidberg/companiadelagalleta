@@ -87,11 +87,13 @@ class CgBase:
             raise
             return False
 
-    def insert_purchase(self, country, card, date, discount, cart, edited, status=0, syncId=None):
+    def insert_purchase(self, country, card, date, discount, cart, edited,location=None, status=0, syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
         success = False
         if dbdetails.server:
             status = 3
+        if location is None:
+            location =  self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
@@ -106,7 +108,7 @@ class CgBase:
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart", {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price}, False)
         success = success and self.insert("purchases",
-                {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited, "location": self.location},
+                {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited, "location": location},
                     False)
         if success:
             self.db.commit()
@@ -114,17 +116,19 @@ class CgBase:
             self.db.rollback()
         return success
 
-    def insert_shift(self, workerId, start, end, edited, status=0, syncId=None):
+    def insert_shift(self, workerId, start, end, edited, location=None, status=0, syncId=None):
         success = False
         if dbdetails.server:
             status = 3
+        if location is None:
+            location = self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
         if end is not None:
             end = util.datestring(end)
         success = self.insert("shifts",
-                {"workerId": workerId, "start": util.datestring(start), "end": end, "location": self.location, "status": status, "syncId": syncId, "edited": edited},
+                {"workerId": workerId, "start": util.datestring(start), "end": end, "location": location, "status": status, "syncId": syncId, "edited": edited},
                     False)
         if success:
             self.db.commit()
