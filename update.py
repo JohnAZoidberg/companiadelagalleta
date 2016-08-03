@@ -15,7 +15,11 @@ import util
 import subprocess
 
 def git_update():
-    return subprocess.check_output("./update.sh")
+    process = subprocess.Popen(["./update.sh"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    returncode = process.wait()
+    return (returncode == 0, process.stdout.read())
 
 def db_update():
     result = ""
@@ -170,7 +174,7 @@ def db_update():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
-    if version < 140:
+    if version < 400:
         try:
             base.cur.execute("ALTER TABLE purchases ADD location INT")
             base.cur.execute("UPDATE purchases SET location = 0")
@@ -180,8 +184,7 @@ def db_update():
         except:
             base.db.rollback()
             failure = True
-    if version < 400:
-      result += "New versioning\n"
+        result += "New versioning\n"
 
     if new_version is not None and not failure:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
@@ -194,7 +197,7 @@ def db_update():
         else:
             result += "FAILURE!\n"
     else:
-        result += "No update available("+str(version)+")\n"
+        result += "No update available("+util.readable_version(version)+")\n"
     return result
 
 if __name__ == "__main__":
