@@ -3,3 +3,4 @@ dbdetails.py
 report.xlsx
 *.pyc
 *.swp
+.ropeproject/

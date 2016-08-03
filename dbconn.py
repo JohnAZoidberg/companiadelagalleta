@@ -9,9 +9,10 @@ from datetime import datetime
 import util
 
 class CgBase:
-    def __init__(self):
+    def __init__(self, location):
         self.db = self._connectDb()
         self.cur = self.db.cursor()
+        self.location = location
 
     def _connectDb(self):
         return MySQLdb.connect(host=dbdetails.host,
@@ -86,11 +87,13 @@ class CgBase:
             raise
             return False
 
-    def insert_purchase(self, country, card, date, discount, cart, edited, status=0, syncId=None):
+    def insert_purchase(self, country, card, date, discount, cart, edited,location=None, status=0, syncId=None):
     # type: (str, bool, datetime, int, {int: int}) -> None
         success = False
         if dbdetails.server:
             status = 3
+        if location is None:
+            location =  self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
@@ -105,7 +108,7 @@ class CgBase:
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart", {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price}, False)
         success = success and self.insert("purchases",
-                    {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited},
+                {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited, "location": location},
                     False)
         if success:
             self.db.commit()
@@ -113,10 +116,12 @@ class CgBase:
             self.db.rollback()
         return success
 
-    def insert_shift(self, workerId, start, end, edited, location, status=0, syncId=None):
+    def insert_shift(self, workerId, start, end, edited, location=None, status=0, syncId=None):
         success = False
         if dbdetails.server:
             status = 3
+        if location is None:
+            location = self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
@@ -131,18 +136,19 @@ class CgBase:
             self.db.rollback()
         return success
 
-    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False, simplecart=False):
+    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None, newerthan=None, datestring=False, notsynced=False, simplecart=False, allLocations=False):
+        where_locations = "" if allLocations else " AND location = " + str(self.location)
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
         result = self.fetchall(pt+", "+ct+", "+bt,
-                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status", pt+".edited",
+                               [pt+".syncId", pt+".country", pt+".card", pt+".discount", pt+".date", pt+".status", pt+".edited", pt+".location",
                                 ct+".quantity", ct+".price",
                                 bt+".boxesEntryId", bt+".title"],
-                               "WHERE purchases.syncId = cart.syncId AND boxes.boxesEntryId = cart.boxId ORDER BY " + pt +".date DESC")
+                                "WHERE purchases.syncId = cart.syncId AND boxes.boxesEntryId = cart.boxId" + where_locations + " ORDER BY " + pt + ".date DESC")
         purchases = OrderedDict()
         for row in result:
-            (syncId, country, card, discount, date, status, edited, quantity, price, boxId, title) = row
+            (syncId, country, card, discount, date, status, edited, location, quantity, price, boxId, title) = row
             if onlydate is not None:
                 if not util.is_same_day(onlydate, date):
                     continue
@@ -162,7 +168,7 @@ class CgBase:
             except:
                 purchases[key] = {}
                 if prettydict:
-                    purchases[key]['purchase'] = {"syncId": key, "status": status, "country": country, "card": card, "discount": discount, "date": date, "edited": edited}
+                    purchases[key]['purchase'] = {"syncId": key, "status": status, "country": country, "card": card, "discount": discount, "date": date, "edited": edited, "location": location}
                 else:
                     purchases[key]['purchase'] = (key, status, country, card, discount, date)
                 if simplecart:
@@ -239,24 +245,6 @@ class CgBase:
             boxes[boxId] = {"title": title, "price": price}
         return boxes
 
-    def get_box_stats(self):
-        stats = {}
-        results = self.fetchall("cart, purchases",
-                                ["cart.boxId", "cart.quantity", "purchases.date"],
-                                "WHERE cart.syncId = purchases.syncId AND cart.status != 2 ORDER BY date ASC")
-        for (boxId, quantity, date) in results:
-            date = date.strftime('%Y-%m-%d')
-            try:
-                foo = stats[date]
-            except:
-                stats[date] = {}
-            try:
-                foo = stats[date][boxId]
-                stats[date][boxId] += quantity
-            except:
-                stats[date][boxId] = quantity
-        return stats
-
     def update_last_sync(self, date=datetime.now()):
         self.update("config", {"last_sync": util.datestring(date)}, True, "")
 
@@ -271,7 +259,7 @@ class CgBase:
         if res is not None:
             return True
         now = datetime.now()
-        return self.insert_shift(workerId, now, None, now, 0)
+        return self.insert_shift(workerId, now, None, now)
 
     def end_work(self, workerId):
         try:
@@ -287,9 +275,10 @@ class CgBase:
         workers = {wid: {"name": wname, "working": wid in working} for wid, wname in util.workers.iteritems()}
         return workers
 
-    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None, returndict=False):
+    def get_shifts(self, getDeleted=False, notsynced=False, datestring=False, newerthan=None, returndict=False, allLocations=False):
         where = "WHERE end IS NOT NULL"
         where += " AND status <> 3" if notsynced else ""
+        where += " AND location = " + str(self.location) if not allLocations else ""
         result = self.fetchall("shifts", ["workerId", "start", "end", "syncId", "status", "edited", "location"], where)
         shifts = []
         for row in result:

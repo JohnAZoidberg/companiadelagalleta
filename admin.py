@@ -11,7 +11,6 @@ import os
 import cgi
 
 import util
-from dbconn import CgBase
 from datetime import datetime
 import api
 from dbdetails import dbdetails

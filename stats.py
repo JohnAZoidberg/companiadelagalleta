@@ -31,9 +31,8 @@ def day_to_datetime(day):
     return datetime.strptime(day, '%Y-%m-%d')
 
 def create_stats_file():
-    form = cgi.FieldStorage()
-    base = CgBase()
-    purchases = base.get_purchases(prettydict=True)
+    base = CgBase(util.get_location())
+    purchases = base.get_purchases(prettydict=True, allLocations=True)
     boxes = base.get_boxes()
 
     wb = load_workbook('stats.xlsx')

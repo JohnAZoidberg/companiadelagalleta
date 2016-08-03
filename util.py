@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from dbdetails import dbdetails
 from random import randint
 import socket
+import Cookie
+import os
 try:
     from collections import OrderedDict
 except ImportError:
@@ -47,8 +49,21 @@ workers = OrderedDict([
     (3, "Roberta")
 ])
 
-def print_header(t="text/html"):
+locations = OrderedDict([
+    (0, "Meloneras"),
+    (1, "Obrador"),
+    (2, "Las Palmas"),
+    (3, "Puerto de la Cruz")
+])
+
+def print_header(t="text/html", cookies={}):
     print "Content-Type: "+ t + ";charset=utf-8"
+    if cookies:
+        c = Cookie.SimpleCookie()
+        for key, val in cookies.iteritems():
+            c[key] = val
+            c[key]["expires"] = 12 * 30 * 24 * 60 * 60
+        print c
     print
 
 def println(*lns):
@@ -56,31 +71,23 @@ def println(*lns):
         print ln
     print "<br>"
 
-def print_purchases(ps, shown_date, page):
-    print "<ul>"
-    daily_total_str = [str(total / 100.0) + "€" for total in calc_daily_total(ps, shown_date)]
-    print '<li>Total: ', daily_total_str[0], '</li>'
-    print '<li>Cash-Total: ', daily_total_str[1], '</li>'
-    print '<li>Card-Total: ', daily_total_str[2], '</li>'
-    for p in ps:
-        (syncId, status, country, card, discount, date) = p['purchase']
-        if not is_same_day(date, shown_date):
-            continue
-        card_str = "with card" if card else "in cash"
-        disc_str = "" if discount == 0 else " and got " + str(discount) + "% off"
-        total = 0
-        for item in p['cart']:
-            (title, status, boxId, quantity, price) = item
-            total += price*quantity
-        date_str = date.strftime('%H:%M')
-        delete_link = "" if dbdetails.server else '<a href="api.py?action=delete_purchase&redirect=' + page + '&syncId=' + str(syncId) + '">borrar</a>'
-        print '<li title="', syncId, '">', date_str, " from ", country, " paid ", (total / 100.0), "€ ", card_str, disc_str, delete_link, "</li>"
-        print "<ul>"
-        for item in p['cart']:
-            (title, status, boxId, quantity, price) = item
-            print '<li title="', boxId, '">', quantity, "x ", title, " at ", (price / 100.0), "€</li>"
-        print "</ul>"
-    print "</ul>"
+def get_cookies():
+    cookies = {}
+    if 'HTTP_COOKIE' in os.environ:
+        raw_cookies = os.environ['HTTP_COOKIE']
+        raw_cookies = raw_cookies.split('; ')
+        for cookie in raw_cookies:
+            cookie = cookie.split('=')
+            cookies[cookie[0]] = cookie[1]
+    return cookies
+
+def get_location():
+    cookies = get_cookies()
+    try:
+        location = int(cookies['location'])
+    except:
+        location = 0
+    return location
 
 def is_same_day(date1, date2):
     return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
@@ -174,6 +181,16 @@ def discountformat(value):
 
 def adddays(date, summand):
     return date + timedelta(days=summand)
+
+def readable_version(value):
+    version_str = str(value % 100)
+    for i in xrange(1):
+        value = value / 100
+        version_str = str(value % 100) + "." + version_str
+    value = value / 100
+    version_str = str(value) + "." + version_str
+    return version_str
+
 # Jinja Tests:
 def is_continent(value):
     return value[0] == "_"
