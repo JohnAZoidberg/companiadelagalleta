@@ -170,7 +170,7 @@ def db_update():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
-    if version < 140:
+    if version < 400:
         try:
             base.cur.execute("ALTER TABLE purchases ADD location INT")
             base.cur.execute("UPDATE purchases SET location = 0")
@@ -180,7 +180,6 @@ def db_update():
         except:
             base.db.rollback()
             failure = True
-    if version < 400:
       result += "New versioning\n"
 
     if new_version is not None and not failure:
