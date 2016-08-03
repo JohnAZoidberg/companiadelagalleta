@@ -15,7 +15,11 @@ import util
 import subprocess
 
 def git_update():
-    return subprocess.check_output("./update.sh")
+    process = subprocess.Popen(["./update.sh"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    returncode = process.wait()
+    return (returncode == 0, process.stdout.read())
 
 def db_update():
     result = ""
@@ -193,7 +197,7 @@ def db_update():
         else:
             result += "FAILURE!\n"
     else:
-        result += "No update available("+str(version)+")\n"
+        result += "No update available("+util.readable_version(version)+")\n"
     return result
 
 if __name__ == "__main__":

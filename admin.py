@@ -22,8 +22,13 @@ def perform_updates():
         return "No internet connection!"
 
     # update git
-    gitupdatestr = update.git_update()
+    shell_success, shell_updatestr = update.git_update()
 
+    if not shell_success:
+        util.print_header()
+        print "SHELL UPDATE ERROR: ", util.br
+        print shell_updatestr
+        exit()
     # update db
     reload(update)
     updatemsg = update.db_update()
@@ -51,8 +56,8 @@ def perform_updates():
     with open('log.txt', 'a') as f:
         f.writelines('\n'.join([
                 util.datetimeformat(datetime.now()),
-                "gitupdate:",
-                str(gitupdatestr),
+                "shellupdate:",
+                str(shell_updatestr),
                 "updatemsg",
                 str(updatemsg),
                 "sync",

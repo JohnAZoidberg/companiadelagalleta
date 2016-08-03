@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo rm *.pyc
-sudo chmod 777 log.txt
-sudo git checkout -- .
-sudo git pull
+rm -f *.pyc
+chmod 777 log.txt
+git checkout -- .
+git pull
