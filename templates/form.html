@@ -96,7 +96,7 @@
             </div>
             <div class="form-group">
               <label class="control-label col-sm-2" for="box">Caja:</label>
-              <div class="col-sm-7 box-inputs padding-sm-right">
+              <div class="col-sm-7 box-inputs">
                 <input type="text" class="form-control" name="{{ foo|uniqueId }}" id="box" placeholder="Box" list="boxes">
                 <datalist id="boxes">
                 {% for boxId, box in boxes %}
@@ -105,12 +105,12 @@
                 </datalist>
                 <input type="hidden" name="current_box" id="box-hidden">
               </div>
-              <div class="col-sm-2 box-inputs padding-sm">
+              <div class="col-sm-2 box-inputs">
                 <input type="number" class="form-control" name="quantity" id="quantity" value="1">
               </div>
-              <div class="col-sm-1 box-inputs padding-sm">
+              <div class="col-sm-1 box-inputs">
                 <span class="clickable glyphicon glyphicon-plus btn btn-default" id="add-box"></span>
-              </div>
+                </div>
             </div>
             <div class="form-group">
               <div class="control-label col-sm-2"></div>
