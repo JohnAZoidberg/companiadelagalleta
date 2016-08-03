@@ -180,7 +180,7 @@ def db_update():
         except:
             base.db.rollback()
             failure = True
-      result += "New versioning\n"
+        result += "New versioning\n"
 
     if new_version is not None and not failure:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
