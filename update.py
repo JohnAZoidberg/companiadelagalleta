@@ -19,9 +19,10 @@ def git_update():
 
 def db_update():
     result = ""
-    base = CgBase()
-    new_version = 131 # 0.1.31
+    base = CgBase(util.get_location())
+    new_version = 400 # 0.4.0
     version = 0
+    failure = False
     try:
         version = base.get_version()
     except Exception as e:
@@ -169,17 +170,33 @@ def db_update():
             base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
+    if version < 140:
+        try:
+            base.cur.execute("ALTER TABLE purchases ADD location INT")
+            base.cur.execute("UPDATE purchases SET location = 0")
+            base.cur.execute("ALTER TABLE purchases MODIFY COLUMN location INT NOT NULL")
+            base.db.commit()
+            result += "New feature for choosing location.\n"
+        except:
+            base.db.rollback()
+            failure = True
+    if version < 400:
+      result += "New versioning\n"
 
-    if new_version is not None:
+    if new_version is not None and not failure:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
         base.db.commit()
-    base.db.rollback()
+    else:
+        base.db.rollback()
     if version != new_version:
-        result += "Updated from " + str(version) + " to " + str(new_version)+"\n"
+        if not failure:
+            result += "Updated from " + util.readable_version(version) + " to " + util.readable_version(new_version)+"\n"
+        else:
+            result += "FAILURE!\n"
     else:
         result += "No update available("+str(version)+")\n"
     return result
 
 if __name__ == "__main__":
     util.print_header()
-    db_update()
+    print db_update()
