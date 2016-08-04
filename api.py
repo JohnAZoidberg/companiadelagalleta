@@ -49,7 +49,7 @@ def save_purchase(boxes):
 def delete_purchase():
     syncId = form.getfirst('syncId')
     if syncId is not None:
-        return base.mark_purchase_deleted(syncId)
+        return base.mark_purchase_deleted(syncId, updateStock=True)
     return False
 
 def sync():

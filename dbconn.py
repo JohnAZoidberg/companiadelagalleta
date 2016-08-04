@@ -203,11 +203,19 @@ class CgBase:
                 purchases[key]['cart'].append({"title": title, "boxId": boxId, "quantity": quantity, "price": price})
             else:
                 purchases[key]['cart'].append((title, boxId, quantity, price))
-        return [val for key, val in purchases.iteritems()]
+        return [val for k, val in purchases.iteritems()]
 
-    def mark_purchase_deleted(self, syncId):
+    def mark_purchase_deleted(self, syncId, updateStock=False):
         syncStr= str(syncId)
         success = self.update("purchases", {"status": 2, "edited": util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
+        if updateStock:
+            success = success and self.update(
+                    "stock",
+                    {"edited": edited},
+                    False,
+                    "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
+                    increment={"quantity": quantity}
+                    )
         if success:
             self.db.commit()
         return success
