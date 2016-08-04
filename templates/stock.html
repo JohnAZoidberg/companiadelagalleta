@@ -45,7 +45,9 @@
           </div>
         </div>
       </nav>
-      <form action="" method="post" class="form-horizontal" role="form">
+      <form action="api.py" method="post" class="form-horizontal" role="form">
+        <input type="hidden" name="action" value="update_stock">
+        <input type="hidden" name="redirect" value="stock.py">
         <div class="row">
           {% for i in range(3) %}
           <div class="col-sm-4">
@@ -72,7 +74,7 @@
                   <label><input type="radio" name="count-method" value="relative" required>&nbsp;Add/Remove</label>
                 </div>
                 <div class="radio">
-                  <label><input type="radio" name="count-method" value="total" required>&nbsp;Total</label>
+                  <label><input type="radio" name="count-method" value="absolute" required>&nbsp;Total</label>
                 </div>
               </div>
             </div>
@@ -85,110 +87,5 @@
         </div>
       </form>
     </div>
-    <script>
-      lastPrice = "";
-      // Turn label into data-value on datalist input
-      $('input[list]').on('input', function(e) {
-          var $input = $(e.target),
-              $options = $('#' + $input.attr('list') + ' option'),
-              $hiddenInput = $('#' + $input.attr('id') + '-hidden'),
-              label = $input.val();
-
-          $hiddenInput.val(label);
-
-          for(var i = 0; i < $options.length; i++) {
-              var $option = $options.eq(i);
-
-              if($option.text() === label) {
-                  $hiddenInput.val($option.attr('data-value'));
-                  lastPrice = $option.attr('data-price');
-                  break;
-              }
-          }
-      });
-
-      // add boxes - obviously
-      $('#add-box').click(function(e) {
-          title = $('#box').val()
-          boxId = $('#box-hidden').val()
-          quantity = $('#quantity').val()
-          // TODO: show errors
-
-          if (title == "" || quantity == 0 || boxId == "" || $('#box_'+boxId).length > 0) return;
-          // clear fields
-          $('#box').val("")
-          $('#box-hidden').val("")
-          $('#quantity').val("1")
-          // clear error
-          $(".box-inputs").removeClass("has-error");
-
-          input = '<input type="hidden" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">'
-          $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + 'x' + lastPrice + '</span> ' + title + input + '</li>')
-          e.preventDefault();
-      });
-
-      // remove added boxes by onclick
-      $('#added-boxes').on('click', '.added-box', function() {
-          $(this).remove();
-      });
-      // Ask for delete confirmation for boxes in statistic
-      $(".deletable-row").click(function() {
-          if (confirm("Really delete?")) {
-              window.document.location = $(this).data("href");
-          }
-      });
-      // display error when submitting without boxes
-      $("#myForm").on("submit", function(e) {
-          if ($('.added-box').length <= 0) {
-              $(".box-inputs").addClass("has-error");
-              e.preventDefault();
-          } else {
-              $("#submit").attr("disabled", "true");
-          }
-      });
-      // manage working status
-      var workers = {{ workers|json }}
-      function updateWorkingStr() {
-          workingstr = "";
-          not_workingstr = ""
-          $.each( workers, function( index, value ){
-              if (value["working"]) {
-                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
-              } else {
-                  not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> '
-              }
-          });
-          $("#working-now").html(workingstr);
-          $("#not-working-now").html(not_workingstr);
-      }
-      // start work
-      $("#not-working-now").on('click', '.begin-work', function() {
-          worker = $(this).html();
-          if (confirm("Comenzar trabajo como " + worker + "?")) {
-              workerId = $(this).data("worker");
-              workers[workerId]["working"] = true;
-              $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
-                  console.log(result)
-                  success = JSON.parse(result)["work_started"]==workerId
-                  console.log(success);
-                  if (success) updateWorkingStr()
-              });
-          }
-      });
-      // end work
-      $("#working-now").on('click', '.end-work', function() {
-          worker = $(this).html();
-          if (confirm("Acabar trabajo como " + worker + "?")) {
-              workerId = $(this).data("worker");
-              workers[workerId]["working"] = false;
-              $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
-                  console.log(result)
-                  success = JSON.parse(result)["work_ended"]==workerId
-                  console.log(success);
-                  if (success) updateWorkingStr()
-              });
-          }
-      });
-    </script>
   </body>
 </html>

@@ -201,6 +201,27 @@ def end_work():
     workres = base.end_work(workerId)
     return (workres, {"work_ended": workerId})
 
+def update_stock():
+    method = form.getfirst("count-method")
+    if method is None:
+        return (False, "Wrong method for stock update")
+    elif method == "relative":
+        absolute = False
+    elif method == "absolute":
+        absolute = True
+    else:
+        return (False, "Wrong method for stock update")
+    containers = {}
+    for containerId in util.containers.keys():
+        containerId = str(containerId)
+        count_field = form.getvalue('container_' + containerId)
+        containers[containerId] = int(count_field)
+    success = base.update_stock(containers, absolute)
+    if success:
+        return (True, "Stock updated")
+    else:
+        return (False, "Some stock update error")
+
 def convert_date(datestring):
     try:
         return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
@@ -239,6 +260,8 @@ if __name__ == "__main__":
             (success, response) = begin_work()
         elif action == "end_work":
             (success, response) = end_work()
+        elif action == "update_stock":
+            (success, response) = update_stock()
         else:
             print_text("No valid Action: " + str(action))
             action = None

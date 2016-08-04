@@ -52,19 +52,23 @@ class CgBase:
         self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
-    def update(self, table, columnsdata, commit, extra, increment=None):
+    def update(self, table, columnsdata, commit, extra, increment={}):
         try:
             first = True
             sqlstr = "UPDATE " + table + " SET "
             for col, d in columnsdata.iteritems():
                 if not first:
                     sqlstr += ", "
-                sqlstr += str(col) + ' = "' + str(d) + '"'
+                try:
+                    d = int(d)
+                    sqlstr += str(col) + ' = ' + str(d)
+                except:
+                    sqlstr += str(col) + ' = "' + str(d) + '"'
                 first = False
             for col, d in increment.iteritems():
                 if not first:
                     sqlstr += ", "
-                sqlstr += str(col) + ' = ' + str(col) + '-' + str(int(d))
+                sqlstr += str(col) + ' = ' + str(col) + '+' + str(int(d))
                 first = False
             sqlstr += " " + extra
             self.cur.execute(sqlstr)
@@ -123,7 +127,7 @@ class CgBase:
                         {"edited": edited},
                         False,
                         "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
-                        increment={"quantity": quantity}
+                        increment={"quantity": -quantity}
                         )
         success = success and self.insert("purchases",
                 {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited, "location": location},
@@ -338,3 +342,12 @@ class CgBase:
             else:
                 stock = {x["syncId"]: x for x in stock} if returndict else stock
         return stock
+
+    def update_stock(self, containers, absolute):
+        for containerId, quantity in containers.iteritems():
+            if absolute:
+                self.update("stock", {"quantity": quantity}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location))
+            else:
+                self.update("stock", {}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location), increment={"quantity": quantity})
+        self.db.commit()
+        return True
