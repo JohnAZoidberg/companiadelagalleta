@@ -14,7 +14,6 @@ import json
 import util
 from dbconn import CgBase
 from datetime import datetime
-from dbdetails import *
 
 def print_html():
     # cgi
@@ -39,8 +38,7 @@ def print_html():
     # data
     now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase(location)
-    boxes = base.get_boxes()
-    purchases, total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
+    stock = base.get_stock(returndict=True, containerIndexed=True)
     workers = base.get_workers()
     version = base.get_version()
 
@@ -64,20 +62,15 @@ def print_html():
 
     # printing
     util.print_header(cookies=new_cookies)
-    print j2_env.get_template('/templates/form.html').render(
-        title='Herramienta',
+    print j2_env.get_template('/templates/stock.html').render(
+        title='Stock',
         date=now,
-        countries=util.country_list.items(),
-        boxes=boxes.items(),
-        purchases=purchases,
-        total=total,
-        msg=msg,
-        server=dbdetails.server,
-        workers=workers,
         location=location,
         locations=util.locations,
+        workers=workers,
+        containers=util.containers,
+        stock=stock,
         version=version
-        #random_prefix=util.uniqueId()
     )
 
 if __name__ == "__main__":

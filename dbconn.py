@@ -42,13 +42,17 @@ class CgBase:
     def fetchone(self, table, columns, extra=""):
         self._fetch(table, columns, extra)
         result = self.cur.fetchone()
-        return None if result is None else result[0]
+        if result is None:
+            return None
+        if len(result) == 1:
+            return result[0]
+        return result
 
     def fetchall(self, table, columns, extra=""):
         self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
-    def update(self, table, columnsdata, commit, extra):
+    def update(self, table, columnsdata, commit, extra, increment=None):
         try:
             first = True
             sqlstr = "UPDATE " + table + " SET "
@@ -56,6 +60,11 @@ class CgBase:
                 if not first:
                     sqlstr += ", "
                 sqlstr += str(col) + ' = "' + str(d) + '"'
+                first = False
+            for col, d in increment.iteritems():
+                if not first:
+                    sqlstr += ", "
+                sqlstr += str(col) + ' = ' + str(col) + '-' + str(int(d))
                 first = False
             sqlstr += " " + extra
             self.cur.execute(sqlstr)
@@ -87,7 +96,7 @@ class CgBase:
             raise
             return False
 
-    def insert_purchase(self, country, card, date, discount, cart, edited,location=None, status=0, syncId=None):
+    def insert_purchase(self, country, card, date, discount, cart, edited,location=None, status=0, syncId=None, updateStock=False):
     # type: (str, bool, datetime, int, {int: int}) -> None
         success = False
         if dbdetails.server:
@@ -100,13 +109,22 @@ class CgBase:
         if len(cart) == 0:
             success = True
         for boxId, quantity in cart.iteritems():
-            price = self.fetchone("boxes", ["price"], " WHERE boxesEntryId = " + str(boxId))
+            price, containerId = self.fetchone("boxes", ["price", "container"], " WHERE boxesEntryId = " + str(boxId))
             if price is None:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0))
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart", {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price}, False)
+            # update stock
+            if updateStock:
+                success = success and self.update(
+                        "stock",
+                        {"edited": edited},
+                        False,
+                        "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
+                        increment={"quantity": quantity}
+                        )
         success = success and self.insert("purchases",
                 {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited, "location": location},
                     False)
@@ -294,3 +312,29 @@ class CgBase:
                     continue
             shifts.append({"syncId": key, "workerId": workerId, "start": start, "end": end, "status": status, "location": location})
         return {shift["syncId"]: shift for shift in shifts} if returndict else shifts
+
+    def get_stock(self, allLocations=False, notsynced=False, datestring=False, newerthan=None, returndict=False, containerIndexed=False):
+        where = ""
+        if not allLocations:
+            where += "WHERE location = " + str(self.location)
+        if notsynced:
+            if where == "":
+                where += "WHERE"
+            else:
+                where += " AND status <> 3"
+        result = self.fetchall("stock", ["containerId", "quantity", "location", "last_inventory", "syncId", "status", "edited"], where)
+        stock = []
+        for row in result:
+            (containerId, quantity, location, last_inventory, syncId, status, edited) = row
+            if datestring:
+                last_inventory = util.datestring(last_inventory)
+            if newerthan is not None:
+                if newerthan > edited:
+                    continue
+            stock.append({"containerId": containerId, "quantity": quantity, "location": location, "last_inventory": last_inventory, "syncId": syncId, "status": status, "edited": edited})
+        if returndict:
+            if containerIndexed:
+                stock = {x["containerId"]: x for x in stock} if returndict else stock
+            else:
+                stock = {x["syncId"]: x for x in stock} if returndict else stock
+        return stock

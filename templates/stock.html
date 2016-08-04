@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/jquery-2.2.4.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style>
+    </style>
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <span class="navbar-brand">{{ title }} (v{{ version|readable_version }})</span>
+            <span class="navbar-brand" id="working-now">
+            {% for wid, worker in workers.iteritems() if worker["working"] %}
+              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
+            {% endfor %}
+            </span>
+          </div>
+          <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+              <li>
+                <div class="dropdown margin-5">
+                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
+                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
+                    {% for lid, location in locations.iteritems() %}
+                    <li><a href="stock.py?location={{ lid }}">{{ location }} </a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </li>
+              <li><a href="index.py"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <form action="" method="post" class="form-horizontal" role="form">
+        <div class="row">
+          {% for i in range(3) %}
+          <div class="col-sm-4">
+            {% for containerId, details in containers.iteritems() %}
+            {% if (i == 0 and containerId >=  0 and containerId <  7)
+               or (i == 1 and containerId >=  7 and containerId < 13)
+               or (i == 2 and containerId >= 13 and containerId < 19) %}
+            <div class="form-group">
+              <label class="control-label col-sm-8" for="box">{{ details['title'] }}:{{ stock[containerId]['quantity'] }}</label>
+              <div class="col-sm-4 box-inputs">
+                <input type="number" class="form-control" name="container_{{ containerId }}" value="0">
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="form-group">
+              <div class="col-sm-offset-10 col-sm-2">
+                <div class="radio">
+                  <label><input type="radio" name="count-method" value="relative" required>&nbsp;Add/Remove</label>
+                </div>
+                <div class="radio">
+                  <label><input type="radio" name="count-method" value="total" required>&nbsp;Total</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-10 col-sm-2">
+                <button type="submit" id="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <script>
+      lastPrice = "";
+      // Turn label into data-value on datalist input
+      $('input[list]').on('input', function(e) {
+          var $input = $(e.target),
+              $options = $('#' + $input.attr('list') + ' option'),
+              $hiddenInput = $('#' + $input.attr('id') + '-hidden'),
+              label = $input.val();
+
+          $hiddenInput.val(label);
+
+          for(var i = 0; i < $options.length; i++) {
+              var $option = $options.eq(i);
+
+              if($option.text() === label) {
+                  $hiddenInput.val($option.attr('data-value'));
+                  lastPrice = $option.attr('data-price');
+                  break;
+              }
+          }
+      });
+
+      // add boxes - obviously
+      $('#add-box').click(function(e) {
+          title = $('#box').val()
+          boxId = $('#box-hidden').val()
+          quantity = $('#quantity').val()
+          // TODO: show errors
+
+          if (title == "" || quantity == 0 || boxId == "" || $('#box_'+boxId).length > 0) return;
+          // clear fields
+          $('#box').val("")
+          $('#box-hidden').val("")
+          $('#quantity').val("1")
+          // clear error
+          $(".box-inputs").removeClass("has-error");
+
+          input = '<input type="hidden" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">'
+          $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + 'x' + lastPrice + '</span> ' + title + input + '</li>')
+          e.preventDefault();
+      });
+
+      // remove added boxes by onclick
+      $('#added-boxes').on('click', '.added-box', function() {
+          $(this).remove();
+      });
+      // Ask for delete confirmation for boxes in statistic
+      $(".deletable-row").click(function() {
+          if (confirm("Really delete?")) {
+              window.document.location = $(this).data("href");
+          }
+      });
+      // display error when submitting without boxes
+      $("#myForm").on("submit", function(e) {
+          if ($('.added-box').length <= 0) {
+              $(".box-inputs").addClass("has-error");
+              e.preventDefault();
+          } else {
+              $("#submit").attr("disabled", "true");
+          }
+      });
+      // manage working status
+      var workers = {{ workers|json }}
+      function updateWorkingStr() {
+          workingstr = "";
+          not_workingstr = ""
+          $.each( workers, function( index, value ){
+              if (value["working"]) {
+                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
+              } else {
+                  not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> '
+              }
+          });
+          $("#working-now").html(workingstr);
+          $("#not-working-now").html(not_workingstr);
+      }
+      // start work
+      $("#not-working-now").on('click', '.begin-work', function() {
+          worker = $(this).html();
+          if (confirm("Comenzar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = true;
+              $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
+                  console.log(result)
+                  success = JSON.parse(result)["work_started"]==workerId
+                  console.log(success);
+                  if (success) updateWorkingStr()
+              });
+          }
+      });
+      // end work
+      $("#working-now").on('click', '.end-work', function() {
+          worker = $(this).html();
+          if (confirm("Acabar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = false;
+              $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
+                  console.log(result)
+                  success = JSON.parse(result)["work_ended"]==workerId
+                  console.log(success);
+                  if (success) updateWorkingStr()
+              });
+          }
+      });
+    </script>
+  </body>
+</html>

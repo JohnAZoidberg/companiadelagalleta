@@ -39,7 +39,7 @@ def save_purchase(boxes):
         discount_field = form.getfirst('discount')
         discount = 0 if discount_field is None else int(discount_field)
         card = True if card == "card" else False
-        insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
+        insert_success = base.insert_purchase(country, card, date, discount, cookies, edited, updateStock=True)
         if insert_success:
             return (True, "Purchase saved")
     else:
