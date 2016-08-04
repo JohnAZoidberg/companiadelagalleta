@@ -124,7 +124,7 @@ class CgBase:
             if updateStock:
                 success = success and self.update(
                         "stock",
-                        {"edited": edited},
+                        {"edited": edited, "status": 1},
                         False,
                         "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
                         increment={"quantity": -quantity}
@@ -211,7 +211,7 @@ class CgBase:
         if updateStock:
             success = success and self.update(
                     "stock",
-                    {"edited": edited},
+                    {"edited": edited, "status": 1},
                     False,
                     "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
                     increment={"quantity": quantity}
@@ -334,16 +334,17 @@ class CgBase:
                 where += "WHERE"
             else:
                 where += " AND status <> 3"
-        result = self.fetchall("stock", ["containerId", "quantity", "location", "last_inventory", "syncId", "status", "edited"], where)
+        result = self.fetchall("stock", ["containerId", "quantity", "location", "syncId", "status", "edited", "recounted"], where)
         stock = []
         for row in result:
-            (containerId, quantity, location, last_inventory, syncId, status, edited) = row
+            (containerId, quantity, location, syncId, status, edited, recounted) = row
             if datestring:
-                last_inventory = util.datestring(last_inventory)
+                edited = util.datestring(edited)
+                recounted = util.datestring(recounted)
             if newerthan is not None:
                 if newerthan > edited:
                     continue
-            stock.append({"containerId": containerId, "quantity": quantity, "location": location, "last_inventory": last_inventory, "syncId": syncId, "status": status, "edited": edited})
+            stock.append({"containerId": containerId, "quantity": quantity, "location": location, "syncId": syncId, "status": status, "edited": edited, "recounted": recounted})
         if returndict:
             if containerIndexed:
                 stock = {x["containerId"]: x for x in stock} if returndict else stock
@@ -352,10 +353,12 @@ class CgBase:
         return stock
 
     def update_stock(self, containers, absolute):
+        success = True
+        now = util.datestring(datetime.now())
         for containerId, quantity in containers.iteritems():
             if absolute:
-                self.update("stock", {"quantity": quantity}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location))
+                success = success and self.update("stock", {"quantity": quantity, "recounted": now, "edited": now}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location))
             else:
-                self.update("stock", {}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location), increment={"quantity": quantity})
+                success = success and self.update("stock", {"edited": now}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location), increment={"quantity": quantity})
         self.db.commit()
         return True

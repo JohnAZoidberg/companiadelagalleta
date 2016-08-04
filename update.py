@@ -203,13 +203,13 @@ def db_update():
               "containerId INT NOT NULL,"
               "quantity INT DEFAULT 0 NOT NULL,"
               "location INT NOT NULL,"
-              "last_inventory datetime DEFAULT '2016-01-01 00:00:00' NOT NULL,"
               "syncId int(11) NOT NULL PRIMARY KEY,"
-              "status int DEFAULT 0 NOT NULL,"
-              "edited datetime DEFAULT '2016-01-01 00:00:00' NOT NULL"
+              "status int DEFAULT 3 NOT NULL,"
+              "edited datetime DEFAULT '2016-01-01 00:00:00' NOT NULL,"
+              "recounted datetime DEFAULT '2016-01-01 00:00:00' NOT NULL"
               ")"
               )
-        #base.cur.execute(sql)
+        base.cur.execute(sql)
         for locationId in util.locations.keys():
             for container in util.containers.keys():
               base.insert("stock", {"containerId": container, "location": locationId, "syncId": (container*1000+locationId)}, False)
