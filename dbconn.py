@@ -345,12 +345,12 @@ class CgBase:
         stock = []
         for row in result:
             (containerId, quantity, location, syncId, status, edited, recounted) = row
-            if datestring:
-                edited = util.datestring(edited)
-                recounted = util.datestring(recounted)
             if newerthan is not None:
                 if newerthan > edited:
                     continue
+            if datestring:
+                edited = util.datestring(edited)
+                recounted = util.datestring(recounted)
             stock.append({"containerId": containerId, "quantity": quantity, "location": location, "syncId": syncId, "status": status, "edited": edited, "recounted": recounted})
         if returndict:
             if containerIndexed:

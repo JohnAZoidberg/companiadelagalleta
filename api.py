@@ -128,7 +128,7 @@ def receive_sync_down():
 def sync_up():
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True, allLocations=True)
     shifts = base.get_shifts(getDeleted=True, datestring=True, notsynced=True, allLocations=True)
-    stock = base.get_stock(datestring=True, newerthan=last_update, notsynced=True, allLocations=True)
+    stock = base.get_stock(datestring=True, notsynced=True, allLocations=True)
     syncdata = {"purchases": ps, "shifts": shifts, "stock": stock}
     jsonstr = json.dumps(syncdata)
     r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
