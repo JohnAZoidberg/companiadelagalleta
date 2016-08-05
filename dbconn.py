@@ -256,16 +256,23 @@ class CgBase:
         return False
 
     def change_purchase_status(self, syncId, status):
-        return self.update("purchases", {"status": status}, True, "WHERE syncId="+str(syncId))
+        return self.update("purchases", {"status": status}, True, "WHERE syncId=" + str(syncId))
 
     def mark_purchase_synced(self, syncId):
         return self.change_purchase_status(syncId, 3)
 
     def change_shift_status(self, syncId, status):
-        return self.update("shifts", {"status": status}, True, "WHERE syncId="+str(syncId))
+        return self.update("shifts", {"status": status}, True, "WHERE syncId=" + str(syncId))
 
     def mark_shift_synced(self, syncId):
         return self.change_shift_status(syncId, 3)
+
+    def change_container_status(self, syncId, status):
+        return self.update("stock", {"status": status}, True, "WHERE syncId=" + str(syncId))
+
+    def mark_container_synced(self, syncId):
+        return self.change_container_status(syncId, 3)
+
 
     def get_boxes(self):
         boxes = OrderedDict()
@@ -331,7 +338,7 @@ class CgBase:
             where += "WHERE location = " + str(self.location)
         if notsynced:
             if where == "":
-                where += "WHERE"
+                where += "WHERE status <> 3"
             else:
                 where += " AND status <> 3"
         result = self.fetchall("stock", ["containerId", "quantity", "location", "syncId", "status", "edited", "recounted"], where)
@@ -357,8 +364,16 @@ class CgBase:
         now = util.datestring(datetime.now())
         for containerId, quantity in containers.iteritems():
             if absolute:
-                success = success and self.update("stock", {"quantity": quantity, "recounted": now, "edited": now}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location))
+                success = success and self.update("stock", {"quantity": quantity, "recounted": now, "edited": now, "status": 1}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location))
             else:
-                success = success and self.update("stock", {"edited": now}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location), increment={"quantity": quantity})
+                success = success and self.update("stock", {"edited": now, "status": 1}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location), increment={"quantity": quantity})
         self.db.commit()
         return True
+
+    def update_container(self, syncId, containerId, quantity, location, edited, recounted):
+        last_recount = self.fetchone("stock", ["recounted"], "WHERE syncId = " + syncId)
+        util.print_header()
+        print edited
+        print edited > last_recount
+        if edited > last_recount:
+            self.update("stock", {"quantity": quantity, "recounted": recounted, "status": 3}, True, "WHERE location = " + str(location))

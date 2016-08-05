@@ -56,7 +56,7 @@
                or (i == 1 and containerId >=  7 and containerId < 13)
                or (i == 2 and containerId >= 13 and containerId < 19) %}
             <div class="form-group">
-              <label class="control-label col-sm-8" for="box">{{ details['title'] }}:{{ stock[containerId]['quantity'] }}</label>
+              <label class="control-label col-sm-8" for="box">{{ details['title'] }}: {{ stock[containerId]['quantity'] }}</label>
               <div class="col-sm-4 box-inputs">
                 <input type="number" class="form-control" name="container_{{ containerId }}" value="0">
               </div>
