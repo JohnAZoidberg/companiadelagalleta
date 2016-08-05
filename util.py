@@ -56,6 +56,27 @@ locations = OrderedDict([
     (3, "Puerto de la Cruz")
 ])
 
+containers = {
+    1: {"boxes": [1], "title": "Carta 10"},
+    2: {"boxes": [2, 63], "title": "Carta 20"},
+    3: {"boxes": [3], "title": "Carta 30"},
+    4: {"boxes": [5, 6, 7, 8, 65, 66], "title": "Basic bag pequeña"},
+    5: {"boxes": [10, 11, 12, 13, 57], "title": "Basic bag grande"},
+    6: {"boxes": [15, 16, 17, 18, 58], "title": "Cube pequeño"},
+    7: {"boxes": [20, 21, 22, 23, 59], "title": "Cube grande"},
+    8: {"boxes": [25, 26, 27, 28], "title": "Pyramid"},
+    9: {"boxes": [30, 31, 60], "title": "Elegant 1 verde"},
+    10: {"boxes": [33, 34, 61], "title": "Elegant 1 crema"},
+    11: {"boxes": [36, 37, 38], "title": "Elegant 2 verde"},
+    12: {"boxes": [40, 41, 42], "title": "Elegant 2 crema"},
+    13: {"boxes": [44, 45, 46], "title": "Elegant 3 verde"},
+    14: {"boxes": [48, 49, 50], "title": "Elegant 3 crema"},
+    15: {"boxes": [52, 62], "title": "Strelitzia"},
+    16: {"boxes": [54, 64], "title": "Mango"},
+    17: {"boxes": [55], "title": "Plumeria"},
+    18: {"boxes": [56], "title": "Galleta Individual"},
+}
+
 def print_header(t="text/html", cookies={}):
     print "Content-Type: "+ t + ";charset=utf-8"
     if cookies:

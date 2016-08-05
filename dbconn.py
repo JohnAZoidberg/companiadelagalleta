@@ -42,20 +42,33 @@ class CgBase:
     def fetchone(self, table, columns, extra=""):
         self._fetch(table, columns, extra)
         result = self.cur.fetchone()
-        return None if result is None else result[0]
+        if result is None:
+            return None
+        if len(result) == 1:
+            return result[0]
+        return result
 
     def fetchall(self, table, columns, extra=""):
         self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
-    def update(self, table, columnsdata, commit, extra):
+    def update(self, table, columnsdata, commit, extra, increment={}):
         try:
             first = True
             sqlstr = "UPDATE " + table + " SET "
             for col, d in columnsdata.iteritems():
                 if not first:
                     sqlstr += ", "
-                sqlstr += str(col) + ' = "' + str(d) + '"'
+                try:
+                    d = int(d)
+                    sqlstr += str(col) + ' = ' + str(d)
+                except:
+                    sqlstr += str(col) + ' = "' + str(d) + '"'
+                first = False
+            for col, d in increment.iteritems():
+                if not first:
+                    sqlstr += ", "
+                sqlstr += str(col) + ' = ' + str(col) + '+' + str(int(d))
                 first = False
             sqlstr += " " + extra
             self.cur.execute(sqlstr)
@@ -87,7 +100,7 @@ class CgBase:
             raise
             return False
 
-    def insert_purchase(self, country, card, date, discount, cart, edited,location=None, status=0, syncId=None):
+    def insert_purchase(self, country, card, date, discount, cart, edited,location=None, status=0, syncId=None, updateStock=False):
     # type: (str, bool, datetime, int, {int: int}) -> None
         success = False
         if dbdetails.server:
@@ -100,13 +113,22 @@ class CgBase:
         if len(cart) == 0:
             success = True
         for boxId, quantity in cart.iteritems():
-            price = self.fetchone("boxes", ["price"], " WHERE boxesEntryId = " + str(boxId))
+            price, containerId = self.fetchone("boxes", ["price", "container"], " WHERE boxesEntryId = " + str(boxId))
             if price is None:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0))
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart", {"syncId": syncId, "boxId": boxId, "quantity": quantity, "price": price}, False)
+            # update stock
+            if updateStock:
+                success = success and self.update(
+                        "stock",
+                        {"edited": edited, "status": 1},
+                        False,
+                        "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
+                        increment={"quantity": -quantity}
+                        )
         success = success and self.insert("purchases",
                 {"country": country, "card": int(card), "date": util.datestring(date), "discount": discount, "status": status, "syncId": syncId, "edited": edited, "location": location},
                     False)
@@ -181,11 +203,19 @@ class CgBase:
                 purchases[key]['cart'].append({"title": title, "boxId": boxId, "quantity": quantity, "price": price})
             else:
                 purchases[key]['cart'].append((title, boxId, quantity, price))
-        return [val for key, val in purchases.iteritems()]
+        return [val for k, val in purchases.iteritems()]
 
-    def mark_purchase_deleted(self, syncId):
+    def mark_purchase_deleted(self, syncId, updateStock=False):
         syncStr= str(syncId)
         success = self.update("purchases", {"status": 2, "edited": util.datestring(datetime.now())}, False, "WHERE syncId="+syncStr)
+        if updateStock:
+            success = success and self.update(
+                    "stock",
+                    {"edited": edited, "status": 1},
+                    False,
+                    "WHERE location = " + str(location) + " AND containerId = " + str(containerId),
+                    increment={"quantity": quantity}
+                    )
         if success:
             self.db.commit()
         return success
@@ -226,16 +256,23 @@ class CgBase:
         return False
 
     def change_purchase_status(self, syncId, status):
-        return self.update("purchases", {"status": status}, True, "WHERE syncId="+str(syncId))
+        return self.update("purchases", {"status": status}, True, "WHERE syncId=" + str(syncId))
 
     def mark_purchase_synced(self, syncId):
         return self.change_purchase_status(syncId, 3)
 
     def change_shift_status(self, syncId, status):
-        return self.update("shifts", {"status": status}, True, "WHERE syncId="+str(syncId))
+        return self.update("shifts", {"status": status}, True, "WHERE syncId=" + str(syncId))
 
     def mark_shift_synced(self, syncId):
         return self.change_shift_status(syncId, 3)
+
+    def change_container_status(self, syncId, status):
+        return self.update("stock", {"status": status}, True, "WHERE syncId=" + str(syncId))
+
+    def mark_container_synced(self, syncId):
+        return self.change_container_status(syncId, 3)
+
 
     def get_boxes(self):
         boxes = OrderedDict()
@@ -294,3 +331,46 @@ class CgBase:
                     continue
             shifts.append({"syncId": key, "workerId": workerId, "start": start, "end": end, "status": status, "location": location})
         return {shift["syncId"]: shift for shift in shifts} if returndict else shifts
+
+    def get_stock(self, allLocations=False, notsynced=False, datestring=False, newerthan=None, returndict=False, containerIndexed=False):
+        where = ""
+        if not allLocations:
+            where += "WHERE location = " + str(self.location)
+        if notsynced:
+            if where == "":
+                where += "WHERE status <> 3"
+            else:
+                where += " AND status <> 3"
+        result = self.fetchall("stock", ["containerId", "quantity", "location", "syncId", "status", "edited", "recounted"], where)
+        stock = []
+        for row in result:
+            (containerId, quantity, location, syncId, status, edited, recounted) = row
+            if newerthan is not None:
+                if newerthan > edited:
+                    continue
+            if datestring:
+                edited = util.datestring(edited)
+                recounted = util.datestring(recounted)
+            stock.append({"containerId": containerId, "quantity": quantity, "location": location, "syncId": syncId, "status": status, "edited": edited, "recounted": recounted})
+        if returndict:
+            if containerIndexed:
+                stock = {x["containerId"]: x for x in stock} if returndict else stock
+            else:
+                stock = {x["syncId"]: x for x in stock} if returndict else stock
+        return stock
+
+    def update_stock(self, containers, absolute):
+        success = True
+        now = util.datestring(datetime.now())
+        for containerId, quantity in containers.iteritems():
+            if absolute:
+                success = success and self.update("stock", {"quantity": quantity, "recounted": now, "edited": now, "status": 1}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location))
+            else:
+                success = success and self.update("stock", {"edited": now, "status": 1}, False, "WHERE containerId = " + str(containerId) + " AND location = " + str(self.location), increment={"quantity": quantity})
+        self.db.commit()
+        return True
+
+    def update_container(self, syncId, containerId, quantity, location, edited, recounted):
+        last_recount = self.fetchone("stock", ["recounted"], "WHERE syncId = " + str(syncId))
+        if edited > last_recount:
+            return self.update("stock", {"quantity": quantity, "recounted": recounted, "status": 3, "edited": edited}, True, "WHERE syncId = " + str(syncId) + " AND location = " + str(location))

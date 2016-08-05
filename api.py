@@ -39,7 +39,7 @@ def save_purchase(boxes):
         discount_field = form.getfirst('discount')
         discount = 0 if discount_field is None else int(discount_field)
         card = True if card == "card" else False
-        insert_success = base.insert_purchase(country, card, date, discount, cookies, edited)
+        insert_success = base.insert_purchase(country, card, date, discount, cookies, edited, updateStock=True)
         if insert_success:
             return (True, "Purchase saved")
     else:
@@ -49,7 +49,7 @@ def save_purchase(boxes):
 def delete_purchase():
     syncId = form.getfirst('syncId')
     if syncId is not None:
-        return base.mark_purchase_deleted(syncId)
+        return base.mark_purchase_deleted(syncId, updateStock=True)
     return False
 
 def sync():
@@ -74,9 +74,10 @@ def sync_down():
         jres = json.loads(jres)
     result = {'synced_down': {
         "purchases": {"added": [], "deleted": []},
-        "shifts":    {"added": [], "deleted": []}
+        "shifts":    {"added": [], "deleted": []},
+        "stock":     {"edited": []},
     }}
-
+    # purchases
     ps = jres["purchases"]
     for p in ps:
         purchase = p['purchase']
@@ -90,7 +91,7 @@ def sync_down():
         elif existing is None:
             if base.insert_purchase(purchase['country'], purchase['card'], purchase['date'], purchase['discount'], cart, edited, location=purchase['location'], status=3, syncId=syncId):
                 result['synced_down']['purchases']['added'].append(syncId)
-
+    # shifts
     shifts = jres["shifts"]
     for shift in shifts:
         syncId = shift['syncId']
@@ -102,6 +103,14 @@ def sync_down():
         elif existing is None:
             if base.insert_shift(shift["workerId"], shift["start"], shift["end"], edited, location=shift["location"], status=3, syncId=syncId):
                 result['synced_down']['shifts']['added'].append(syncId)
+    # stock
+    stock = jres["stock"]
+    for container in stock:
+        syncId = container['syncId']
+        status = container['status']
+        if status == 1:
+            if base.update_container(syncId, container['containerId'], container['quantity'], container['location'], edited, util.stringdate(container['recounted'])):
+                result['synced_down']['stock']['edited'].append(syncId)
     base.update_last_sync(edited)
     return result
 
@@ -113,41 +122,49 @@ def receive_sync_down():
     result = {}
     result['purchases'] = base.get_purchases(prettydict=True, newerthan=last_update, datestring=True, simplecart=True, getDeleted=True, allLocations=True)
     result['shifts'] = base.get_shifts(getDeleted=True, datestring=True, newerthan=last_update, allLocations=True)
+    result['stock'] = base.get_stock(datestring=True, newerthan=last_update, allLocations=True)
     return (True, json.dumps(result))
 
 def sync_up():
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True, notsynced=True, simplecart=True, allLocations=True)
     shifts = base.get_shifts(getDeleted=True, datestring=True, notsynced=True, allLocations=True)
-    syncdata = {"purchases": ps, "shifts": shifts}
+    stock = base.get_stock(datestring=True, notsynced=True, allLocations=True)
+    syncdata = {"purchases": ps, "shifts": shifts, "stock": stock}
     jsonstr = json.dumps(syncdata)
     r = requests.post(dbdetails.serverroot+"/api.py", params={"action": "syncUp"}, data={"data": jsonstr, "edited": util.datestring(datetime.now())})
     try:
         jres = r.json()
         foo = jres["purchases"]
     except ValueError as e:
-        print_text("ERROR ON SERVERSIDE!<br>"+r.text)
+        print_text("ERROR ON SERVERSIDE!<br>\n" + r.text)
         exit()
     except TypeError:
         jres = json.loads(jres)
     # handle result - mark deleted or as synced
+    # purchases
     for syncId in jres["purchases"]["deleted"]:
         base.delete_purchase(syncId)
     for syncId in jres["purchases"]["added"]:
         base.mark_purchase_synced(syncId)
-
+    # shifts
     for syncId in jres["shifts"]["deleted"]:
         base.delete_shift(syncId)
     for syncId in jres["shifts"]["added"]:
         base.mark_shift_synced(syncId)
+    # stock
+    for syncId in jres["stock"]["edited"]:
+        base.mark_container_synced(syncId)
     return {"synced_up": {
         "purchases": {"deleted": jres["purchases"]['deleted'], "added": jres["purchases"]['added']},
-        "shifts": {"deleted": jres["shifts"]['deleted'], "added": jres["shifts"]['added']}
+        "shifts": {"deleted": jres["shifts"]['deleted'], "added": jres["shifts"]['added']},
+        "stock": {"edited": jres["stock"]['edited']}
     }}
 
 def receive_sync_up():
     result = {"action": "syncUp",
         "purchases": {"deleted": [], "added": []},
-        "shifts":    {"deleted": [], "added": []}
+        "shifts":    {"deleted": [], "added": []},
+        "stock":    {"edited": []}
     }
     data = form.getfirst("data")
     edited = form.getfirst("edited")
@@ -155,6 +172,7 @@ def receive_sync_up():
         return (False, "You must have the edited thing set")
 
     res = json.loads(data)
+    # purchases
     ps = res["purchases"]
     for p in ps:
         purchase = p['purchase']
@@ -172,7 +190,7 @@ def receive_sync_up():
         elif status == 2:
             if existing is None or base.mark_purchase_deleted(syncId):
                 result["purchases"]['deleted'].append(syncId)
-
+    # shifts
     shifts = res["shifts"]
     for shift in shifts:
         syncId = shift['syncId']
@@ -188,6 +206,14 @@ def receive_sync_up():
         elif status == 2:
             if existing is None or base.mark_shift_deleted(syncId):
                 result["shifts"]['deleted'].append(syncId)
+    # stock
+    stock = res["stock"]
+    for container in stock:
+        syncId = container['syncId']
+        status = container['status']
+        if status == 1:
+            if base.update_container(syncId, container['containerId'], container['quantity'], container['location'], util.stringdate(container['edited']), util.stringdate(container['recounted'])):
+                result["stock"]['edited'].append(syncId)
 
     return (True, json.dumps(result))
 
@@ -200,6 +226,29 @@ def end_work():
     workerId = form.getfirst("workerId")
     workres = base.end_work(workerId)
     return (workres, {"work_ended": workerId})
+
+def update_stock():
+    method = form.getfirst("count-method")
+    if method is None:
+        return (False, "Wrong method for stock update")
+    elif method == "relative":
+        absolute = False
+    elif method == "absolute":
+        absolute = True
+    else:
+        return (False, "Wrong method for stock update")
+    containers = {}
+    for containerId in util.containers.keys():
+        containerId = str(containerId)
+        count_field = form.getvalue('container_' + containerId)
+        count = int(count_field)
+        if absolute or not count == 0:
+            containers[containerId] = count
+    success = base.update_stock(containers, absolute)
+    if success:
+        return (True, "Stock updated")
+    else:
+        return (False, "Some stock update error")
 
 def convert_date(datestring):
     try:
@@ -239,6 +288,8 @@ if __name__ == "__main__":
             (success, response) = begin_work()
         elif action == "end_work":
             (success, response) = end_work()
+        elif action == "update_stock":
+            (success, response) = update_stock()
         else:
             print_text("No valid Action: " + str(action))
             action = None

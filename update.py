@@ -24,7 +24,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(util.get_location())
-    new_version = 400 # 0.4.0
+    new_version = 500 # 0.5.0
     version = 0
     failure = False
     try:
@@ -185,6 +185,45 @@ def db_update():
             base.db.rollback()
             failure = True
         result += "New versioning\n"
+
+    if version < 500:
+        # Add container id o boxes table
+        try:
+            base.cur.execute("ALTER TABLE boxes ADD container INT")
+        except:
+          pass
+        for container, details in util.containers.iteritems():
+            for box in details['boxes']:
+                sql = "UPDATE boxes SET container = " + str(container) + " WHERE `boxesEntryId` = " + str(box)
+                base.cur.execute(sql)
+        base.cur.execute("ALTER TABLE boxes MODIFY COLUMN container INT NOT NULL")
+
+        # Add stock table
+        sql = (
+              "CREATE TABLE stock ("
+              "containerId INT NOT NULL,"
+              "quantity INT DEFAULT 0 NOT NULL,"
+              "location INT NOT NULL,"
+              "syncId int(11) NOT NULL PRIMARY KEY,"
+              "status int DEFAULT 3 NOT NULL,"
+              "edited datetime DEFAULT '2016-01-01 00:00:00' NOT NULL,"
+              "recounted datetime DEFAULT '2016-01-01 00:00:00' NOT NULL"
+              ")"
+              )
+        base.cur.execute(sql)
+        for locationId in util.locations.keys():
+            for container in util.containers.keys():
+              base.insert("stock", {"containerId": container, "location": locationId, "syncId": (container*1000+locationId)}, False)
+
+        base.db.commit()
+        result += "Add stock tracking\n"
+        try:
+            foo = 4
+        except Exception as e:
+            base.db.rollback()
+            raise e
+            result += str(e) + "\n"
+            failure = True
 
     if new_version is not None and not failure:
         base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
