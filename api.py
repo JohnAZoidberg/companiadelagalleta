@@ -241,7 +241,9 @@ def update_stock():
     for containerId in util.containers.keys():
         containerId = str(containerId)
         count_field = form.getvalue('container_' + containerId)
-        containers[containerId] = int(count_field)
+        count = int(count_field)
+        if absolute or not count == 0:
+            containers[containerId] = count
     success = base.update_stock(containers, absolute)
     if success:
         return (True, "Stock updated")
