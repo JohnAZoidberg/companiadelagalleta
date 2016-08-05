@@ -74,7 +74,7 @@ def sync_down():
         jres = json.loads(jres)
     result = {'synced_down': {
         "purchases": {"added": [], "deleted": []},
-        "shifts":    {"added": [], "deleted": []}
+        "shifts":    {"added": [], "deleted": []},
         "stock":     {"edited": []},
     }}
     # purchases
@@ -156,14 +156,14 @@ def sync_up():
         base.mark_container_synced(syncId)
     return {"synced_up": {
         "purchases": {"deleted": jres["purchases"]['deleted'], "added": jres["purchases"]['added']},
-        "shifts": {"deleted": jres["shifts"]['deleted'], "added": jres["shifts"]['added']}
+        "shifts": {"deleted": jres["shifts"]['deleted'], "added": jres["shifts"]['added']},
         "stock": {"edited": jres["stock"]['edited']}
     }}
 
 def receive_sync_up():
     result = {"action": "syncUp",
         "purchases": {"deleted": [], "added": []},
-        "shifts":    {"deleted": [], "added": []}
+        "shifts":    {"deleted": [], "added": []},
         "stock":    {"edited": []}
     }
     data = form.getfirst("data")
