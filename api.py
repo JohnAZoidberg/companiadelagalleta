@@ -109,7 +109,7 @@ def sync_down():
         syncId = container['syncId']
         status = container['status']
         if status == 1:
-            if base.update_container(syncId, container['containerId'], container['quantity'], container['location'], container['edited'], container['recounted']):
+            if base.update_container(syncId, container['containerId'], container['quantity'], container['location'], edited, util.stringdate(container['recounted'])):
                 result['synced_down']['stock']['edited'].append(syncId)
     base.update_last_sync(edited)
     return result
@@ -212,7 +212,7 @@ def receive_sync_up():
         syncId = container['syncId']
         status = container['status']
         if status == 1:
-            if base.update_container(syncId, container['containerId'], container['quantity'], container['location'], container['edited'], container['recounted']):
+            if base.update_container(syncId, container['containerId'], container['quantity'], container['location'], util.stringdate(container['edited']), util.stringdate(container['recounted'])):
                 result["stock"]['edited'].append(syncId)
 
     return (True, json.dumps(result))
