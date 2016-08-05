@@ -56,9 +56,11 @@
                or (i == 1 and containerId >=  7 and containerId < 13)
                or (i == 2 and containerId >= 13 and containerId < 19) %}
             <div class="form-group">
-              <label class="control-label col-sm-8" for="box">{{ details['title'] }}: {{ stock[containerId]['quantity'] }}</label>
-              <div class="col-sm-4 box-inputs">
-                <input type="number" class="form-control" name="container_{{ containerId }}" value="0">
+              <label class="control-label col-sm-6" for="box">{{ details['title'] }}: </label>
+              <div class="col-sm-6 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
+                <div class="input-group-addon">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
+                <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0">
+                <div class="input-group-addon container-result">= {{ stock[containerId]['quantity'] }}</div>
               </div>
             </div>
             {% endif %}
@@ -71,10 +73,10 @@
             <div class="form-group">
               <div class="col-sm-offset-10 col-sm-2">
                 <div class="radio">
-                  <label><input type="radio" name="count-method" value="relative" required>&nbsp;Add/Remove</label>
+                  <label><input type="radio" name="count-method" value="relative" class="count-method" required>&nbsp;Add/Remove</label>
                 </div>
                 <div class="radio">
-                  <label><input type="radio" name="count-method" value="absolute" required>&nbsp;Total</label>
+                  <label><input type="radio" name="count-method" value="absolute" class="count-method" required>&nbsp;Total</label>
                 </div>
               </div>
             </div>
@@ -87,5 +89,36 @@
         </div>
       </form>
     </div>
+    <script>
+      $('.container-inputs').on('change', '.quantity', function(e) {
+          $('.container-inputs').each(function(i, obj) {
+              quantity = $(this).data('quantity');
+              new_quantity = $(this).find('.quantity')[0].value;
+              result = parseInt(quantity) + parseInt(new_quantity);
+              $result = $(this).find('.container-result');
+              $result.html("=" + result)
+          });
+      })
+      $('.count-method').change(function(e){
+          $input = e.target;
+          if ($input.value == 'relative') {
+              $('.container-modifier').html("+");
+              $('.container-inputs').each(function(i, obj) {
+                  quantity = $(this).data('quantity');
+                  new_quantity = $(this).find('.quantity')[0].value;
+                  result = parseInt(quantity) + parseInt(new_quantity);
+                  $result = $(this).find('.container-result');
+                  $result.html("= " + result)
+              });
+          } else if ($input.value == 'absolute') {
+              $('.container-modifier').html("=>");
+              $('.container-inputs').each(function(i, obj) {
+                  new_quantity = $(this).find('.quantity')[0].value;
+                  $result = $(this).find('.container-result');
+                  $result.html("= " + new_quantity)
+              });
+          }
+      })
+    </script>
   </body>
 </html>
