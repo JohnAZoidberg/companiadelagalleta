@@ -372,8 +372,5 @@ class CgBase:
 
     def update_container(self, syncId, containerId, quantity, location, edited, recounted):
         last_recount = self.fetchone("stock", ["recounted"], "WHERE syncId = " + str(syncId))
-        util.print_header()
-        print edited
-        print edited > last_recount
         if edited > last_recount:
-            self.update("stock", {"quantity": quantity, "recounted": recounted, "status": 3, "edited": edited}, True, "WHERE syncId = " + str(syncId) + " AND location = " + str(location))
+            return self.update("stock", {"quantity": quantity, "recounted": recounted, "status": 3, "edited": edited}, True, "WHERE syncId = " + str(syncId) + " AND location = " + str(location))
