@@ -47,7 +47,7 @@ def print_html():
     # env
     THIS_DIR = os.path.dirname(os.path.abspath(__file__))
     j2_env = Environment(loader=FileSystemLoader(THIS_DIR),
-                         trim_blocks=True)
+                         trim_blocks=True, lstrip_blocks=True)
     j2_env.filters['dateformat'] = util.dateformat
     j2_env.filters['datetimeformat'] = util.datetimeformat
     j2_env.filters['timeformat'] = util.timeformat

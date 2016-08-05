@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/jquery-2.2.4.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <style>
+    </style>
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <span class="navbar-brand">{{ title }} (v{{ version|readable_version }})</span>
+            <span class="navbar-brand" id="working-now">
+            {% for wid, worker in workers.iteritems() if worker["working"] %}
+              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
+            {% endfor %}
+            </span>
+          </div>
+          <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+              <li>
+                <div class="dropdown margin-5">
+                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
+                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
+                    {% for lid, location in locations.iteritems() %}
+                    <li><a href="stock.py?location={{ lid }}">{{ location }} </a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </li>
+              <li><a href="index.py"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+      <form action="api.py" method="post" class="form-horizontal" role="form">
+        <input type="hidden" name="action" value="update_stock">
+        <input type="hidden" name="redirect" value="stock.py">
+        <div class="row">
+          {% for i in range(3) %}
+          <div class="col-sm-4">
+            {% for containerId, details in containers.iteritems() %}
+            {% if (i == 0 and containerId >=  0 and containerId <  7)
+               or (i == 1 and containerId >=  7 and containerId < 13)
+               or (i == 2 and containerId >= 13 and containerId < 19) %}
+            <div class="form-group">
+              <label class="control-label col-sm-6" for="box">{{ details['title'] }}: </label>
+              <div class="col-sm-6 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
+                <div class="input-group-addon">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
+                <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0">
+                <div class="input-group-addon container-result">= {{ stock[containerId]['quantity'] }}</div>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endfor %}
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="form-group">
+              <div class="col-sm-offset-10 col-sm-2">
+                <div class="radio">
+                  <label><input type="radio" name="count-method" value="relative" class="count-method" checked required>&nbsp;Add/Remove</label>
+                </div>
+                <div class="radio">
+                  <label><input type="radio" name="count-method" value="absolute" class="count-method" required>&nbsp;Total</label>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-10 col-sm-2">
+                <button type="submit" id="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <script>
+      $('.container-inputs').on('change', '.quantity', function(e) {
+          $input = $('.count-method:checked');
+          $('.container-inputs').each(function(i, obj) {
+              if ($input.val() == 'relative') {
+                  $('.container-modifier').html("+");
+                  $('.container-inputs').each(function(i, obj) {
+                      quantity = $(this).data('quantity');
+                      new_quantity = $(this).find('.quantity')[0].value;
+                      result = parseInt(quantity) + parseInt(new_quantity);
+                      $result = $(this).find('.container-result');
+                      $result.html("= " + result)
+                  });
+              } else if ($input.val() == 'absolute') {
+                  $('.container-modifier').html("=>");
+                  $('.container-inputs').each(function(i, obj) {
+                      new_quantity = $(this).find('.quantity')[0].value;
+                      $result = $(this).find('.container-result');
+                      $result.html("= " + new_quantity)
+                  });
+              }
+          });
+      })
+      $('.count-method').change(function(e){
+          $input = e.target;
+          if ($input.value == 'relative') {
+              $('.container-modifier').html("+");
+              $('.container-inputs').each(function(i, obj) {
+                  quantity = $(this).data('quantity');
+                  new_quantity = $(this).find('.quantity')[0].value;
+                  result = parseInt(quantity) + parseInt(new_quantity);
+                  $result = $(this).find('.container-result');
+                  $result.html("= " + result)
+              });
+          } else if ($input.value == 'absolute') {
+              $('.container-modifier').html("=>");
+              $('.container-inputs').each(function(i, obj) {
+                  new_quantity = $(this).find('.quantity')[0].value;
+                  $result = $(this).find('.container-result');
+                  $result.html("= " + new_quantity)
+              });
+          }
+      })
+    </script>
+  </body>
+</html>
