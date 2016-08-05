@@ -73,7 +73,7 @@
             <div class="form-group">
               <div class="col-sm-offset-10 col-sm-2">
                 <div class="radio">
-                  <label><input type="radio" name="count-method" value="relative" class="count-method" required>&nbsp;Add/Remove</label>
+                  <label><input type="radio" name="count-method" value="relative" class="count-method" checked required>&nbsp;Add/Remove</label>
                 </div>
                 <div class="radio">
                   <label><input type="radio" name="count-method" value="absolute" class="count-method" required>&nbsp;Total</label>
@@ -91,12 +91,25 @@
     </div>
     <script>
       $('.container-inputs').on('change', '.quantity', function(e) {
+          $input = $('.count-method:checked');
           $('.container-inputs').each(function(i, obj) {
-              quantity = $(this).data('quantity');
-              new_quantity = $(this).find('.quantity')[0].value;
-              result = parseInt(quantity) + parseInt(new_quantity);
-              $result = $(this).find('.container-result');
-              $result.html("=" + result)
+              if ($input.val() == 'relative') {
+                  $('.container-modifier').html("+");
+                  $('.container-inputs').each(function(i, obj) {
+                      quantity = $(this).data('quantity');
+                      new_quantity = $(this).find('.quantity')[0].value;
+                      result = parseInt(quantity) + parseInt(new_quantity);
+                      $result = $(this).find('.container-result');
+                      $result.html("= " + result)
+                  });
+              } else if ($input.val() == 'absolute') {
+                  $('.container-modifier').html("=>");
+                  $('.container-inputs').each(function(i, obj) {
+                      new_quantity = $(this).find('.quantity')[0].value;
+                      $result = $(this).find('.container-result');
+                      $result.html("= " + new_quantity)
+                  });
+              }
           });
       })
       $('.count-method').change(function(e){
