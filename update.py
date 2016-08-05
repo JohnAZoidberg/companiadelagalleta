@@ -185,7 +185,8 @@ def db_update():
             base.db.rollback()
             failure = True
         result += "New versioning\n"
-    if version < 500 or True:
+
+    if version < 500:
         # Add container id o boxes table
         try:
             base.cur.execute("ALTER TABLE boxes ADD container INT")
