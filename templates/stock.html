@@ -56,10 +56,10 @@
                or (i == 1 and containerId >=  7 and containerId < 13)
                or (i == 2 and containerId >= 13 and containerId < 19) %}
             <div class="form-group">
-              <label class="control-label col-sm-6" for="box">{{ details['title'] }}: </label>
-              <div class="col-sm-6 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
+              <label class="control-label col-sm-5" for="box">{{ details['title'] }}: </label>
+              <div class="col-sm-7 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
                 <div class="input-group-addon">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
-                <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0">
+                <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0" required>
                 <div class="input-group-addon container-result">= {{ stock[containerId]['quantity'] }}</div>
               </div>
             </div>
@@ -90,27 +90,23 @@
       </form>
     </div>
     <script>
-      $('.container-inputs').on('change', '.quantity', function(e) {
+      $('.container-inputs').on('keyup mouseup', '.quantity', function(e) {
           $input = $('.count-method:checked');
-          $('.container-inputs').each(function(i, obj) {
-              if ($input.val() == 'relative') {
-                  $('.container-modifier').html("+");
-                  $('.container-inputs').each(function(i, obj) {
-                      quantity = $(this).data('quantity');
-                      new_quantity = $(this).find('.quantity')[0].value;
-                      result = parseInt(quantity) + parseInt(new_quantity);
-                      $result = $(this).find('.container-result');
-                      $result.html("= " + result)
-                  });
-              } else if ($input.val() == 'absolute') {
-                  $('.container-modifier').html("=>");
-                  $('.container-inputs').each(function(i, obj) {
-                      new_quantity = $(this).find('.quantity')[0].value;
-                      $result = $(this).find('.container-result');
-                      $result.html("= " + new_quantity)
-                  });
-              }
-          });
+          $target = $(e.target).parent();
+          $result = $target.find('.container-result');
+          new_quantity = $target.find('.quantity')[0].value;
+          if (new_quantity == '') {
+              new_quantity = 0
+          }
+          if ($input.val() == 'relative') {
+              $('.container-modifier').html("+");
+              quantity = $target.data('quantity');
+              result = parseInt(quantity) + parseInt(new_quantity);
+              $result.html("= " + result)
+          } else if ($input.val() == 'absolute') {
+              $('.container-modifier').html("=>");
+              $result.html("= " + new_quantity)
+          }
       })
       $('.count-method').change(function(e){
           $input = e.target;
