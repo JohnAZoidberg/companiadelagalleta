@@ -20,7 +20,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(util.get_location())
-    new_version = 500  # 0.5.0
+    new_version = 501  # 0.5.1
     version = 0
     failure = False
     try:
@@ -230,6 +230,12 @@ def db_update():
 
         base.db.commit()
         result += "Add stock tracking\n"
+    if version < 501:
+        try:
+            base.cur.execute("ALTER TABLE purchases ADD note TEXT")
+        except:
+            pass
+        result += "Add feature to add notes to a purchase\n"
 
     if new_version is not None and not failure:
         base.update("config",

@@ -104,7 +104,7 @@ class CgBase:
 
     def insert_purchase(self, country, card, date, discount, cart, edited,
                         location=None, status=0, syncId=None,
-                        updateStock=False):
+                        updateStock=False, note=None):
         success = False
         if dbdetails.server:
             status = 3
@@ -142,7 +142,7 @@ class CgBase:
             {"country": country, "card": int(card),
              "date": util.datestring(date), "discount": discount,
              "status": status, "syncId": syncId, "edited": edited,
-             "location": location},
+             "location": location, "note": note},
             False
         )
         if success:
@@ -186,6 +186,7 @@ class CgBase:
             pt+", "+ct+", "+bt,
             [pt+".syncId", pt+".country", pt+".card", pt+".discount",
              pt+".date", pt+".status", pt+".edited", pt+".location",
+             pt+".note",
              ct+".quantity", ct+".price",
              bt+".boxesEntryId", bt+".title"],
             "WHERE purchases.syncId = cart.syncId "
@@ -194,7 +195,7 @@ class CgBase:
         purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, status, edited,
-             location, quantity, price, boxId, title) = row
+             location, note, quantity, price, boxId, title) = row
             if onlydate is not None:
                 if not util.is_same_day(onlydate, date):
                     continue
@@ -215,7 +216,7 @@ class CgBase:
                     purchases[key]['purchase'] = {
                         "syncId": key, "status": status, "country": country,
                         "card": card, "discount": discount, "date": date,
-                        "edited": edited, "location": location
+                        "edited": edited, "location": location, "note": note
                     }
                 else:
                     purchases[key]['purchase'] = (
