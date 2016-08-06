@@ -27,6 +27,8 @@ def save_purchase(boxes):
     if cookies:
         country = form.getfirst('country')
         card = form.getvalue('payment')
+        note = form.getvalue('note')
+        note = "" if note is None else note
         date_field = form.getfirst('date') + " " + form.getfirst('time')
         if date_field is None:
             date = datetime.now()
@@ -40,7 +42,8 @@ def save_purchase(boxes):
         discount = 0 if discount_field is None else int(discount_field)
         card = True if card == "card" else False
         insert_success = base.insert_purchase(country, card, date, discount,
-                                              cookies, edited, updateStock=True)
+                                              cookies, edited, note=note,
+                                              updateStock=True)
         if insert_success:
             return (True, "Purchase saved")
     else:
@@ -71,11 +74,12 @@ def sync_down():
                      params={"action": "sync_down", "last_update": last_sync})
     try:
         jres = r.json()
-        if "purchases" not in jres:
-            print_text("ERROR ON SERVERSIDE!<br>"+r.text)
-            exit()
+        ps = jres["purchases"]
     except TypeError:
         jres = json.loads(jres)
+    except:
+        print_text("ERROR ON SERVERSIDE!<br>"+r.text)
+        exit()
     result = {'synced_down': {
         "purchases": {"added": [], "deleted": []},
         "shifts":    {"added": [], "deleted": []},
@@ -97,7 +101,8 @@ def sync_down():
             if base.insert_purchase(purchase['country'], purchase['card'],
                                     purchase['date'], purchase['discount'],
                                     cart, edited, location=purchase['location'],
-                                    status=3, syncId=syncId):
+                                    status=3, syncId=syncId,
+                                    note=purchase['note']):
                 result['synced_down']['purchases']['added'].append(syncId)
     # shifts
     shifts = jres["shifts"]
@@ -163,11 +168,12 @@ def sync_up():
     )
     try:
         jres = r.json()
-        if "purchases" not in jres:
-            print_text("ERROR ON SERVERSIDE!<br>\n" + r.text)
-            exit()
+        foo = jres['purchases']
     except TypeError:
         jres = json.loads(jres)
+    except:
+        print_text("ERROR ON SERVERSIDE!<br>\n" + r.text)
+        exit()
     # handle result - mark deleted or as synced
     # purchases
     for syncId in jres["purchases"]["deleted"]:
@@ -218,7 +224,8 @@ def receive_sync_up():
                 if base.insert_purchase(
                         purchase['country'], purchase['card'], purchase['date'],
                         purchase['discount'], cart, edited,
-                        location=purchase['location'], status=3, syncId=syncId):
+                        location=purchase['location'], status=3, syncId=syncId,
+                        note=purchase['note']):
                     result["purchases"]['added'].append(syncId)
             elif existing == 2:  # exists but was previously marked as deleted
                 if base.change_purchase_status(syncId, 3):

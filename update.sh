@@ -1,4 +1,4 @@
 #!/bin/bash
-rm -f *.pyc
-git checkout -- .
-git pull
+sudo chmod 666 log.txt
+sudo git checkout -- .
+sudo git pull
