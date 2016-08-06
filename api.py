@@ -28,7 +28,7 @@ def save_purchase(boxes):
         country = form.getfirst('country')
         card = form.getvalue('payment')
         note = form.getvalue('note')
-        note = "" if note is None else Note
+        note = "" if note is None else note
         date_field = form.getfirst('date') + " " + form.getfirst('time')
         if date_field is None:
             date = datetime.now()
@@ -74,7 +74,6 @@ def sync_down():
                      params={"action": "sync_down", "last_update": last_sync})
     try:
         jres = r.json()
-        print_text(jres)
         ps = jres["purchases"]
     except TypeError:
         jres = json.loads(jres)
@@ -169,11 +168,12 @@ def sync_up():
     )
     try:
         jres = r.json()
-        if "purchases" not in jres:
-            print_text("ERROR ON SERVERSIDE!<br>\n" + r.text)
-            exit()
+        foo = jres['purchases']
     except TypeError:
         jres = json.loads(jres)
+    except:
+        print_text("ERROR ON SERVERSIDE!<br>\n" + r.text)
+        exit()
     # handle result - mark deleted or as synced
     # purchases
     for syncId in jres["purchases"]["deleted"]:
