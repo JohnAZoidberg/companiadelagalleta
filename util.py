@@ -1,7 +1,5 @@
 # coding=utf-8
-import json
 from datetime import datetime, timedelta
-from dbdetails import dbdetails
 from random import randint
 import socket
 import Cookie
@@ -77,8 +75,9 @@ containers = {
     18: {"boxes": [56], "title": "Galleta Individual"},
 }
 
+
 def print_header(t="text/html", cookies={}):
-    print "Content-Type: "+ t + ";charset=utf-8"
+    print "Content-Type: " + t + ";charset=utf-8"
     if cookies:
         c = Cookie.SimpleCookie()
         for key, val in cookies.iteritems():
@@ -87,10 +86,12 @@ def print_header(t="text/html", cookies={}):
         print c
     print
 
+
 def println(*lns):
     for ln in lns:
         print ln
     print "<br>"
+
 
 def get_cookies():
     cookies = {}
@@ -102,6 +103,7 @@ def get_cookies():
             cookies[cookie[0]] = cookie[1]
     return cookies
 
+
 def get_location():
     cookies = get_cookies()
     try:
@@ -110,21 +112,26 @@ def get_location():
         location = 0
     return location
 
+
 def is_same_day(date1, date2):
-    return datetime.strftime(date1, '%Y-%m-%d') == datetime.strftime(date2, '%Y-%m-%d')
+    return datetime.strftime(date1, '%Y-%m-%d')\
+           == datetime.strftime(date2, '%Y-%m-%d')
+
 
 def earlier_than(hour, minute, dt):
     return dt < dt.replace(hour=hour, minute=minute)
 
+
 def split_purchases(purchases):
-    morning = {"ps":[], "total": {"cash": 0, "card": 0}}
-    evening = {"ps":[], "total": {"cash": 0, "card": 0}}
+    morning = {"ps": [], "total": {"cash": 0, "card": 0}}
+    evening = {"ps": [], "total": {"cash": 0, "card": 0}}
     for p in purchases:
         if not earlier_than(16, 0, p['purchase']['date']):
             morning['ps'].append(p)
         else:
             evening['ps'].append(p)
     return (morning, evening)
+
 
 def calc_purchases_totals(ps):
     split_ps = split_purchases(ps)
@@ -148,8 +155,10 @@ def calc_purchases_totals(ps):
         card_total += card_sum
     return split_ps, (card_total, cash_total)
 
+
 def uniqueId(*args):
     return randint(100000000, 999999999)
+
 
 def checkConnection(host="8.8.8.8", port=53, timeout=3):
     """
@@ -165,6 +174,7 @@ def checkConnection(host="8.8.8.8", port=53, timeout=3):
         print ex.message
     return False
 
+
 def datestring(date):
     try:
         return date.strftime('%Y-%m-%d %H:%M:%S')
@@ -174,34 +184,44 @@ def datestring(date):
         else:
             raise
 
+
 def stringdate(string):
     return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
 
 # Jinja Filters:
 def dateformat(value):
     return value.strftime('%Y-%m-%d')
 
+
 def datetimeformat(value):
     return value.strftime('%Y-%m-%d %H:%M')
 
+
 def timeformat(value):
     return value.strftime('%H:%M')
+
 
 def moneyformat(value):
     extrazero = "0" if value % 10 == 0 else ""
     return str((value / 100.0)) + extrazero + "&nbsp;€"
 
+
 def countryformat(value):
     return country_list[value]
+
 
 def cardformat(value):
     return "VISA" if value else ""
 
+
 def discountformat(value):
     return "(-" + str(value) + "%) " if value > 0 else ""
 
+
 def adddays(date, summand):
     return date + timedelta(days=summand)
+
 
 def readable_version(value):
     version_str = str(value % 100)
@@ -212,8 +232,11 @@ def readable_version(value):
     version_str = str(value) + "." + version_str
     return version_str
 
+
 # Jinja Tests:
 def is_continent(value):
     return value[0] == "_"
+
+
 def is_today(value):
     return is_same_day(datetime.now(), value)

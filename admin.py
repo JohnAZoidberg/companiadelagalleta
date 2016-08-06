@@ -6,16 +6,14 @@ sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable() # Displays any errors
 
-from jinja2 import Environment, FileSystemLoader
-import os
-import cgi
+from datetime import datetime
+import urllib
 
 import util
-from datetime import datetime
 import api
 from dbdetails import dbdetails
 import update
-import urllib
+
 
 def perform_updates():
     if not util.checkConnection():
@@ -36,33 +34,33 @@ def perform_updates():
     if not dbdetails.server:
         success, syncstr = api.sync()
         sync_json = syncstr
-        if not sync_json['synced_down']['purchases']['deleted']\
-           and not sync_json['synced_down']['purchases']['added']\
-           and not sync_json['synced_up']['purchases']['deleted']\
-           and not sync_json['synced_up']['purchases']['added']\
-           and not sync_json['synced_down']['shifts']['deleted']\
-           and not sync_json['synced_down']['shifts']['added']\
-           and not sync_json['synced_up']['shifts']['deleted']\
-           and not sync_json['synced_up']['shifts']['added']:
-               updatemsg += "\nNothing to sync"
+        if (not sync_json['synced_down']['purchases']['deleted']
+                and not sync_json['synced_down']['purchases']['added']
+                and not sync_json['synced_up']['purchases']['deleted']
+                and not sync_json['synced_up']['purchases']['added']
+                and not sync_json['synced_down']['shifts']['deleted']
+                and not sync_json['synced_down']['shifts']['added']
+                and not sync_json['synced_up']['shifts']['deleted']
+                and not sync_json['synced_up']['shifts']['added']):
+            updatemsg += "\nNothing to sync"
         elif success:
             updatemsg += "\nSync done"
         else:
             updatemsg += "\nSync problem!!!"
-
     else:
         success = True
         syncstr = "Server -> no sync"
+
     with open('log.txt', 'a') as f:
         f.writelines('\n'.join([
-                util.datetimeformat(datetime.now()),
-                "shellupdate:",
-                str(shell_updatestr),
-                "updatemsg",
-                str(updatemsg),
-                "sync",
-                str((success, syncstr)),
-                "-----\n"
+            util.datetimeformat(datetime.now()),
+            "shellupdate:",
+            str(shell_updatestr),
+            "updatemsg",
+            str(updatemsg),
+            "sync",
+            str((success, syncstr)),
+            "-----\n"
         ]))
     return updatemsg
 

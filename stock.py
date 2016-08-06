@@ -6,12 +6,14 @@ sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable() # Displays any errors
 
-from jinja2 import Environment, FileSystemLoader
 import os
 import cgi
 
+from jinja2 import Environment, FileSystemLoader
+
 import util
 from dbconn import CgBase
+
 
 def print_html():
     # cgi

@@ -5,30 +5,27 @@ reload(sys)
 sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable()
-import cgi
-import json
+
 from datetime import datetime
-from dbconn import *
-from random import randint
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
+
+from dbconn import CgBase
 import util
 from openpyxl import load_workbook
+
 
 def colnum_string(n):
     div = n
     string = ""
-    temp = 0
     while div > 0:
         module = (div-1) % 26
         string = chr(65+module) + string
         div = int((div-module) / 26)
     return string
 
+
 def day_to_datetime(day):
     return datetime.strptime(day, '%Y-%m-%d')
+
 
 def create_stats_file():
     base = CgBase(util.get_location())

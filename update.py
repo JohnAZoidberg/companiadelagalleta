@@ -2,37 +2,33 @@
 # coding=utf-8
 import cgitb
 cgitb.enable()
-import cgi
-import json
-from datetime import datetime
-from dbconn import *
-from random import randint
-try:
-    from collections import OrderedDict
-except ImportError:
-    from ordereddict import OrderedDict
-import util
+
 import subprocess
+
+from dbconn import CgBase
+import util
+
 
 def git_update():
     process = subprocess.Popen(["./update.sh"],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
     returncode = process.wait()
     return (returncode == 0, process.stdout.read())
+
 
 def db_update():
     result = ""
     base = CgBase(util.get_location())
-    new_version = 500 # 0.5.0
+    new_version = 500  # 0.5.0
     version = 0
     failure = False
     try:
         version = base.get_version()
     except Exception as e:
         if str(e) == "(1146, \"Table 'cg.config' doesn't exist\")":
-            version = 0 # 0.0.0
-    if version < 10: # 0.1.0
+            version = 0  # 0.0.0
+    if version < 10:  # 0.1.0
         carts = base.fetchall("cart", ["syncId"], "")
         purchases = base.fetchall("purchases", ["syncId"], "")
         for cart in carts:
@@ -40,15 +36,16 @@ def db_update():
                 result += str(cart)+str(cart in purchases)+"\n"
                 sql = "DELETE FROM cart WHERE syncId=" + str(cart[0])
                 base.cur.execute(sql)
-        base.cur.execute("DELETE FROM cart WHERE syncId=482836353 AND boxId=17 LIMIT 1")
+        base.cur.execute(
+            "DELETE FROM cart WHERE syncId=482836353 AND boxId=17 LIMIT 1")
         try:
             base.cur.execute("ALTER TABLE cart DROP COLUMN edited")
         except:
-           pass
+            pass
         try:
             base.cur.execute("ALTER TABLE cart DROP COLUMN status")
         except:
-           pass
+            pass
         try:
             base.cur.execute("DROP TABLE config")
         except:
@@ -68,12 +65,18 @@ def db_update():
         except:
             base.db.rollback()
             raise
-        base.insert("boxes", {"title": "Basic bag pequeña - GRATIS", "price": 0, "boxesEntryId": 65}, False)
+        base.insert("boxes",
+                    {"title": "Basic bag pequeña - GRATIS", "price": 0,
+                     "boxesEntryId": 65},
+                    False)
         base.db.commit()
     if version < 12:
         result += "This version does not add anything new :P\n",
     if version < 117:
-        base.insert("boxes", {"title": "Bolsa Merienda", "price": 275, "boxesEntryId": 66}, True)
+        base.insert("boxes",
+                    {"title": "Bolsa Merienda", "price": 275,
+                     "boxesEntryId": 66},
+                    True)
         base.db.commit()
     if version < 118:
         box_update = {
@@ -83,13 +86,15 @@ def db_update():
             28: "Pyramid box - Clásica"
         }
         for old_title, new_title in box_update.iteritems():
-            base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
+            base.update("boxes",
+                        {"title": new_title}, False,
+                        "WHERE boxesEntryId = " + str(old_title))
         result += "Removed the 'window' from the names of the Pyramid boxes\n"
         base.db.commit()
     if version < 119:
         box_update = {
-             5: "Basic bag pequeña - Frutas",
-             6: "Basic bag pequeña - Canarias",
+            5:  "Basic bag pequeña - Frutas",
+            6:  "Basic bag pequeña - Canarias",
             10: "Basic bag grande - Frutas",
             11: "Basic bag grande - Canarias",
             15: "Cube pequeña - Frutas",
@@ -106,7 +111,8 @@ def db_update():
             28: "Pyramid - Clásica"
         }
         for old_title, new_title in box_update.iteritems():
-            base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
+            base.update("boxes", {"title": new_title}, False,
+                        "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
     if version < 120:
@@ -171,14 +177,16 @@ def db_update():
             64: "Mango - Vegano",
         }
         for old_title, new_title in box_update.iteritems():
-            base.update("boxes", {"title": new_title}, False, "WHERE boxesEntryId = " + str(old_title))
+            base.update("boxes", {"title": new_title}, False,
+                        "WHERE boxesEntryId = " + str(old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
     if version < 400:
         try:
             base.cur.execute("ALTER TABLE purchases ADD location INT")
             base.cur.execute("UPDATE purchases SET location = 0")
-            base.cur.execute("ALTER TABLE purchases MODIFY COLUMN location INT NOT NULL")
+            base.cur.execute(
+                "ALTER TABLE purchases MODIFY COLUMN location INT NOT NULL")
             base.db.commit()
             result += "New feature for choosing location.\n"
         except:
@@ -191,12 +199,14 @@ def db_update():
         try:
             base.cur.execute("ALTER TABLE boxes ADD container INT")
         except:
-          pass
+           pass
         for container, details in util.containers.iteritems():
             for box in details['boxes']:
-                sql = "UPDATE boxes SET container = " + str(container) + " WHERE `boxesEntryId` = " + str(box)
+                sql = ("UPDATE boxes SET container = " + str(container)
+                      + " WHERE `boxesEntryId` = " + str(box))
                 base.cur.execute(sql)
-        base.cur.execute("ALTER TABLE boxes MODIFY COLUMN container INT NOT NULL")
+        base.cur.execute(
+            "ALTER TABLE boxes MODIFY COLUMN container INT NOT NULL")
 
         # Add stock table
         sql = (
@@ -213,26 +223,24 @@ def db_update():
         base.cur.execute(sql)
         for locationId in util.locations.keys():
             for container in util.containers.keys():
-              base.insert("stock", {"containerId": container, "location": locationId, "syncId": (container*1000+locationId)}, False)
+                base.insert("stock",
+                            {"containerId": container, "location": locationId,
+                             "syncId": (container*1000+locationId)},
+                            False)
 
         base.db.commit()
         result += "Add stock tracking\n"
-        try:
-            foo = 4
-        except Exception as e:
-            base.db.rollback()
-            raise e
-            result += str(e) + "\n"
-            failure = True
 
     if new_version is not None and not failure:
-        base.update("config", {"version": new_version}, True, "WHERE constant = 'X'")
+        base.update("config",
+                    {"version": new_version}, True, "WHERE constant = 'X'")
         base.db.commit()
     else:
         base.db.rollback()
     if version != new_version:
         if not failure:
-            result += "Updated from " + util.readable_version(version) + " to " + util.readable_version(new_version)+"\n"
+            result += ("Updated from " + util.readable_version(version)
+                       + " to " + util.readable_version(new_version)+"\n")
         else:
             result += "FAILURE!\n"
     else:

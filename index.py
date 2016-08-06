@@ -4,17 +4,19 @@ import sys
 reload(sys)
 sys.setdefaultencoding("utf8")
 import cgitb
-cgitb.enable() # Displays any errors
+cgitb.enable()  # Displays any errors
 
-from jinja2 import Environment, FileSystemLoader
 import os
 import cgi
 import json
+from datetime import datetime
+
+from jinja2 import Environment, FileSystemLoader
 
 import util
 from dbconn import CgBase
-from datetime import datetime
-from dbdetails import *
+from dbdetails import dbdetails
+
 
 def print_html():
     # cgi
@@ -37,10 +39,12 @@ def print_html():
         location = int(location)
         new_cookies = {"location": location}
     # data
-    now = datetime.now() if showndate is None else datetime.strptime(showndate, '%Y-%m-%d')
+    now = datetime.now() if showndate is None\
+          else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase(location)
     boxes = base.get_boxes()
-    purchases, total = util.calc_purchases_totals(base.get_purchases(onlydate=now, prettydict=True))
+    purchases, total = util.calc_purchases_totals(
+        base.get_purchases(onlydate=now, prettydict=True))
     workers = base.get_workers()
     version = base.get_version()
 
@@ -77,7 +81,6 @@ def print_html():
         location=location,
         locations=util.locations,
         version=version
-        #random_prefix=util.uniqueId()
     )
 
 if __name__ == "__main__":
