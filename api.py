@@ -100,13 +100,18 @@ def sync_down():
         if status == 2:
             if base.delete_purchase(syncId):
                 result['synced_down']['purchases']['deleted'].append(syncId)
-        elif existing is None:
-            if base.insert_purchase(purchase['country'], purchase['card'],
-                                    purchase['date'], purchase['discount'],
-                                    cart, edited, location=purchase['location'],
-                                    status=3, syncId=syncId,
-                                    note=purchase['note']):
-                result['synced_down']['purchases']['added'].append(syncId)
+        else:
+            if existing is None:
+                if base.insert_purchase(purchase['country'], purchase['card'],
+                                        purchase['date'], purchase['discount'],
+                                        cart, edited,
+                                        location=purchase['location'],
+                                        status=3, syncId=syncId,
+                                        note=purchase['note']):
+                    result['synced_down']['purchases']['added'].append(syncId)
+            else:
+                result['synced_down']['purchases']['deleted'].append(syncId)
+
     # shifts
     shifts = jres["shifts"]
     for shift in shifts:
@@ -117,12 +122,15 @@ def sync_down():
         if status == 2:
             if base.delete_shift(syncId):
                 result['synced_down']['shifts']['deleted'].append(syncId)
-        elif existing is None:
-            if base.insert_shift(shift["workerId"], shift["start"],
-                                 shift["end"], edited,
-                                 location=shift["location"],
-                                 status=3, syncId=syncId):
-                result['synced_down']['shifts']['added'].append(syncId)
+        else:
+            if existing is None:
+                if base.insert_shift(shift["workerId"], shift["start"],
+                                    shift["end"], edited,
+                                    location=shift["location"],
+                                    status=3, syncId=syncId):
+                    result['synced_down']['shifts']['added'].append(syncId)
+            else:
+                result['synced_down']['shifts']['deleted'].append(syncId)
     # stock
     stock = jres["stock"]
     for container in stock:
@@ -230,12 +238,15 @@ def receive_sync_up():
                         location=purchase['location'], status=3, syncId=syncId,
                         note=purchase['note']):
                     result["purchases"]['added'].append(syncId)
-            elif existing == 2:  # exists but was previously marked as deleted
-                if base.change_purchase_status(syncId, 3):
+            else:
+                if existing == 2:  # exists but was previously marked as deleted
+                    if base.change_purchase_status(syncId, 3):
+                        result["purchases"]['added'].append(syncId)
+                else:
                     result["purchases"]['added'].append(syncId)
         elif status == 2:
-            if existing is None or base.mark_purchase_deleted(syncId):
-                result["purchases"]['deleted'].append(syncId)
+            base.mark_purchase_deleted(syncId):
+            result["purchases"]['deleted'].append(syncId)
     # shifts
     shifts = res["shifts"]
     for shift in shifts:
@@ -249,12 +260,15 @@ def receive_sync_up():
                         shift["workerId"], shift["start"], shift["end"], edited,
                         location=shift["location"], status=3, syncId=syncId):
                     result["shifts"]['added'].append(syncId)
-            elif existing == 2:  # exists but was previously marked as deleted
-                if base.change_shift_status(syncId, 3):
+            else:
+                if existing == 2:  # exists but was previously marked as deleted
+                    if base.change_shift_status(syncId, 3):
+                        result["shifts"]['added'].append(syncId)
+                else:
                     result["shifts"]['added'].append(syncId)
         elif status == 2:
-            if existing is None or base.mark_shift_deleted(syncId):
-                result["shifts"]['deleted'].append(syncId)
+            base.mark_shift_deleted(syncId):
+            result["shifts"]['deleted'].append(syncId)
     # stock
     stock = res["stock"]
     for container in stock:
