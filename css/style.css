@@ -1,3 +1,6 @@
+.gone {
+   display: none;
+}
 textarea {
    resize: vertical;
 }
