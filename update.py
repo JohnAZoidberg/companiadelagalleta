@@ -243,7 +243,7 @@ def db_update():
 
     if new_version is not None and not failure:
         base.update("config",
-                    {"version": new_version}, True, "WHERE constant = 'X'")
+                    {"version": new_version}, True, ("WHERE constant = 'X'", ()))
         base.db.commit()
     else:
         base.db.rollback()
