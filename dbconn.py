@@ -47,14 +47,14 @@ class CgBase:
             str_value += ", %s"
         return str_value, tuple(xs)
 
-    def _fetch(self, table, columns, extra=""):
+    def _fetch(self, table, columns, extra=("", ())):
         try:
             self.cur.execute("SELECT " + self._list_to_str(columns)
-                             + " FROM " + table + " " + extra)
+                             + " FROM " + table + " " + extra[0], extra[1])
         except:
             raise
 
-    def fetchone(self, table, columns, extra=""):
+    def fetchone(self, table, columns, extra=("", ())):
         self._fetch(table, columns, extra)
         result = self.cur.fetchone()
         if result is None:
@@ -63,7 +63,7 @@ class CgBase:
             return result[0]
         return result
 
-    def fetchall(self, table, columns, extra=""):
+    def fetchall(self, table, columns, extra=("", ())):
         self._fetch(table, columns, extra)
         return self.cur.fetchall()
 
@@ -81,9 +81,9 @@ class CgBase:
                     sqlstr += ", "
                 sqlstr += str(col) + ' = ' + str(col) + ' + %s'
                 first = False
-            sqlstr += " " + extra
+            sqlstr += " " + extra[0]
             self.cur.execute(sqlstr,
-                tuple(columnsdata.values() + increment.values()))
+                tuple(columnsdata.values() + increment.values()) + extra[1])
             rows = self.cur.rowcount
             if commit:
                 self.db.commit()
@@ -94,14 +94,14 @@ class CgBase:
             raise
         return False
 
-    def insert(self, table, columns_data, commit, extra=""):
+    def insert(self, table, columns_data, commit, extra=("", ())):
         column_str = self._list_to_str(columns_data.keys())
         data_str, data_param = self._list_to_sql(columns_data.values())
         try:
             self.cur.execute("INSERT INTO " + table
                              + " (" + column_str + ")"
-                             + "VALUES (" + data_str + ") " + extra,
-                             data_param)
+                             + "VALUES (" + data_str + ") " + extra[0],
+                             data_param + extra[1])
             rows = self.cur.rowcount
             if commit:
                 self.db.commit()
@@ -128,7 +128,7 @@ class CgBase:
         for boxId, quantity in cart.iteritems():
             price, containerId = self.fetchone(
                 "boxes", ["price", "container"],
-                " WHERE boxesEntryId = " + str(boxId))
+                (" WHERE boxesEntryId = %s", (boxId,)))
             if price is None:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
@@ -144,8 +144,8 @@ class CgBase:
                         "stock",
                         {"edited": edited, "status": 1},
                         False,
-                        "WHERE location = " + str(location)
-                        + " AND containerId = " + str(containerId),
+                        ("WHERE location = %s AND containerId = %s",
+                         (location, containerId)),
                         increment={"quantity": -quantity}
                 )
         success = success and self.insert("purchases",
@@ -188,7 +188,12 @@ class CgBase:
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None,
             newerthan=None, datestring=False, notsynced=False, simplecart=False,
             allLocations=False):
-        where = "" if allLocations else " AND location = " + str(self.location)
+        where = ["WHERE purchases.syncId = cart.syncId "
+                 + "AND boxes.boxesEntryId = cart.boxId",
+                []]
+        if allLocations:
+            where[0] += " AND location = %s"
+            where[1].append(self.location)
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
@@ -199,9 +204,7 @@ class CgBase:
              pt+".note",
              ct+".quantity", ct+".price",
              bt+".boxesEntryId", bt+".title"],
-            "WHERE purchases.syncId = cart.syncId "
-            + "AND boxes.boxesEntryId = cart.boxId" + where
-            + " ORDER BY " + pt + ".date DESC")
+            (where[0] + " ORDER BY " + pt + ".date DESC", tuple(where[1])))
         purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, status, edited,
@@ -252,7 +255,7 @@ class CgBase:
         edited = util.datestring(datetime.now())
         success = self.update("purchases",
             {"status": 2, "edited": edited},
-            False, "WHERE syncId=" + syncStr)
+            False, ("WHERE syncId = %s", (syncStr,)))
         if updateStock:
             success = success and self.cur.execute(
                 "UPDATE stock, boxes, cart SET stock.edited = '" + edited + "', stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
@@ -266,7 +269,7 @@ class CgBase:
         syncStr = str(syncId)
         success = self.update("shifts",
             {"status": 2, "edited": util.datestring(datetime.now())},
-            False, "WHERE syncId=" + syncStr)
+            False, ("WHERE syncId = %s", (syncStr,)))
         if success:
             self.db.commit()
         return success
@@ -301,21 +304,21 @@ class CgBase:
 
     def change_purchase_status(self, syncId, status):
         return self.update("purchases", {"status": status},
-                           True, "WHERE syncId=" + str(syncId))
+                           True, ("WHERE syncId = %s", (syncId,)))
 
     def mark_purchase_synced(self, syncId):
         return self.change_purchase_status(syncId, 3)
 
     def change_shift_status(self, syncId, status):
         return self.update("shifts", {"status": status},
-                           True, "WHERE syncId=" + str(syncId))
+                           True, ("WHERE syncId = %s", (syncId,)))
 
     def mark_shift_synced(self, syncId):
         return self.change_shift_status(syncId, 3)
 
     def change_container_status(self, syncId, status):
         return self.update("stock", {"status": status},
-                           True, "WHERE syncId=" + str(syncId))
+                           True, ("WHERE syncId = %s", (syncId,)))
 
     def mark_container_synced(self, syncId):
         return self.change_container_status(syncId, 3)
@@ -329,17 +332,18 @@ class CgBase:
         return boxes
 
     def update_last_sync(self, date=datetime.now()):
-        self.update("config", {"last_sync": util.datestring(date)}, True, "")
+        self.update("config", {"last_sync": util.datestring(date)}, True, ("", ()))
 
     def get_last_sync(self):
-        return self.fetchone("config", ["last_sync"], "")
+        return self.fetchone("config", ["last_sync"])
 
     def get_version(self):
         return self.fetchone("config", ["version"])
 
     def begin_work(self, workerId):
         res = self.fetchone("shifts", ["workerId"],
-                            "WHERE workerId = " + workerId + " AND end IS NULL")
+                            ("WHERE workerId = %s AND end IS NULL",
+                             (workerId,)))
         if res is not None:
             return True
         now = datetime.now()
@@ -348,14 +352,15 @@ class CgBase:
     def end_work(self, workerId):
         try:
             self.update("shifts", {"end": util.datestring(datetime.now())},
-                        True, "WHERE workerId = " + workerId + " AND end IS NULL")
+                True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
             return True
         except:
             # TODO write error to log
             return False
 
     def get_workers(self):
-        working = self.fetchall("shifts", ["workerId"], "WHERE end IS NULL")
+        working = self.fetchall("shifts", ["workerId"],
+                                ("WHERE end IS NULL", ()))
         working = [w[0] for w in working] if working else []
         workers = {
                 wid: {"name": wname, "working": wid in working}
@@ -365,12 +370,15 @@ class CgBase:
 
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False,
                    newerthan=None, returndict=False, allLocations=False):
-        where = "WHERE end IS NOT NULL"
-        where += " AND status <> 3" if notsynced else ""
-        where += " AND location = " + str(self.location) if not allLocations else ""
+        where = ["WHERE end IS NOT NULL", []]
+        if notsynced:
+            where[0] += " AND status <> 3"
+        if not allLocations:
+            where[0] += " AND location = %s"
+            where[1].append(self.location)
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
-            where
+            (where[0], tuple(where[1]))
         )
         shifts = []
         for row in result:
@@ -392,17 +400,16 @@ class CgBase:
 
     def get_stock(self, allLocations=False, notsynced=False, datestring=False,
                   newerthan=None, returndict=False, containerIndexed=False):
-        where = ""
+        # the syncId check if unnecessary but done to have a first WHERE
+        where = ["WHERE syncId IS NOT NULL", []]
         if not allLocations:
-            where += "WHERE location = " + str(self.location)
+            where[0] += " AND location = %s"
+            where[1].append(self.location)
         if notsynced:
-            if where == "":
-                where += "WHERE status <> 3"
-            else:
-                where += " AND status <> 3"
+            where[0] += " AND status <> 3"
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
-             "status", "edited", "recounted"], where)
+             "status", "edited", "recounted"], (where[0], tuple(where[1])))
         stock = []
         for row in result:
             (containerId, quantity, location, syncId,
@@ -435,13 +442,13 @@ class CgBase:
                 success = success and self.update("stock",
                     {"quantity": quantity, "recounted": now,
                      "edited": now, "status": 1}, False,
-                    "WHERE containerId = " + str(containerId)
-                    + " AND location = " + str(self.location))
+                    ("WHERE containerId = %s AND location = %s",
+                     (containerId, (self.location,))))
             else:
                 success = success and self.update("stock",
                     {"edited": now, "status": 1}, False,
-                    "WHERE containerId = " + str(containerId)
-                    + " AND location = " + str(self.location),
+                    ("WHERE containerId = %s AND location = %s",
+                     (containerId, (self.location,))),
                     increment={"quantity": quantity})
         self.db.commit()
         return True
@@ -449,10 +456,10 @@ class CgBase:
     def update_container(self, syncId, containerId, quantity,
                          location, edited, recounted):
         last_recount = self.fetchone("stock", ["recounted"],
-                                     "WHERE syncId = " + str(syncId))
+                                     ("WHERE syncId = %s", (syncId,)))
         if edited > last_recount:
             return self.update("stock",
                 {"quantity": quantity, "recounted": recounted,
                  "status": 3, "edited": edited}, True,
-                "WHERE syncId = " + str(syncId)
-                + " AND location = " + str(location))
+                ("WHERE syncId = %s AND location = %s",
+                 (syncId, self.location)))

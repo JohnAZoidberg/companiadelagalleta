@@ -96,7 +96,7 @@ def sync_down():
         syncId = purchase['syncId']
         status = purchase['status']
         existing = base.fetchone("purchases", ["status"],
-                                 "WHERE syncId=" + str(syncId))
+                                 ("WHERE syncId = %s", syncId))
         if status == 2:
             if base.delete_purchase(syncId):
                 result['synced_down']['purchases']['deleted'].append(syncId)
@@ -113,7 +113,7 @@ def sync_down():
         syncId = shift['syncId']
         status = shift['status']
         existing = base.fetchone("shifts", ["status"],
-                                 "WHERE syncId=" + str(syncId))
+                                 ("WHERE syncId = %s", syncId))
         if status == 2:
             if base.delete_shift(syncId):
                 result['synced_down']['shifts']['deleted'].append(syncId)
@@ -221,7 +221,7 @@ def receive_sync_up():
         status = purchase['status']
         syncId = purchase['syncId']
         existing = base.fetchone("purchases", ["status"],
-                                 "WHERE syncId=" + str(syncId))
+                                 ("WHERE syncId = %s", syncId))
         if status == 0:
             if existing is None:
                 if base.insert_purchase(
@@ -242,7 +242,7 @@ def receive_sync_up():
         syncId = shift['syncId']
         status = shift['status']
         existing = base.fetchone("shifts", ["status"],
-                                 "WHERE syncId=" + str(syncId))
+                                 ("WHERE syncId = %s", syncId))
         if status == 0:
             if existing is None:
                 if base.insert_shift(

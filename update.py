@@ -32,8 +32,8 @@ def db_update():
         if str(e) == "(1146, \"Table 'cg.config' doesn't exist\")":
             version = 0  # 0.0.0
     if version < 10:  # 0.1.0
-        carts = base.fetchall("cart", ["syncId"], "")
-        purchases = base.fetchall("purchases", ["syncId"], "")
+        carts = base.fetchall("cart", ["syncId"])
+        purchases = base.fetchall("purchases", ["syncId"])
         for cart in carts:
             if cart not in purchases:
                 result += str(cart)+str(cart in purchases)+"\n"
@@ -91,7 +91,7 @@ def db_update():
         for old_title, new_title in box_update.iteritems():
             base.update("boxes",
                         {"title": new_title}, False,
-                        "WHERE boxesEntryId = " + str(old_title))
+                        ("WHERE boxesEntryId = %s", old_title))
         result += "Removed the 'window' from the names of the Pyramid boxes\n"
         base.db.commit()
     if version < 119:
@@ -115,7 +115,7 @@ def db_update():
         }
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False,
-                        "WHERE boxesEntryId = " + str(old_title))
+                        ("WHERE boxesEntryId = %s", old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
     if version < 120:
@@ -127,7 +127,8 @@ def db_update():
             "xx": "_xx"
         }
         for old, new in country_changes.iteritems():
-            base.update("purchases", {"country": new}, False, "WHERE country='"+old+"'")
+            base.update("purchases", {"country": new}, False,
+                        ("WHERE country= %s", old))
         base.cur.execute("ALTER TABLE purchases MODIFY country VARCHAR(255)")
         result += "More countries and continents\n"
         base.db.commit()
