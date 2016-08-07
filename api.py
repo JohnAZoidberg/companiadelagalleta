@@ -1,9 +1,12 @@
 #!/usr/bin/python -u
 # coding=utf-8
+import sys
+reload(sys)
+sys.setdefaultencoding("utf8")
 import cgitb
-cgitb.enable()
-import cgi
+cgitb.enable()  # Displays any errors
 
+import cgi
 import json
 from datetime import datetime
 import requests

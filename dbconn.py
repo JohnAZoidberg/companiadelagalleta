@@ -1,11 +1,17 @@
 #!/usr/bin/python -u
 # coding=utf-8
-import util
+import sys
+reload(sys)
+sys.setdefaultencoding("utf8")
+import cgitb
+cgitb.enable()  # Displays any errors
+
 from collections import OrderedDict
 from datetime import datetime
 
 import MySQLdb
 
+import util
 from dbdetails import dbdetails
 
 
