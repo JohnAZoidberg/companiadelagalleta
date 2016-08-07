@@ -41,7 +41,9 @@ def perform_updates():
                 and not sync_json['synced_down']['shifts']['deleted']
                 and not sync_json['synced_down']['shifts']['added']
                 and not sync_json['synced_up']['shifts']['deleted']
-                and not sync_json['synced_up']['shifts']['added']):
+                and not sync_json['synced_up']['shifts']['added']
+                and not sync_json['synced_up']['stock']['edited']
+                and not sync_json['synced_down']['stock']['edited']):
             updatemsg += "\nNothing to sync"
         elif success:
             updatemsg += "\nSync done"

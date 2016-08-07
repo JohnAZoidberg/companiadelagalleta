@@ -32,14 +32,20 @@ class CgBase:
     def close_connection(self):
         self.db.close()
 
-    def _list_to_str(self, xs, quote=""):  # TODO rename to _list_to_sql_str
+    def _list_to_str(self, xs, quote=""):
         str_value = quote + str(xs[0]) + quote
         for x in xs[1:]:
-            if x is None:
-                str_value += ", NULL"
-            else:
-                str_value += ", " + quote + str(x) + quote
+            str_value += ", " + quote + str(x) + quote
         return str_value
+
+    def _list_to_sql(self, xs):
+        str_value = "%s"
+        for x in xs[1:]:
+            """if x is None:
+                str_value += ", NULL"
+            else:"""
+            str_value += ", %s"
+        return str_value, tuple(xs)
 
     def _fetch(self, table, columns, extra=""):
         try:
@@ -68,19 +74,16 @@ class CgBase:
             for col, d in columnsdata.iteritems():
                 if not first:
                     sqlstr += ", "
-                try:
-                    d = int(d)
-                    sqlstr += str(col) + ' = ' + str(d)
-                except:
-                    sqlstr += str(col) + ' = "' + str(d) + '"'
+                sqlstr += str(col) + ' = %s'
                 first = False
             for col, d in increment.iteritems():
                 if not first:
                     sqlstr += ", "
-                sqlstr += str(col) + ' = ' + str(col) + '+' + str(int(d))
+                sqlstr += str(col) + ' = ' + str(col) + ' + %s'
                 first = False
             sqlstr += " " + extra
-            self.cur.execute(sqlstr)
+            self.cur.execute(sqlstr,
+                tuple(columnsdata.values() + increment.values()))
             rows = self.cur.rowcount
             if commit:
                 self.db.commit()
@@ -93,11 +96,12 @@ class CgBase:
 
     def insert(self, table, columns_data, commit, extra=""):
         column_str = self._list_to_str(columns_data.keys())
-        data_str = self._list_to_str(columns_data.values(), '"')
+        data_str, data_param = self._list_to_sql(columns_data.values())
         try:
             self.cur.execute("INSERT INTO " + table
                              + " (" + column_str + ")"
-                             + "VALUES (" + data_str + ") " + extra)
+                             + "VALUES (" + data_str + ") " + extra,
+                             data_param)
             rows = self.cur.rowcount
             if commit:
                 self.db.commit()
