@@ -50,7 +50,6 @@ country_list = OrderedDict([
 workers = OrderedDict([
     (0, "Daniel"),
     (1, "Patricia"),
-    (2, "Raquel"),
     (3, "Roberta")
 ])
 
