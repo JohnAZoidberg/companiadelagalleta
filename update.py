@@ -257,7 +257,7 @@ def db_update():
             }
             for boxId, newPrice in price_change.iteritems():
                 base.update("boxes", {"price": newPrice}, False,
-                            "WHERE boxesEntryId = " + str(boxId))
+                            ("WHERE boxesEntryId = %s", (boxId,))
             base.db.commit()
             result += "Change prices of mango, basic peq, plumeria and strelitzia\n"
         except Exception as e:
