@@ -20,7 +20,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(util.get_location())
-    new_version = 501  # 0.5.1
+    new_version = 502  # 0.5.2
     version = 0
     failure = False
     try:
@@ -236,6 +236,31 @@ def db_update():
         except:
             pass
         result += "Add feature to add notes to a purchase\n"
+    if version < 502:
+        try:
+            price_change = {
+                # Basic bags 495 => 545
+                5: 545,
+                6: 545,
+                7: 545,
+                8: 545,
+                # Strelitzia 1395 => 1495
+                52: 1495,
+                # Mango 1395 => 1495
+                54: 1495,
+                # Plumeria 1895 => 1995
+                55: 1995
+            }
+            for boxId, newPrice in price_change.iteritems():
+                base.update("boxes", {"price": newPrice}, False,
+                            "WHERE boxesEntryId = " + str(boxId))
+            base.db.commit()
+            result += "Change prices of mango, basic peq, plumeria and strelitzia\n"
+        except Exception as e:
+            result += str(e) + "\n"
+            failure = True
+            base.db.rollback()
+            raise
 
     if new_version is not None and not failure:
         base.update("config",
