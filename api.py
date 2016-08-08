@@ -245,7 +245,7 @@ def receive_sync_up():
                 else:
                     result["purchases"]['added'].append(syncId)
         elif status == 2:
-            base.mark_purchase_deleted(syncId):
+            base.mark_purchase_deleted(syncId)
             result["purchases"]['deleted'].append(syncId)
     # shifts
     shifts = res["shifts"]
@@ -267,7 +267,7 @@ def receive_sync_up():
                 else:
                     result["shifts"]['added'].append(syncId)
         elif status == 2:
-            base.mark_shift_deleted(syncId):
+            base.mark_shift_deleted(syncId)
             result["shifts"]['deleted'].append(syncId)
     # stock
     stock = res["stock"]
