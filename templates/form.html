@@ -105,7 +105,12 @@
               {% for daytime in purchases %}
               {% for purchase in daytime['ps'] %}
               <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=home?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
-                <td>{{ purchase['purchase']['date']|timeformat }}</td>
+                <td>
+                  {{ purchase['purchase']['date']|timeformat }}
+                  {% if not purchase['purchase']['note'] == "" %}
+                  <span style="float:right;"title="{{ purchase['purchase']['note'] }}" class="glyphicon glyphicon-info-sign"></span>
+                  {% endif %}
+                </td>
                 <td>{{ purchase['purchase']['country']|countryformat }}</td>
                 <td>{{ purchase['purchase']['card']|cardformat }}</td>
                 <td align="right">{{ purchase['purchase']['discount']|discountformat }}{{ purchase['purchase']['total']|moneyformat }}</td>
