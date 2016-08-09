@@ -11,6 +11,7 @@ from inspect import getmembers, isfunction
 import util
 from home import home_page
 from stock import stock_page
+from api import api_page
 import jinja_filters
 import jinja_tests
 
@@ -36,6 +37,7 @@ app.jinja_env.lstrip_blocks = True
 
 app.register_blueprint(home_page)
 app.register_blueprint(stock_page)
+app.register_blueprint(api_page)
 
 if __name__ == "__main__":
     app.run(debug=True)

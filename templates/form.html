@@ -7,7 +7,7 @@
 {% block content %}
       <div class="row">
         <div class="col-sm-6"><!-- Input form -->
-          <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
+          <form action="api" method="post" id="myForm" class="form-horizontal" role="form">
             <input type="hidden" name="action" value="save_purchase">
             <input type="hidden" name="redirect" value="home?date={{ date|dateformat }}">
             <div class="form-group">
@@ -104,7 +104,7 @@
             <tbody>
               {% for daytime in purchases %}
               {% for purchase in daytime['ps'] %}
-              <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api.py?action=delete_purchase&redirect=home?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
+              <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api?action=delete_purchase&redirect=home?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
                 <td>
                   {{ purchase['purchase']['date']|timeformat }}
                   {% if not purchase['purchase']['note'] == "" %}
@@ -222,7 +222,7 @@
           if (confirm("Comenzar trabajo como " + worker + "?")) {
               workerId = $(this).data("worker");
               workers[workerId]["working"] = true;
-              $.post("api.py", {"action": "begin_work", "workerId": workerId}, function(result) {
+              $.post("api", {"action": "begin_work", "workerId": workerId}, function(result) {
                   console.log(result);
                   success = JSON.parse(result)["work_started"]==workerId;
                   console.log(success);
@@ -236,7 +236,7 @@
           if (confirm("Acabar trabajo como " + worker + "?")) {
               workerId = $(this).data("worker");
               workers[workerId]["working"] = false;
-              $.post("api.py", {"action": "end_work", "workerId": workerId}, function(result) {
+              $.post("api", {"action": "end_work", "workerId": workerId}, function(result) {
                   console.log(result);
                   success = JSON.parse(result)["work_ended"]==workerId;
                   console.log(success);

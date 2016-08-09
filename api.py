@@ -6,7 +6,6 @@ sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable()  # Displays any errors
 
-import cgi
 import json
 from datetime import datetime
 import requests
@@ -15,8 +14,48 @@ from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-form = cgi.FieldStorage()
-base = CgBase(util.get_location())
+from flask import Blueprint, request, redirect, url_for
+
+
+api_page = Blueprint('api_page', __name__, template_folder='templates')
+@api_page.route('/api', methods=['POST', 'GET'])
+def api():
+    base = CgBase(util.get_location()[1])
+    action = request._args.get('action', None)
+    success = False
+    response = '{"result": "200 - OK"}'
+    if action is not None:
+        if action == "save_purchase":
+            (success, response) = save_purchase(base.get_boxes())
+        elif action == "delete_purchase":
+            success = delete_purchase()
+        elif action == "sync_down":
+            (success, response) = receive_sync_down()
+        elif action == "sync":
+            (success, response) = sync()
+        elif action == "syncUp":
+            (success, response) = receive_sync_up()
+        elif action == "begin_work":
+            (success, response) = begin_work()
+        elif action == "end_work":
+            (success, response) = end_work()
+        elif action == "update_stock":
+            (success, response) = update_stock()
+        else:
+            print_text("No valid Action: " + str(action))
+            action = None
+    else:
+        print_text('{"result": "No Action"}')
+
+    if success:
+        redirect_target = request._args.get('redirect', None)
+        if redirect_target is None:
+            return json.dumps(response)
+        else:
+            return redirect(url_for(redirect_target))
+    elif action is not None:
+        return ('{"result": "No success - ' + str(response) + '",'
+                   + '"action": "' + action + '"}')
 
 
 def save_purchase(boxes):
@@ -341,40 +380,3 @@ def print_text(text):
     util.print_header()
     print text
 
-if __name__ == "__main__":
-    action = form.getfirst("action")
-    success = False
-    response = '{"result": "200 - OK"}'
-    if action is not None:
-        if action == "save_purchase":
-            (success, response) = save_purchase(base.get_boxes())
-        elif action == "delete_purchase":
-            success = delete_purchase()
-        elif action == "sync_down":
-            (success, response) = receive_sync_down()
-        elif action == "sync":
-            (success, response) = sync()
-        elif action == "syncUp":
-            (success, response) = receive_sync_up()
-        elif action == "begin_work":
-            (success, response) = begin_work()
-        elif action == "end_work":
-            (success, response) = end_work()
-        elif action == "update_stock":
-            (success, response) = update_stock()
-        else:
-            print_text("No valid Action: " + str(action))
-            action = None
-    else:
-        print_text('{"result": "No Action"}')
-
-    if success:
-        redirect = form.getfirst('redirect')
-        if redirect is None:
-            print_text(json.dumps(response))
-        else:
-            print "Location: " + redirect
-            print
-    elif action is not None:
-        print_text('{"result": "No success - ' + str(response) + '",'
-                   + '"action": "' + action + '"}')
