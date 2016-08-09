@@ -195,20 +195,20 @@ class CgBase:
         where = ["WHERE purchases.syncId = cart.syncId "
                  + "AND boxes.boxesEntryId = cart.boxId",
                 []]
-        if allLocations:
+        if not allLocations:
             where[0] += " AND purchases.location = %s"
             where[1].append(self.location)
         if onlydate is not None:
-            where[0] += " AND  purchases.date BETWEEN %s  AND %s"
+            where[0] += " AND purchases.date BETWEEN %s  AND %s"
             where[1].append(jinja_filters.dateformat(onlydate) + " 00:00:00")
             where[1].append(jinja_filters.dateformat(onlydate) + " 23:59:59")
         if newerthan is not None:
-            where[0] += " AND  purchases.edited < %s"
-            where[1].append(util.datestring(onlydate))
+            where[0] += " AND purchases.edited < %s"
+            where[1].append(util.datestring(newerthan))
         if notsynced:
-            where[0] += " AND  purchases.status <> 3"
+            where[0] += " AND purchases.status <> 3"
         if not getDeleted:
-            where[0] += " AND  purchases.status <> 2"
+            where[0] += " AND purchases.status <> 2"
         result = self.fetchall(
             pt+", "+ct+", "+bt,
             [pt+".syncId", pt+".country", pt+".card", pt+".discount",
@@ -373,11 +373,16 @@ class CgBase:
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False,
                    newerthan=None, returndict=False, allLocations=False):
         where = ["WHERE end IS NOT NULL", []]
-        if notsynced:
-            where[0] += " AND status <> 3"
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
+        if newerthan is not None:
+            where[0] += " AND edited < %s"
+            where[1].append(util.datestring(newerthan))
+        if notsynced:
+            where[0] += " AND status <> 3"
+        if not getDeleted:
+            where[0] += " AND status <> 2"
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))
@@ -389,11 +394,6 @@ class CgBase:
             if datestring:
                 start = util.datestring(start)
                 end = "null" if end is None else util.datestring(end)
-            if not getDeleted and status == 2:
-                continue
-            if newerthan is not None:
-                if newerthan > edited:
-                    continue
             shifts.append({"syncId": key, "workerId": workerId, "start": start,
                            "end": end, "status": status, "location": location})
         if returndict:
@@ -407,6 +407,9 @@ class CgBase:
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
+        if newerthan is not None:
+            where[0] += " AND edited < %s"
+            where[1].append(util.datestring(newerthan))
         if notsynced:
             where[0] += " AND status <> 3"
         result = self.fetchall("stock",
@@ -416,9 +419,6 @@ class CgBase:
         for row in result:
             (containerId, quantity, location, syncId,
              status, edited, recounted) = row
-            if newerthan is not None:
-                if newerthan > edited:
-                    continue
             if datestring:
                 edited = util.datestring(edited)
                 recounted = util.datestring(recounted)
