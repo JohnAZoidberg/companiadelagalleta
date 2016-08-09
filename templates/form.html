@@ -1,69 +1,10 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="{{ url_for('static', filename='js/jquery-2.2.4.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <style>
-    </style>
-    <title>{{ title }}</title>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <nav class="navbar navbar-inverse">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <span class="navbar-brand">Ventas (v{{ version|readable_version }})</span>
-            <span class="navbar-brand" id="working-now">
-            {% for wid, worker in workers.iteritems() if worker["working"] %}
-              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
-            {% endfor %}
-            </span>
-          </div>
-          <div class="collapse navbar-collapse" id="myNavbar">
-            <ul class="nav navbar-nav navbar-right">
-              <li>
-                <div class="dropdown margin-5">
-                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
-                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
-                    {% for lid, location in locations.iteritems() %}
-                    <li><a href="index.py?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </li>
-              <li>
-                <div class="dropdown margin-5">
-                  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
-                  </button>
-                  <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                    {% for wid, worker in workers.iteritems() if not worker["working"] %}
-                    <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </li>
-              <li><a href="admin.py"><span class="glyphicon glyphicon-refresh"></span> {{ "Update" if server else "Update&Sync" }}</a></li>
-              <li><a href="stats.py"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block menu %}
+  {{ super() }}
               <li><a href="stock.py"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-      {% if msg != None %}
-      <div class="alert alert-info fade in">
-        <a href="?" class="close">&times;</a>
-        {{ msg }}
-      </div>
-      {% endif %}
+{% endblock %}
+{% block content %}
       <div class="row">
         <div class="col-sm-6"><!-- Input form -->
           <form action="api.py" method="post" id="myForm" class="form-horizontal" role="form">
@@ -187,7 +128,8 @@
           </table>
         </div>
       </div>
-    </div>
+{% endblock %}
+{% block script %}
     <script>
       lastPrice = "";
       // Turn label into data-value on datalist input
@@ -255,7 +197,7 @@
           }
       });
       // manage working status
-      var workers = {{ workers|json|safe }}
+      var workers = {{ workers|tojson|safe }}
       function updateWorkingStr() {
           workingstr = "";
           not_workingstr = "";
@@ -298,5 +240,4 @@
           }
       });
     </script>
-  </body>
-</html>
+{% endblock %}
