@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <script src="js/jquery-2.2.4.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/jquery-2.2.4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <style>
     </style>
     <title>{{ title }}</title>
@@ -82,7 +82,7 @@
               <div class="col-sm-5">
                 <select class="form-control" name="country" id="country">
                 {% for country in countries %}
-                <option value="{{ country[0] }}">{{ "&nbsp;&nbsp;" if country[0] is not continent else "" }}{{ country[1] }}</option>
+                <option value="{{ country[0] }}">{{ "&nbsp;&nbsp;"|safe if country[0] is not continent else "" }}{{ country[1] }}</option>
                 {% endfor %}
                 </select>
               </div>
@@ -255,7 +255,7 @@
           }
       });
       // manage working status
-      var workers = {{ workers|json }}
+      var workers = {{ workers|json|safe }}
       function updateWorkingStr() {
           workingstr = "";
           not_workingstr = "";
