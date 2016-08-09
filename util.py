@@ -1,13 +1,13 @@
 # coding=utf-8
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import randint
 import socket
-import Cookie
-import os
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+
+from flask import request
 
 br = "<br>"
 
@@ -76,14 +76,8 @@ containers = {
 }
 
 
-def print_header(t="text/html", cookies={}):
+def print_header(t="text/html"):
     print "Content-Type: " + t + ";charset=utf-8"
-    if cookies:
-        c = Cookie.SimpleCookie()
-        for key, val in cookies.iteritems():
-            c[key] = val
-            c[key]["expires"] = 12 * 30 * 24 * 60 * 60
-        print c
     print
 
 
@@ -93,24 +87,16 @@ def println(*lns):
     print "<br>"
 
 
-def get_cookies():
-    cookies = {}
-    if 'HTTP_COOKIE' in os.environ:
-        raw_cookies = os.environ['HTTP_COOKIE']
-        raw_cookies = raw_cookies.split('; ')
-        for cookie in raw_cookies:
-            cookie = cookie.split('=')
-            cookies[cookie[0]] = cookie[1]
-    return cookies
-
-
 def get_location():
-    cookies = get_cookies()
-    try:
-        location = int(cookies['location'])
-    except:
-        location = 0
-    return location
+    location = request.args.get('location', None)
+    cookie_set = False
+    if location is None:
+        try:
+            location = request.cookies['location']
+            cookie_set = True
+        except:
+            location = 0
+    return cookie_set, int(location)
 
 
 def is_same_day(date1, date2):

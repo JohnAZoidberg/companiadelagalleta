@@ -2,12 +2,12 @@
 {% block title %}{{ title }}{% endblock %}
 {% block menu %}
   {{ super() }}
-              <li><a href="index.py"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+              <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 {% endblock %}
 {% block content %}
       <form action="api.py" method="post" class="form-horizontal" role="form">
         <input type="hidden" name="action" value="update_stock">
-        <input type="hidden" name="redirect" value="stock.py">
+        <input type="hidden" name="redirect" value="stock">
         <div class="row">
           {% for i in range(3) %}
           <div class="col-sm-4">

@@ -12,15 +12,21 @@ from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, make_response
 
 home_page = Blueprint('home_page', __name__, template_folder='templates')
-@home_page.route('/')
+@home_page.route('/', methods=['POST', 'GET'])
+@home_page.route('/home', methods=['POST', 'GET'])
 def home():
-    # temp
-    showndate = None
-    location = 0
-    msg = None
+    new_cookies = {}
+    # get/post and cookie
+    showndate = request.args.get('date', None)
+    msg = request.args.get('msg', None)
+    location_cookie, location = util.get_location()
+    if not location_cookie:
+        new_cookies = {"location": str(location)}
+
+
     # data
     now = datetime.now() if showndate is None\
           else datetime.strptime(showndate, '%Y-%m-%d')
@@ -30,7 +36,8 @@ def home():
         base.get_purchases(onlydate=now, prettydict=True))
     workers = base.get_workers()
     version = base.get_version()
-    return render_template('form.html',
+
+    resp = make_response(render_template('form.html',
         title='Herramienta',
         date=now,
         countries=util.country_list.items(),
@@ -43,4 +50,7 @@ def home():
         location=location,
         locations=util.locations,
         version=version
-    )
+    ))
+    for key, val in new_cookies.iteritems():
+        resp.set_cookie(key, val)
+    return resp

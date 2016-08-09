@@ -39,7 +39,7 @@
                   <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
                   <ul class="dropdown-menu" aria-labelledby="locationDropdown">
                     {% for lid, location in locations.iteritems() %}
-                    <li><a href="index.py?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
+                    <li><a href="?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
                     {% endfor %}
                   </ul>
                 </div>
