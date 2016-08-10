@@ -20,47 +20,30 @@ from flask import Blueprint, request, redirect, url_for, jsonify, abort
 api_page = Blueprint('api_page', __name__, template_folder='templates')
 
 
-@api_page.route('/api/v1.0/purchases', methods=['POST'])
-def save_purchase(boxes):
+@api_page.route('/api/v1.0/purchase', methods=['POST'])
+def save_purchase():
+    purchase = request.get_json()
     base = CgBase(util.get_location()[1])
-    cookies = {}
-    for boxId, box in boxes.iteritems():
-        boxId = str(boxId)
-        count_field = form.getvalue('box_'+boxId)
-        count = 0 if count_field is None else int(count_field)
-        if count > 0:
-            cookies[boxId] = count
-    if cookies:
-        country = form.getfirst('country')
-        card = form.getvalue('payment')
-        note = form.getvalue('note')
-        note = "" if note is None else note
-        date_field = form.getfirst('date') + " " + form.getfirst('time')
-        if date_field is None:
-            date = datetime.now()
-            edited = date
-        else:
-            date = convert_date(date_field + ":00")
-            if date is None:
-                return (False, "Not a valid datetime")
-            edited = datetime.now()
-        discount_field = form.getfirst('discount')
-        discount = 0 if discount_field is None else int(discount_field)
-        card = True if card == "card" else False
-        insert_success = base.insert_purchase(country, card, date, discount,
-                                              cookies, edited, note=note,
-                                              updateStock=True)
+    if purchase['boxes']:
+        date = convert_date(purchase['datetime'] + ":00")
+        if date is None:
+            return abort_msg(400, "Not a valid datetime")
+        edited = datetime.now()
+        insert_success = base.insert_purchase(
+            purchase['country'], purchase['card'], purchase['datetime'],
+            purchase['discount'], purchase['boxes'], edited,
+            note=purchase['note'], updateStock=True)
         if insert_success:
-            resp = jsonify(data)
+            resp = jsonify({"save_purchase": "Successful"})
             resp.status_code = 201
             return resp
     else:
-        return (False, "No cookies")
-    return (False, "Unknown save_purchase error")
+        return abort_msg(400, "No cookies")
+    return abort_msg(400, "Unknown save_purchase error")
 
 
 @api_page.route('/api/v1.0/purchases/<int:sync_id>', methods=['DELETE'])
-def delete_purchase():
+def delete_purchase(sync_id):
     base = CgBase(util.get_location()[1])
     success = base.mark_purchase_deleted(sync_id, updateStock=True)
     if success:
@@ -369,6 +352,7 @@ def convert_date(datestring):
         except:
             pass
     return None
+
 
 def abort_msg(status, msg):
         message = {
