@@ -10,8 +10,15 @@ from datetime import datetime
 
 from dbconn import CgBase
 import util
-from openpyxl import load_workbook
 
+from openpyxl import load_workbook
+from flask import Blueprint, render_template, request, make_response, redirect, send_from_directory
+
+stats_download = Blueprint('stats_download', __name__)
+@stats_download.route('/stats')
+def stats():
+    create_stats_file()
+    return send_from_directory('', 'estadisticas.xlsx')
 
 def colnum_string(n):
     div = n
@@ -28,7 +35,7 @@ def day_to_datetime(day):
 
 
 def create_stats_file():
-    base = CgBase(util.get_location())
+    base = CgBase(util.get_location()[1])
     purchases = base.get_purchases(prettydict=True, allLocations=True)
     boxes = base.get_boxes()
 
@@ -63,7 +70,3 @@ def create_stats_file():
         cajas["C" + row] = price
 
     wb.save("estadisticas.xlsx")
-    print "Location: estadisticas.xlsx\n"
-
-if __name__ == "__main__":
-    create_stats_file()

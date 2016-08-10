@@ -49,8 +49,9 @@ class CgBase:
 
     def _fetch(self, table, columns, extra=("", ())):
         try:
-            self.cur.execute("SELECT " + self._list_to_str(columns)
-                             + " FROM " + table + " " + extra[0], extra[1])
+            sql = ("SELECT " + self._list_to_str(columns)
+                             + " FROM " + table + " " + extra[0])
+            self.cur.execute(sql, extra[1])
         except:
             raise
 
@@ -192,7 +193,7 @@ class CgBase:
                  + "AND boxes.boxesEntryId = cart.boxId",
                 []]
         if allLocations:
-            where[0] += " AND location = %s"
+            where[0] += " AND purchases.location = %s"
             where[1].append(self.location)
         pt = "purchases"
         ct = "cart"
@@ -204,7 +205,7 @@ class CgBase:
              pt+".note",
              ct+".quantity", ct+".price",
              bt+".boxesEntryId", bt+".title"],
-            (where[0] + " ORDER BY " + pt + ".date DESC", tuple(where[1])))
+            (where[0] + " ORDER BY "+pt+".date DESC", tuple(where[1])))
         purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, status, edited,
