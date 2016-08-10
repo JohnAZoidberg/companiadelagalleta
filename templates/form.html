@@ -107,7 +107,7 @@
               <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api?action=delete_purchase&redirect=home?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
                 <td>
                   {{ purchase['purchase']['date']|timeformat }}
-                  {% if not purchase['purchase']['note'] == "" %}
+                  {% if purchase['purchase']['note'] is not none %}
                   <span style="float:right;"title="{{ purchase['purchase']['note'] }}" class="glyphicon glyphicon-info-sign"></span>
                   {% endif %}
                 </td>
