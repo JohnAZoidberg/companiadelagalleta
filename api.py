@@ -299,7 +299,7 @@ def receive_sync_up():
 
 @api_page.route('/api/v1.0/shifts/<int:worker_id>/begin',
                 methods=['PUT'])
-def begin_work():
+def begin_work(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.begin_work(worker_id)
     if workres:
@@ -307,7 +307,7 @@ def begin_work():
     else:
         message = {
                 'status': 500,
-                'message': "Worker hasn't started: " + str(worker_id),
+                'message': "Unknown start work error",
         }
         resp = jsonify(message)
         resp.status_code = 500
@@ -316,7 +316,7 @@ def begin_work():
 
 @api_page.route('/api/v1.0/shifts/<int:worker_id>/end',
                 methods=['PUT'])
-def end_work():
+def end_work(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.end_work(worker_id)
     if workres:

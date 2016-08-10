@@ -73,6 +73,63 @@
       {% endblock %}
     </div>
     {% block script %}
+      // create jQuery methods for PUT and DELETE
+      jQuery.each( [ "put", "delete" ], function( i, method ) {
+        jQuery[ method ] = function( url, data, callback, type ) {
+          if ( jQuery.isFunction( data ) ) {
+            type = type || callback;
+            callback = data;
+            data = undefined;
+          }
+
+          return jQuery.ajax({
+            url: url,
+            type: method,
+            dataType: type,
+            data: data,
+            success: callback
+          });
+        };
+      });
+      // manage working status
+      var workers = {{ workers|tojson|safe }}
+      function updateWorkingStr() {
+          workingstr = "";
+          not_workingstr = "";
+          $.each( workers, function( index, value ){
+              if (value["working"]) {
+                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
+              } else {
+                  not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> ';
+              }
+          });
+          $("#working-now").html(workingstr);
+          $("#not-working-now").html(not_workingstr);
+      }
+      // start work
+      $("#not-working-now").on('click', '.begin-work', function() {
+          worker = $(this).html();
+          if (confirm("Comenzar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = true;
+              $.put("api/v1.0/shifts/"+workerId+"/begin", function(result) {
+                  success = result["work_started"]==workerId;
+                  if (success) updateWorkingStr();
+              });
+          }
+      });
+      // end work
+      $("#working-now").on('click', '.end-work', function() {
+          worker = $(this).html();
+          if (confirm("Acabar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = false;
+              $.put("api/v1.0/shifts/"+workerId+"/end", function(result) {
+                  success = result["work_ended"]==workerId;
+                  if (success) updateWorkingStr();
+              });
+          }
+      });
     {% endblock %}
   </body>
 </html>

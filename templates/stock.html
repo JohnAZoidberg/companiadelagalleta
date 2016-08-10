@@ -51,6 +51,7 @@
 {% endblock %}
 {% block script %}
     <script>
+  {{ super() }}
       $('.container-inputs').on('keyup mouseup', '.quantity', function(e) {
           $input = $('.count-method:checked');
           $target = $(e.target).parent();
