@@ -350,13 +350,12 @@ class CgBase:
         return self.insert_shift(workerId, now, None, now)
 
     def end_work(self, workerId):
-        try:
-            self.update("shifts", {"end": util.datestring(datetime.now())},
-                True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
-            return True
-        except:
-            # TODO write error to log
+        i = self.update("shifts", {"end": util.datestring(datetime.now())},
+            True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
+        if i == 0:
             return False
+        else:
+            return True
 
     def get_workers(self):
         working = self.fetchall("shifts", ["workerId"],

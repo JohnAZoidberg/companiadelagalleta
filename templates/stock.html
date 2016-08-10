@@ -5,9 +5,8 @@
               <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 {% endblock %}
 {% block content %}
-      <form action="api.py" method="post" class="form-horizontal" role="form">
-        <input type="hidden" name="action" value="update_stock">
-        <input type="hidden" name="redirect" value="stock">
+      <form action="api/v1.0/stock" method="post" class="form-horizontal" role="form">
+        <input type="hidden" name="redirect" value="yep">
         <div class="row">
           {% for i in range(3) %}
           <div class="col-sm-4">

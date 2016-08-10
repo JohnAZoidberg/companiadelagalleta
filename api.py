@@ -14,51 +14,15 @@ from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-from flask import Blueprint, request, redirect, url_for
+from flask import Blueprint, request, redirect, url_for, jsonify, abort
 
 
 api_page = Blueprint('api_page', __name__, template_folder='templates')
-@api_page.route('/api', methods=['POST', 'GET'])
-def api():
-    base = CgBase(util.get_location()[1])
-    action = request._args.get('action', None)
-    success = False
-    response = '{"result": "200 - OK"}'
-    if action is not None:
-        if action == "save_purchase":
-            (success, response) = save_purchase(base.get_boxes())
-        elif action == "delete_purchase":
-            success = delete_purchase()
-        elif action == "sync_down":
-            (success, response) = receive_sync_down()
-        elif action == "sync":
-            (success, response) = sync()
-        elif action == "syncUp":
-            (success, response) = receive_sync_up()
-        elif action == "begin_work":
-            (success, response) = begin_work()
-        elif action == "end_work":
-            (success, response) = end_work()
-        elif action == "update_stock":
-            (success, response) = update_stock()
-        else:
-            print_text("No valid Action: " + str(action))
-            action = None
-    else:
-        print_text('{"result": "No Action"}')
-
-    if success:
-        redirect_target = request._args.get('redirect', None)
-        if redirect_target is None:
-            return json.dumps(response)
-        else:
-            return redirect(url_for(redirect_target))
-    elif action is not None:
-        return ('{"result": "No success - ' + str(response) + '",'
-                   + '"action": "' + action + '"}')
 
 
+@api_page.route('/api/v1.0/purchases', methods=['POST'])
 def save_purchase(boxes):
+    base = CgBase(util.get_location()[1])
     cookies = {}
     for boxId, box in boxes.iteritems():
         boxId = str(boxId)
@@ -87,17 +51,23 @@ def save_purchase(boxes):
                                               cookies, edited, note=note,
                                               updateStock=True)
         if insert_success:
-            return (True, "Purchase saved")
+            resp = jsonify(data)
+            resp.status_code = 201
+            return resp
     else:
         return (False, "No cookies")
     return (False, "Unknown save_purchase error")
 
 
+@api_page.route('/api/v1.0/purchases/<int:sync_id>', methods=['DELETE'])
 def delete_purchase():
-    syncId = form.getfirst('syncId')
-    if syncId is not None:
-        return base.mark_purchase_deleted(syncId, updateStock=True)
-    return False
+    base = CgBase(util.get_location()[1])
+    success = base.mark_purchase_deleted(sync_id, updateStock=True)
+    if success:
+        return jsonify({"purchase_deleted": sync_id})
+    else:
+        return abort_msg(404, "Not purchase with syncId: " + str(sync_id))
+
 
 
 def sync():
@@ -110,6 +80,7 @@ def sync():
 
 
 def sync_down():
+    base = CgBase(util.get_location()[1])
     edited = datetime.now()
     last_sync = base.get_last_sync()
     r = requests.get(dbdetails.serverroot+"/api.py",
@@ -186,6 +157,7 @@ def sync_down():
 
 
 def receive_sync_down():
+    base = CgBase(util.get_location()[1])
     datestring = form.getfirst("last_update")
     if datestring is None:
         return (False, "You must give a date of the last update (last_update)")
@@ -203,6 +175,7 @@ def receive_sync_down():
 
 
 def sync_up():
+    base = CgBase(util.get_location()[1])
     ps = base.get_purchases(getDeleted=True, datestring=True, prettydict=True,
                             notsynced=True, simplecart=True, allLocations=True)
     shifts = base.get_shifts(getDeleted=True, datestring=True, notsynced=True,
@@ -248,6 +221,7 @@ def sync_up():
 
 
 def receive_sync_up():
+    base = CgBase(util.get_location()[1])
     result = {
         "action": "syncUp",
         "purchases": {"deleted": [], "added": []},
@@ -323,40 +297,66 @@ def receive_sync_up():
     return (True, json.dumps(result))
 
 
+@api_page.route('/api/v1.0/shifts/<int:worker_id>/begin',
+                methods=['PUT'])
 def begin_work():
-    workerId = form.getfirst("workerId")
-    workres = base.begin_work(workerId)
-    return (workres, {"work_started": workerId})
+    base = CgBase(util.get_location()[1])
+    workres = base.begin_work(worker_id)
+    if workres:
+        return jsonify({"work_started": worker_id})
+    else:
+        message = {
+                'status': 500,
+                'message': "Worker hasn't started: " + str(worker_id),
+        }
+        resp = jsonify(message)
+        resp.status_code = 500
+        return resp
 
 
+@api_page.route('/api/v1.0/shifts/<int:worker_id>/end',
+                methods=['PUT'])
 def end_work():
-    workerId = form.getfirst("workerId")
-    workres = base.end_work(workerId)
-    return (workres, {"work_ended": workerId})
+    base = CgBase(util.get_location()[1])
+    workres = base.end_work(worker_id)
+    if workres:
+        return jsonify({"work_ended": worker_id})
+    else:
+        message = {
+                'status': 404,
+                'message': "Worker hasn't started: " + str(worker_id),
+        }
+        resp = jsonify(message)
+        resp.status_code = 404
+        return resp
 
 
+@api_page.route('/api/v1.0/stock', methods=['POST'])
 def update_stock():
-    method = form.getfirst("count-method")
-    if method is None:
-        return (False, "Wrong method for stock update")
-    elif method == "relative":
+    base = CgBase(util.get_location()[1])
+    method = request.form.get('count-method', None)
+    if method == "relative":
         absolute = False
     elif method == "absolute":
         absolute = True
     else:
-        return (False, "Wrong method for stock update")
+        return abort_msg(400, "Wrong method for stock update")
     containers = {}
     for containerId in util.containers.keys():
         containerId = str(containerId)
-        count_field = form.getvalue('container_' + containerId)
+        count_field = request.form.get('container_' + containerId, 0)
         count = int(count_field)
         if absolute or not count == 0:
             containers[containerId] = count
     success = base.update_stock(containers, absolute)
     if success:
-        return (True, "Stock updated")
+        redirect_target = request.form.get('redirect', None)
+        if redirect_target is not None:
+            return redirect(url_for('stock_page.stock'))
+        else:
+            return jsonify({"updated_stock": containers})
     else:
-        return (False, "Some stock update error")
+        return abort_msg(500, "Some stock update error")
 
 
 def convert_date(datestring):
@@ -370,13 +370,11 @@ def convert_date(datestring):
             pass
     return None
 
-
-def print_json(text):
-    util.print_header("text/json")
-    print text
-
-
-def print_text(text):
-    util.print_header()
-    print text
-
+def abort_msg(status, msg):
+        message = {
+                'status': status,
+                'message': msg,
+        }
+        resp = jsonify(message)
+        resp.status_code = status
+        return resp

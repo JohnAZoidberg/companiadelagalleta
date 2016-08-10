@@ -15,8 +15,8 @@ from dbdetails import dbdetails
 from flask import Blueprint, render_template, request, make_response
 
 home_page = Blueprint('home_page', __name__, template_folder='templates')
-@home_page.route('/', methods=['POST', 'GET'])
-@home_page.route('/home', methods=['POST', 'GET'])
+@home_page.route('/', methods=['GET'])
+@home_page.route('/home', methods=['GET'])
 def home():
     new_cookies = {}
     # get/post and cookie
