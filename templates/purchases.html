@@ -9,7 +9,7 @@
             <tbody id="table-body">
               {% for daytime in purchases %}
               {% for purchase in daytime['ps'] %}
-              <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-href="api?action=delete_purchase&redirect=home?datetime={{ date|dateformat }}&syncId={{ purchase['purchase']['syncId'] }}">
+              <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-syncid="{{ purchase['purchase']['syncId'] }}">
                 <td>
                   {{ purchase['purchase']['date']|timeformat }}
                   {% if purchase['purchase']['note'] is not none %}

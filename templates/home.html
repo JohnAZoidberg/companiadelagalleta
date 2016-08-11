@@ -76,10 +76,37 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
           }
       });
 
+      function reload_purchases() {
+          $("#purchases-container")
+              .load("/purchases?date={{ date|dateformat }}");
+      }
+
       // Ask for delete confirmation for boxes in statistic
-      $(".deletable-row").click(function() {
+      $("#purchases-container").on("click", ".deletable-row", function(e) {
           if (confirm("Really delete?")) {
-              window.document.location = $(this).data("href");
+              syncId = $(this).data("syncid");
+              $.ajax({
+                  type: "DELETE",
+                  url: "api/v1.0/purchase/" + syncId,
+                  //data: JSON.stringify(content),
+                  contentType: "application/json; charset=utf-8",
+                  dataType: "json",
+                  success: function(data, status, xhr) {
+                    console.log(data)
+                    console.log(status)
+                    console.log(xhr)
+                    if (xhr['status'] == 200) {
+                        console.log(xhr['responseJSON']);
+                        reload_purchases();
+                    }
+      reload_purchases();
+                  },
+                  error: function(xhr, status, error) {
+                    console.log(xhr.responseText)
+                    console.log(status)
+                    console.log(error)
+                  }
+              });
           }
       });
 
@@ -141,8 +168,7 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
                         $("#boxes-container").addClass("gone");
                         $("#added-boxes").html("");
                         // load new purchases
-                        $("#purchases-container")
-                            .load("/purchases?date={{ date|dateformat }}")
+                        reload_purchases();
                     }
                   },
                   error: function(xhr, status, error) {

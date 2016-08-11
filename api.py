@@ -42,7 +42,7 @@ def save_purchase():
     return abort_msg(400, "Unknown save_purchase error")
 
 
-@api_page.route('/api/v1.0/purchases/<int:sync_id>', methods=['DELETE'])
+@api_page.route('/api/v1.0/purchase/<int:sync_id>', methods=['DELETE'])
 def delete_purchase(sync_id):
     base = CgBase(util.get_location()[1])
     success = base.mark_purchase_deleted(sync_id, updateStock=True)

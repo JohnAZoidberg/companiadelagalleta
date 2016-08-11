@@ -262,7 +262,7 @@ class CgBase:
         if updateStock:
             success = success and self.cur.execute(
                 "UPDATE stock, boxes, cart SET stock.edited = '" + edited + "', stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
-                + " WHERE stock.location = " + str(self.location) + " AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = " + syncId
+                + " WHERE stock.location = " + str(self.location) + " AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = " + str(syncId)
             )
         if success:
             self.db.commit()
