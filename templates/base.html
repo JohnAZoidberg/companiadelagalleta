@@ -113,7 +113,7 @@
               workerId = $(this).data("worker");
               workers[workerId]["working"] = true;
               $.put("api/v1.0/shifts/"+workerId+"/begin", function(result) {
-                  success = result["work_started"]==workerId;
+                  success = result["worker_id"]==workerId;
                   if (success) updateWorkingStr();
               });
           }
@@ -125,7 +125,7 @@
               workerId = $(this).data("worker");
               workers[workerId]["working"] = false;
               $.put("api/v1.0/shifts/"+workerId+"/end", function(result) {
-                  success = result["work_ended"]==workerId;
+                  success = result["worker_id"]==workerId;
                   if (success) updateWorkingStr();
               });
           }

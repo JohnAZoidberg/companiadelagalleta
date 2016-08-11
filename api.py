@@ -282,11 +282,14 @@ def receive_sync_up():
 
 @api_page.route('/api/v1.0/shifts/<int:worker_id>/begin',
                 methods=['PUT'])
-def begin_work(worker_id):
+def begin_(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.begin_work(worker_id)
     if workres:
-        return jsonify({"work_started": worker_id})
+        return jsonify({
+            "worker_id": worker_id,
+            "end": None
+        })
     else:
         message = {
                 'status': 500,
@@ -302,9 +305,7 @@ def begin_work(worker_id):
 def end_work(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.end_work(worker_id)
-    if workres:
-        return jsonify({"work_ended": worker_id})
-    else:
+    if not workres:
         message = {
                 'status': 404,
                 'message': "Worker hasn't started: " + str(worker_id),
@@ -312,6 +313,10 @@ def end_work(worker_id):
         resp = jsonify(message)
         resp.status_code = 404
         return resp
+    else:
+        return jsonify({
+            "worker_id": worker_id
+        })
 
 
 @api_page.route('/api/v1.0/stock', methods=['POST'])

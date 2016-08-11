@@ -351,12 +351,13 @@ class CgBase:
         return self.insert_shift(workerId, now, None, now)
 
     def end_work(self, workerId):
-        i = self.update("shifts", {"end": util.datestring(datetime.now())},
+        end = util.datestring(datetime.now())
+        i = self.update("shifts", {"end": end},
             True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
         if i == 0:
             return False
         else:
-            return True
+            return end
 
     def get_workers(self):
         working = self.fetchall("shifts", ["workerId"],
