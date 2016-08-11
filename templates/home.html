@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block menu %}
+  {{ super() }}
+              <li><a href="stock"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
+{% endblock %}
+{% block content %}
+      <div class="row">
+      {% include "form.html" %}
+        <div class="col-sm-6"><!-- Sales list -->
+          <ul class="list-inline">
+            <li>
+              <form method="get">
+                <input id="change-date" name="date" size="10" style="width: auto; display: inline;" class="form-control" placeholder="2016-07-24"  value="{{ date|dateformat }}">
+              </form>
+            </li>
+            <li><a href="?date={{ date|adddays(-1)|dateformat }}" class="btn btn-default glyphicon glyphicon-chevron-left"></a></li>
+            <li><a href="?" class="btn btn-default">Hoy</a></li>
+            <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default glyphicon glyphicon-chevron-right"></a></li>
+          </ul>
+          <div id="purchases-container">
+      {% include "purchases.html" %}
+          </div>
+        </div>
+      </div>
+{% endblock %}
+{% block script %}
+    <script>
+  {{ super() }}
+      // Turn label into data-value on datalist input
+      lastPrice = "";
+      $('input[list]').on('input', function(e) {
+          var $input = $(e.target),
+              $options = $('#' + $input.attr('list') + ' option'),
+              $hiddenInput = $('#' + $input.attr('id') + '-hidden'),
+              label = $input.val();
+
+          $hiddenInput.val(label);
+
+          for(var i = 0; i < $options.length; i++) {
+              var $option = $options.eq(i);
+if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
+                  lastPrice = $option.attr('data-price');
+                  break;
+              }
+          }
+      });
+
+      // add boxes - obviously
+      $('#add-box').click(function(e) {
+          title = $('#box').val();
+          boxId = $('#box-hidden').val();
+          quantity = $('#quantity').val();
+          // TODO: show errors
+
+          if (title == "" || quantity == 0 || boxId == "" || $('#box_'+boxId).length > 0) return;
+          // unhide container
+          $('#boxes-container').removeClass("gone");
+          // clear fields
+          $('#box').val("");
+          $('#box-hidden').val("");
+          $('#quantity').val("1");
+          // clear error
+          $(".box-inputs").removeClass("has-error");
+
+          input = '<input type="hidden" data-box="' + boxId + '" name="box_' + boxId + '" id="box_' + boxId + '" value="' + quantity + '">';
+          $('#added-boxes').append('<li class="list-group-item added-box clickable"><span class="badge">' + quantity + 'x' + lastPrice + '</span> ' + title + input + '</li>');
+          e.preventDefault();
+      });
+
+      // remove added boxes by onclick
+      $('#added-boxes').on('click', '.added-box', function() {
+          $(this).remove();
+          if ($('.added-box').length <= 0) {
+              $('#boxes-container').addClass("gone");
+          }
+      });
+
+      // Ask for delete confirmation for boxes in statistic
+      $(".deletable-row").click(function() {
+          if (confirm("Really delete?")) {
+              window.document.location = $(this).data("href");
+          }
+      });
+
+      // display error when submitting without boxes
+      $("#myForm").on("submit", function(e) {
+          e.preventDefault();
+          if ($('.added-box').length <= 0 && false) {
+              $(".box-inputs").addClass("has-error");
+          } else {
+              //$("#submit").attr("disabled", "true");
+              // get card value
+              card_str = $("input[name=payment]:checked").val()
+              card = false
+              if (card_str == "card") {
+                  card = true
+              } else if (card_str == "cash") {
+                  card = false
+              }
+              // get discount value
+              discount_str = $("input[name=discount]").val()
+              if (discount_str == "") {
+                  discount = 0
+              } else {
+                  discount = parseInt(discount_str)
+              }
+              content = {
+                  "datetime": $("input[name=date]").val()
+                              + " " + $("input[name=time]").val(),
+                  "country": $("select[name=country]").val(),
+                  "discount": discount,
+                  "note": $("textarea[name=note]").val(),
+                  "card": card,
+                  "boxes": {}
+              };
+              $("#added-boxes").find("input[name^=box]")
+                      .each(function (index, element) {
+                  target = $(element);
+                  box_id = parseInt(target.data("box"));
+                  quantity = parseInt(target.val());
+                  content["boxes"][box_id] = quantity;
+
+              })
+              console.log(JSON.stringify(content))
+              $.ajax({
+                  type: "POST",
+                  url: "/api/v1.0/purchase",
+                  data: JSON.stringify(content),
+                  contentType: "application/json; charset=utf-8",
+                  dataType: "json",
+                  success: function(data, status, xhr) {
+                    if (xhr['status'] == 201) {
+                        console.log(xhr['responseJSON']);
+                        // clear form
+                        $("input[name=time]").val("");
+                        $("input[name=discount]").val("");
+                        $("select[name=country]").val("");
+                        $("textarea[name=note]").val("");
+                        $("input[name=payment]").prop('checked', false);
+                        $("#boxes-container").addClass("gone");
+                        $("#added-boxes").html("");
+                        // load new purchases
+                        $("#purchases-container")
+                            .load("/purchases?date={{ date|dateformat }}")
+                    }
+                  },
+                  error: function(xhr, status, error) {
+                    console.log(xhr.responseText)
+                    console.log(status)
+                    console.log(error)
+                  }
+              });
+          }
+      });
+    </script>
+{% endblock %}

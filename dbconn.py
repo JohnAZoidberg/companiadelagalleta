@@ -119,6 +119,8 @@ class CgBase:
         success = False
         if dbdetails.server:
             status = 3
+        if note == "":
+            note = None
         if location is None:
             location = self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits

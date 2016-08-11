@@ -26,7 +26,6 @@ def home():
     if not location_cookie:
         new_cookies = {"location": str(location)}
 
-
     # data
     now = datetime.now() if showndate is None\
           else datetime.strptime(showndate, '%Y-%m-%d')
@@ -37,7 +36,7 @@ def home():
     workers = base.get_workers()
     version = base.get_version()
 
-    resp = make_response(render_template('form.html',
+    resp = make_response(render_template('home.html',
         title='Herramienta',
         date=now,
         countries=util.country_list.items(),
@@ -54,3 +53,25 @@ def home():
     for key, val in new_cookies.iteritems():
         resp.set_cookie(key, val)
     return resp
+
+
+@home_page.route('/purchases', methods=['GET'])
+def purchases():
+    # get/post and cookie
+    showndate = request.args.get('date', None)
+    location_cookie, location = util.get_location()
+
+    # data
+    now = datetime.now() if showndate is None\
+          else datetime.strptime(showndate, '%Y-%m-%d')
+    base = CgBase(location)
+    purchases, total = util.calc_purchases_totals(
+        base.get_purchases(onlydate=now, prettydict=True))
+
+    return render_template('purchases.html',
+        date=now,
+        purchases=purchases,
+        total=total,
+        server=dbdetails.server,
+        location=location,
+    )
