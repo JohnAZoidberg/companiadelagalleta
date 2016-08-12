@@ -18,7 +18,9 @@ from dbdetails import dbdetails
 class CgBase:
     def __init__(self, location):
         self.db = self._connectDb()
+        self.db.autocommit(False)
         self.cur = self.db.cursor()
+        self.dict_cur = self.db.cursor(MySQLdb.cursors.DictCursor)
         self.location = location
 
     def _connectDb(self):
@@ -47,11 +49,14 @@ class CgBase:
             str_value += ", %s"
         return str_value, tuple(xs)
 
-    def _fetch(self, table, columns, extra=("", ())):
+    def _fetch(self, table, columns, extra=("", ()), returndict=False):
         try:
             sql = ("SELECT " + self._list_to_str(columns)
                              + " FROM " + table + " " + extra[0])
-            self.cur.execute(sql, extra[1])
+            if returndict:
+                self.dict_cur.execute(sql, extra[1])
+            else:
+                self.cur.execute(sql, extra[1])
         except:
             raise
 
@@ -64,8 +69,8 @@ class CgBase:
             return result[0]
         return result
 
-    def fetchall(self, table, columns, extra=("", ())):
-        self._fetch(table, columns, extra)
+    def fetchall(self, table, columns, extra=("", ()), returndict=False):
+        self._fetch(table, columns, extra, returndict=returndict)
         return self.cur.fetchall()
 
     def update(self, table, columnsdata, commit, extra, increment={}):
@@ -188,6 +193,17 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def update_purchase(self, country, card, date, discount, cart, edited,
+                        location=None, status=1, syncId=None,
+                        updateStock=False, note=None):
+        if syncId is None:
+            raise Exception("SyncId can not be None")
+        delete = self.delete_purchase(syncId, False)
+        insert = self.insert_purchase(country, card, date, discount, cart, edited,
+                        location, status, syncId,
+                        updateStock, note)
+        return delete and insert
+
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None,
             newerthan=None, datestring=False, notsynced=False, simplecart=False,
             allLocations=False):
@@ -277,14 +293,15 @@ class CgBase:
             self.db.commit()
         return success
 
-    def delete_purchase(self, syncId):
+    def delete_purchase(self, syncId, commit=True):
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
             p_rows = self.cur.rowcount
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             c_rows = self.cur.rowcount
-            self.db.commit()
+            if commit:
+                self.db.commit()
             if p_rows > 0 and c_rows > 0:
                 return True
         except:
@@ -457,12 +474,12 @@ class CgBase:
         return True
 
     def update_container(self, syncId, containerId, quantity,
-                         location, edited, recounted):
+                         location, edited, recounted, status=1):
         last_recount = self.fetchone("stock", ["recounted"],
                                      ("WHERE syncId = %s", (syncId,)))
         if edited > last_recount:
             return self.update("stock",
                 {"quantity": quantity, "recounted": recounted,
-                 "status": 3, "edited": edited}, True,
+                 "status": status, "edited": edited}, True,
                 ("WHERE syncId = %s AND location = %s",
                  (syncId, self.location)))

@@ -14,7 +14,7 @@ from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-from flask import Blueprint, request, redirect, url_for, jsonify, abort
+from flask import Blueprint, request, redirect, url_for, jsonify
 
 
 api_page = Blueprint('api_page', __name__, template_folder='templates')
@@ -51,15 +51,142 @@ def delete_purchase(sync_id):
     else:
         return abort_msg(404, "Not purchase with syncId: " + str(sync_id))
 
-
-
+@api_page.route('/api/v1.0/sync', methods=['GET', 'PUT'])
 def sync():
-    downresult = sync_down()
-    upresult = sync_up()
-    generic_result = {"action": "sync"}
-    generic_result.update(upresult)
-    generic_result.update(downresult)
-    return (True, generic_result)
+    dbdetails.server = True
+    base = CgBase(util.get_location()[1])
+    if not dbdetails.server:  # Clientside
+        # get data to return
+        up_data = {
+            "data": {},
+            "sync_time": util.datestring(datetime.now()),
+            "last_sync": util.datestring(base.get_last_sync())
+        }
+        up_data['data']['purchase'] = base.get_purchases(
+                getDeleted=True, datestring=True, prettydict=True,
+                notsynced=True, simplecart=True, allLocations=True)
+        up_data['data']['shift'] = base.get_shifts(
+                getDeleted=True, datestring=True, notsynced=True,
+                allLocations=True)
+        up_data['data']['stock'] = base.get_stock(
+                datestring=True, notsynced=True, allLocations=True)
+        return jsonify(up_data)
+        r = requests.put(dbdetails.serverroot + "/api/v1.0/sync",
+                        data={json.dumps(up_data)}
+        )
+        # TODO mark everything as synced (status = 3)
+        # TODO write synced items to log file
+        try:
+            input = r.json()
+            down_data = jres['data']
+        except TypeError:
+            input = json.loads(input)
+        except:
+            raise Exception("ERROR ON SERVERSIDE!<br>\n" + r.text)
+        sync_time = datetime.now()
+    else: # Serverside
+        input = request.get_json()
+        sync_time = input['sync_time']
+
+    """# update based on submitted data
+    sql = "SELECT status, edited FROM purchases"
+    extra = (" WHERE syncId in (%s" + (",%s"*(len(input['data']-1))) + ")",
+            tuple(x['syncId'] for x in input['data']))
+    existing = base.fetchall(sql, extra, returndict=True)
+    for _type, item in input['data']:
+        status = item['status']
+        sync_id = item['syncId']
+        edited = item['edited']
+        existing_status = None
+        try:
+            existing_status = existing[sync_id]['status']
+            existing_edited = existing[sync_id]['edited']
+        except KeyError:
+            existing_status = None
+        if status == 0:
+            insert_item(base, _type, item, sync_time)
+        elif status == 1:
+            if existing_status == 0:
+                edit_item(base, _type, item, sync_time)
+            elif existing_status == 1\
+                    or existing_status == 2:
+                if edited > existing_edited:
+                    edit_item(base, _type, item, sync_time)
+            elif existing_status is None:
+                insert_item(base, _type, item, sync_time)
+        elif status == 2:
+            if existing_status == 0:
+                delete_item(base, _type, item, sync_time)
+            elif existing_status == 1:
+                if edited > existing_edited:
+                    delete_item(base, _type, item, sync_time)
+            elif existing_status == 2:
+                if edited > existing_edited:
+                    edit_item(base, _type, item, sync_time)
+            elif existing_status is None:
+                insert_item(base, _type, item, sync_time)"""
+    if dbdetails.server:
+        # get data to return
+        last_sync = util.stringdate(input['last_sync'])
+        result = {"data": {}}
+        result['data']['purchase'] = base.get_purchases(
+            prettydict=True, newerthan=last_sync, datestring=True,
+            simplecart=True, getDeleted=True, allLocations=True)
+        result['data']['shift'] = base.get_shifts(
+            getDeleted=True, datestring=True,
+            newerthan=last_sync, allLocations=True)
+        result['data']['stock'] = base.get_stock(
+                datestring=True, newerthan=last_sync,
+                allLocations=True)
+        return jsonify(result)
+
+
+def insert_item(base, _type, item, sync_time):
+    status = 0 if dbdetails.server else 3
+    if _type == "purchase":
+        base.insert_purchase(item['country'], item['card'], item['date'],
+                item['discount'], item['cart'], sync_time,
+                location=item['location'], status=status,
+                syncId=item['syncId'], note=item['note'])
+        pass
+    elif _type == "shift":
+        base.insert_shift(item['workerId'], item['start'], item['end'],
+                sync_time, location=item['location'], status=status,
+                syncId=item['syncId'])
+        pass
+    elif _type == "stock":
+        pass  # it is not possible to insert stock
+
+
+def edit_item(base, _type, item, sync_time):
+    status = 1 if dbdetails.server else 3
+    if _type == "purchase":
+        base.update_purchase(item['country'], item['card'], item['date'],
+                item['discount'], item['cart'], sync_time,
+                location=item['location'], status=status,
+                syncId=item['syncId'], note=item['note'])
+    elif _type == "shift":
+        pass  # it is not possible to edit a shift
+    elif _type == "stock":
+        base.update_container(item['syncId'], item['containerId'],
+                item['quantity'], item['location'], sync_time,
+                item['recounted'], status=status)
+
+
+def delete_item(base, _type, item, sync_time):
+    sync_id = item['syncId']
+    if _type == "purchase":
+        if dbdetails.server:
+            base.mark_purchase_deleted(sync_id)
+        else:
+            base.delete_purchase(sync_id)
+    elif _type == "shift":
+        if dbdetails.server:
+            base.mark_shift_deleted(sync_id)
+        else:
+            base.delete_shift(sync_id)
+    elif _type == "stock":
+        pass  # it is not possible to delete stock
 
 
 def sync_down():
