@@ -94,42 +94,48 @@ def sync():
     items = (input['data']['purchase']
              + input['data']['shift']
              + input['data']['stock'])
-    extra = (" WHERE syncId in (%s" + (",%s"*(len(items)-1)) + ")",
+    extra = ("WHERE syncId IN (%s" + (",%s"*(len(items)-1)) + ")",
             tuple(item['syncId'] for item in items))
-    existing = base.fetchall("purchases", ["status", "edited"],
-                             extra, returndict=True)
-    for _type, item in input['data'].iteritems():
-        status = item['status']
-        sync_id = item['syncId']
-        edited = item['edited']
-        existing_status = None
-        try:
-            existing_status = existing[sync_id]['status']
-            existing_edited = existing[sync_id]['edited']
-        except KeyError:
+    existing = base.fetchall("purchases", ["syncId", "status", "edited"],
+                             extra)
+    existing += base.fetchall("shifts", ["syncId", "status", "edited"],
+                             extra)
+    existing += base.fetchall("stock", ["syncId", "status", "edited"],
+                             extra)
+    existing = {x[0]: x for x in existing}
+    for _type, item_list in input['data'].iteritems():
+        for item in item_list:
+            status = item['status']
+            sync_id = item['syncId']
+            edited = util.stringdate(item['edited'])
             existing_status = None
-        if status == 0:
-            insert_item(base, _type, item, sync_time)
-        elif status == 1:
-            if existing_status == 0:
-                edit_item(base, _type, item, sync_time)
-            elif existing_status == 1\
-                    or existing_status == 2:
-                if edited > existing_edited:
-                    edit_item(base, _type, item, sync_time)
-            elif existing_status is None:
+            try:
+                existing_status = existing[sync_id][1]  # ['status']
+                existing_edited = existing[sync_id][2]  # ['edited']
+            except KeyError:
+                existing_status = None
+            if status == 0:
                 insert_item(base, _type, item, sync_time)
-        elif status == 2:
-            if existing_status == 0:
-                delete_item(base, _type, item, sync_time)
-            elif existing_status == 1:
-                if edited > existing_edited:
+            elif status == 1:
+                if existing_status == 0:
+                    edit_item(base, _type, item, sync_time)
+                elif existing_status == 1\
+                        or existing_status == 2:
+                    if edited > existing_edited:
+                        edit_item(base, _type, item, sync_time)
+                elif existing_status is None:
+                    insert_item(base, _type, item, sync_time)
+            elif status == 2:
+                if existing_status == 0:
                     delete_item(base, _type, item, sync_time)
-            elif existing_status == 2:
-                if edited > existing_edited:
-                    edit_item(base, _type, item, sync_time)
-            elif existing_status is None:
-                insert_item(base, _type, item, sync_time)
+                elif existing_status == 1:
+                    if edited > existing_edited:
+                        delete_item(base, _type, item, sync_time)
+                elif existing_status == 2:
+                    if edited > existing_edited:
+                        edit_item(base, _type, item, sync_time)
+                elif existing_status is None:
+                    insert_item(base, _type, item, sync_time)
 
     if dbdetails.server:
         # get data to return
