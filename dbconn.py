@@ -214,7 +214,7 @@ class CgBase:
             where[0] += " AND purchases.location = %s"
             where[1].append(self.location)
         if notnow:
-            where[0] += " AND purchases.edited = %s"
+            where[0] += " AND purchases.edited <> %s"
             where[1].append(notnow)
         pt = "purchases"
         ct = "cart"
@@ -407,7 +407,7 @@ class CgBase:
             where[0] += " AND location = %s"
             where[1].append(self.location)
         if notnow:
-            where[0] += " AND edited = %s"
+            where[0] += " AND edited <> %s"
             where[1].append(notnow)
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
@@ -441,7 +441,7 @@ class CgBase:
         if notsynced:
             where[0] += " AND status <> 3"
         if notnow:
-            where[0] += " AND edited = %s"
+            where[0] += " AND edited <> %s"
             where[1].append(notnow)
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
