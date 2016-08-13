@@ -82,12 +82,14 @@ def sync():
         except ValueError:
             try:
                 input = json.loads(r.text)
-            except:
+            except ValueError:
                 return ("ERROR ON SERVERSIDE!<br>\n" + r.text)
+            except:
+                raise
         except:
-            return ("ERROR ON SERVERSIDE!<br>\n" + r.text)
+            raise
         sync_time = datetime.now()
-        return jsonify(down_data)
+        return jsonify(synced_up, down_data)
     else: # Serverside
         input = request.get_json()
         try:
@@ -150,13 +152,14 @@ def sync():
         result = {"data": {}, "synced": []}
         result['data']['purchase'] = base.get_purchases(
             prettydict=True, newerthan=last_sync, datestring=True,
-            simplecart=True, getDeleted=True, allLocations=True)
+            simplecart=True, getDeleted=True, allLocations=True,
+            notnow=sync_time)
         result['data']['shift'] = base.get_shifts(
             getDeleted=True, datestring=True,
-            newerthan=last_sync, allLocations=True)
+            newerthan=last_sync, allLocations=True, notnow=sync_time)
         result['data']['stock'] = base.get_stock(
                 datestring=True, newerthan=last_sync,
-                allLocations=True)
+                allLocations=True, notnow=sync_time)
         return jsonify(result)
     else:
         return jsonify(input)

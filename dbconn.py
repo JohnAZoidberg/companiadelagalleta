@@ -206,13 +206,16 @@ class CgBase:
 
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None,
             newerthan=None, datestring=False, notsynced=False, simplecart=False,
-            allLocations=False):
+            allLocations=False, notnow=False):
         where = ["WHERE purchases.syncId = cart.syncId "
                  + "AND boxes.boxesEntryId = cart.boxId",
                 []]
         if allLocations:
             where[0] += " AND purchases.location = %s"
             where[1].append(self.location)
+        if notnow:
+            where[0] += " AND purchases.date = %s"
+            where[1].append(notnow)
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
@@ -395,13 +398,17 @@ class CgBase:
         return workers
 
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False,
-                   newerthan=None, returndict=False, allLocations=False):
+                   newerthan=None, returndict=False, allLocations=False,
+                   notnow=False):
         where = ["WHERE end IS NOT NULL", []]
         if notsynced:
             where[0] += " AND status <> 3"
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
+        if notnow:
+            where[0] += " AND date = %s"
+            where[1].append(notnow)
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))
@@ -425,7 +432,7 @@ class CgBase:
         return shifts
 
     def get_stock(self, allLocations=False, notsynced=False, datestring=False,
-                  newerthan=None, returndict=False, containerIndexed=False):
+                  newerthan=None, returndict=False, containerIndexed=False, notnow=False):
         # the syncId check if unnecessary but done to have a first WHERE
         where = ["WHERE syncId IS NOT NULL", []]
         if not allLocations:
@@ -433,6 +440,9 @@ class CgBase:
             where[1].append(self.location)
         if notsynced:
             where[0] += " AND status <> 3"
+        if notnow:
+            where[0] += " AND date = %s"
+            where[1].append(notnow)
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
              "status", "edited", "recounted"], (where[0], tuple(where[1])))
