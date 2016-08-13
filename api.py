@@ -69,6 +69,7 @@ def sync():
                 allLocations=True)
         up_data['data']['stock'] = base.get_stock(
                 datestring=True, notsynced=True, allLocations=True)
+        return jsonify(up_data)
         r = requests.put(dbdetails.serverroot + "/api/v1.0/sync",
                         data=json.dumps(up_data),
                         headers={"Content-Type": "application/json"}
@@ -88,7 +89,7 @@ def sync():
         try:
             sync_time = input['sync_time']
         except:
-            return "JSON ERROR"
+            return "JSON ERROR: " + str(input)
 
     # update based on submitted data
     items = (input['data']['purchase']
