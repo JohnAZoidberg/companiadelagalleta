@@ -69,7 +69,6 @@ def sync():
                 allLocations=True)
         up_data['data']['stock'] = base.get_stock(
                 datestring=True, notsynced=True, allLocations=True)
-        return jsonify(up_data)
         r = requests.put(dbdetails.serverroot + "/api/v1.0/sync",
                         data=json.dumps(up_data),
                         headers={"Content-Type": "application/json"}
@@ -78,16 +77,21 @@ def sync():
         # TODO write synced items to log file
         try:
             input = r.json()
+            synced_up = input['synced']
             down_data = input['data']
         except ValueError:
-            input = json.loads(input)
+            try:
+                input = json.loads(r.text)
+            except:
+                return ("ERROR ON SERVERSIDE!<br>\n" + r.text)
         except:
-            raise Exception("ERROR ON SERVERSIDE!<br>\n" + r.text)
+            return ("ERROR ON SERVERSIDE!<br>\n" + r.text)
         sync_time = datetime.now()
+        return jsonify(down_data)
     else: # Serverside
         input = request.get_json()
         try:
-            sync_time = input['sync_time']
+            sync_time = util.stringdate(input['sync_time'])
         except:
             return "JSON ERROR: " + str(input)
 
@@ -104,6 +108,7 @@ def sync():
     existing += base.fetchall("stock", ["syncId", "status", "edited"],
                              extra)
     existing = {x[0]: x for x in existing}
+    synced = {"purchase": [], "shift": [], "stock": []}
     for _type, item_list in input['data'].iteritems():
         for item in item_list:
             status = item['status']
@@ -137,11 +142,12 @@ def sync():
                         edit_item(base, _type, item, sync_time)
                 elif existing_status is None:
                     insert_item(base, _type, item, sync_time)
+            synced[_type].append(sync_id)
 
     if dbdetails.server:
         # get data to return
         last_sync = util.stringdate(input['last_sync'])
-        result = {"data": {}}
+        result = {"data": {}, "synced": []}
         result['data']['purchase'] = base.get_purchases(
             prettydict=True, newerthan=last_sync, datestring=True,
             simplecart=True, getDeleted=True, allLocations=True)
@@ -174,7 +180,12 @@ def insert_item(base, _type, item, sync_time):
 
 
 def edit_item(base, _type, item, sync_time):
-    status = 1 if dbdetails.server else 3
+    if item['status'] == 2:
+        status = 2
+    elif dbdetails.server:
+        status = 1
+    else:
+        status = 3
     if _type == "purchase":
         base.update_purchase(item['country'], item['card'], item['date'],
                 item['discount'], item['cart'], sync_time,
