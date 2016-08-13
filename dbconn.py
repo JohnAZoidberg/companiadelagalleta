@@ -245,6 +245,12 @@ class CgBase:
             if key not in purchases:
                 purchases[key] = {}
                 if prettydict:
+                    purchases[key] = {
+                        "syncId": key, "status": status, "country": country,
+                        "card": card, "discount": discount, "date": date,
+                        "edited": edited, "location": location, "note": note
+                    }
+                    # TODO remove this shit
                     purchases[key]['purchase'] = {
                         "syncId": key, "status": status, "country": country,
                         "card": card, "discount": discount, "date": date,

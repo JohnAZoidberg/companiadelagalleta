@@ -53,7 +53,6 @@ def delete_purchase(sync_id):
 
 @api_page.route('/api/v1.0/sync', methods=['GET', 'PUT'])
 def sync():
-    dbdetails.server = True
     base = CgBase(util.get_location()[1])
     if not dbdetails.server:  # Clientside
         # get data to return
@@ -70,30 +69,36 @@ def sync():
                 allLocations=True)
         up_data['data']['stock'] = base.get_stock(
                 datestring=True, notsynced=True, allLocations=True)
-        return jsonify(up_data)
         r = requests.put(dbdetails.serverroot + "/api/v1.0/sync",
-                        data={json.dumps(up_data)}
+                        data=json.dumps(up_data),
+                        headers={"Content-Type": "application/json"}
         )
         # TODO mark everything as synced (status = 3)
         # TODO write synced items to log file
         try:
             input = r.json()
-            down_data = jres['data']
-        except TypeError:
+            down_data = input['data']
+        except ValueError:
             input = json.loads(input)
         except:
             raise Exception("ERROR ON SERVERSIDE!<br>\n" + r.text)
         sync_time = datetime.now()
     else: # Serverside
         input = request.get_json()
-        sync_time = input['sync_time']
+        try:
+            sync_time = input['sync_time']
+        except:
+            return "JSON ERROR"
 
-    """# update based on submitted data
-    sql = "SELECT status, edited FROM purchases"
-    extra = (" WHERE syncId in (%s" + (",%s"*(len(input['data']-1))) + ")",
-            tuple(x['syncId'] for x in input['data']))
-    existing = base.fetchall(sql, extra, returndict=True)
-    for _type, item in input['data']:
+    # update based on submitted data
+    items = (input['data']['purchase']
+             + input['data']['shift']
+             + input['data']['stock'])
+    extra = (" WHERE syncId in (%s" + (",%s"*(len(items)-1)) + ")",
+            tuple(item['syncId'] for item in items))
+    existing = base.fetchall("purchases", ["status", "edited"],
+                             extra, returndict=True)
+    for _type, item in input['data'].iteritems():
         status = item['status']
         sync_id = item['syncId']
         edited = item['edited']
@@ -124,7 +129,8 @@ def sync():
                 if edited > existing_edited:
                     edit_item(base, _type, item, sync_time)
             elif existing_status is None:
-                insert_item(base, _type, item, sync_time)"""
+                insert_item(base, _type, item, sync_time)
+
     if dbdetails.server:
         # get data to return
         last_sync = util.stringdate(input['last_sync'])
@@ -139,6 +145,8 @@ def sync():
                 datestring=True, newerthan=last_sync,
                 allLocations=True)
         return jsonify(result)
+    else:
+        return jsonify(input)
 
 
 def insert_item(base, _type, item, sync_time):
