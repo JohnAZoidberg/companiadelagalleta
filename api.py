@@ -89,7 +89,6 @@ def sync():
         except:
             raise
         sync_time = datetime.now()
-        return jsonify(synced_up, down_data)
     else: # Serverside
         input = request.get_json()
         try:
@@ -98,21 +97,25 @@ def sync():
             return "JSON ERROR: " + str(input)
 
     # update based on submitted data
+    existing = []
     purchase_items = input['data']['purchase']
-    extra = ("WHERE syncId IN (%s" + (",%s"*(len(purchase_items)-1)) + ")",
-            tuple(item['syncId'] for item in purchase_items))
-    existing = base.fetchall("purchases", ["syncId", "status", "edited"],
-                             extra)
+    if purchase_items:
+        extra = ("WHERE syncId IN (%s" + (",%s"*(len(purchase_items)-1)) + ")",
+                tuple(item['syncId'] for item in purchase_items))
+        existing += base.fetchall("purchases", ["syncId", "status", "edited"],
+                                 extra)
     shift_items = input['data']['shift']
-    extra = ("WHERE syncId IN (%s" + (",%s"*(len(shift_items)-1)) + ")",
-            tuple(item['syncId'] for item in shift_items))
-    existing += base.fetchall("shifts", ["syncId", "status", "edited"],
-                             extra)
+    if shift_items:
+        extra = ("WHERE syncId IN (%s" + (",%s"*(len(shift_items)-1)) + ")",
+                tuple(item['syncId'] for item in shift_items))
+        existing += base.fetchall("shifts", ["syncId", "status", "edited"],
+                                 extra)
     stock_items = input['data']['stock']
-    extra = ("WHERE syncId IN (%s" + (",%s"*(len(stock_items)-1)) + ")",
-            tuple(item['syncId'] for item in stock_items))
-    existing += base.fetchall("stock", ["syncId", "status", "edited"],
-                             extra)
+    if stock_items:
+        extra = ("WHERE syncId IN (%s" + (",%s"*(len(stock_items)-1)) + ")",
+                tuple(item['syncId'] for item in stock_items))
+        existing += base.fetchall("stock", ["syncId", "status", "edited"],
+                                 extra)
     existing = {x[0]: x for x in existing}
     synced = {"purchase": [], "shift": [], "stock": []}
     for _type, item_list in input['data'].iteritems():
