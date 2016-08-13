@@ -117,7 +117,11 @@ def sync():
         existing += base.fetchall("stock", ["syncId", "status", "edited"],
                                  extra)
     existing = {x[0]: x for x in existing}
-    synced = {"purchase": [], "shift": [], "stock": []}
+    synced = {
+            "added": {"purchase": [], "shift": [], "stock": []},
+            "edited": {"purchase": [], "shift": [], "stock": []},
+            "deleted": {"purchase": [], "shift": [], "stock": []}
+    }
     for _type, item_list in input['data'].iteritems():
         for item in item_list:
             status = item['status']
@@ -131,6 +135,7 @@ def sync():
                 existing_status = None
             if status == 0:
                 insert_item(base, _type, item, sync_time)
+                synced['added'][_type].append(sync_id)
             elif status == 1:
                 if existing_status == 0:
                     edit_item(base, _type, item, sync_time)
@@ -140,6 +145,7 @@ def sync():
                         edit_item(base, _type, item, sync_time)
                 elif existing_status is None:
                     insert_item(base, _type, item, sync_time)
+                synced['edited'][_type].append(sync_id)
             elif status == 2:
                 if existing_status == 0:
                     delete_item(base, _type, item, sync_time)
@@ -151,7 +157,7 @@ def sync():
                         edit_item(base, _type, item, sync_time)
                 elif existing_status is None:
                     insert_item(base, _type, item, sync_time)
-            synced[_type].append(sync_id)
+                synced['deleted'][_type].append(sync_id)
 
     if dbdetails.server:
         # get data to return
@@ -169,16 +175,26 @@ def sync():
                 allLocations=True, notnow=sync_time)
         return jsonify(result)
     else:
-        for _type, items in synced.iteritems():
-            for sync_id in items:
-                if _type == "purchase":
-                    base.mark_purchase_synced(sync_id)
-                elif _type == "shift":
-                    base.mark_shift_synced(sync_id)
-                elif _type == "stock":
-                    base.mark_container_synced(sync_id)
-        base.update_last_sync(edited)
-        return jsonify(input)
+        for action, types in synced_up.iteritems():
+            for _type, items in types.iteritems():
+                for sync_id in items:
+                    if _type == "purchase":
+                        if action == "deleted":
+                            base.delete_purchase(sync_id)
+                        else:
+                            base.mark_purchase_synced(sync_id)
+                    elif _type == "shift":
+                        if action == "deleted":
+                            base.delete_shift(sync_id)
+                        else:
+                            base.mark_shift_synced(sync_id)
+                    elif _type == "stock":
+                        if action == "deleted":
+                            pass # not possible to delete stock
+                        else:
+                            base.mark_container_synced(sync_id)
+        base.update_last_sync(sync_time)
+        return jsonify(synced_up=input, synced_down=synced)
 
 def insert_item(base, _type, item, sync_time):
     status = 0 if dbdetails.server else 3
