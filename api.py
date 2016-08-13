@@ -149,7 +149,7 @@ def sync():
     if dbdetails.server:
         # get data to return
         last_sync = util.stringdate(input['last_sync'])
-        result = {"data": {}, "synced": []}
+        result = {"data": {}, "synced": synced}
         result['data']['purchase'] = base.get_purchases(
             prettydict=True, newerthan=last_sync, datestring=True,
             simplecart=True, getDeleted=True, allLocations=True,
