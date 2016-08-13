@@ -98,15 +98,19 @@ def sync():
             return "JSON ERROR: " + str(input)
 
     # update based on submitted data
-    items = (input['data']['purchase']
-             + input['data']['shift']
-             + input['data']['stock'])
-    extra = ("WHERE syncId IN (%s" + (",%s"*(len(items)-1)) + ")",
-            tuple(item['syncId'] for item in items))
+    purchase_items = input['data']['purchase']
+    extra = ("WHERE syncId IN (%s" + (",%s"*(len(purchase_items)-1)) + ")",
+            tuple(item['syncId'] for item in purchase_items))
     existing = base.fetchall("purchases", ["syncId", "status", "edited"],
                              extra)
+    shift_items = input['data']['shift']
+    extra = ("WHERE syncId IN (%s" + (",%s"*(len(shift_items)-1)) + ")",
+            tuple(item['syncId'] for item in shift_items))
     existing += base.fetchall("shifts", ["syncId", "status", "edited"],
                              extra)
+    stock_items = input['data']['stock']
+    extra = ("WHERE syncId IN (%s" + (",%s"*(len(stock_items)-1)) + ")",
+            tuple(item['syncId'] for item in stock_items))
     existing += base.fetchall("stock", ["syncId", "status", "edited"],
                              extra)
     existing = {x[0]: x for x in existing}
@@ -162,8 +166,16 @@ def sync():
                 allLocations=True, notnow=sync_time)
         return jsonify(result)
     else:
+        for _type, items in synced.iteritems():
+            for sync_id in items:
+                if _type == "purchase":
+                    base.mark_purchase_synced(sync_id)
+                elif _type == "shift":
+                    base.mark_shift_synced(sync_id)
+                elif _type == "stock":
+                    base.mark_container_synced(sync_id)
+        base.update_last_sync(edited)
         return jsonify(input)
-
 
 def insert_item(base, _type, item, sync_time):
     status = 0 if dbdetails.server else 3
