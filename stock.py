@@ -10,6 +10,7 @@ from datetime import datetime
 
 import util
 from dbconn import CgBase
+from dbdetails import dbdetails
 
 from flask import Blueprint, render_template, request
 
@@ -33,6 +34,7 @@ def stock():
         date=now,
         countries=util.country_list.items(),
         msg=msg,
+        server=dbdetails.server,
         location=location,
         locations=util.locations,
         workers=workers,
