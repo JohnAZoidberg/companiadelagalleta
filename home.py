@@ -10,6 +10,7 @@ from datetime import datetime
 
 from dbconn import CgBase
 import util
+from dbdetails import dbdetails
 
 from flask import Blueprint, render_template, request, make_response
 

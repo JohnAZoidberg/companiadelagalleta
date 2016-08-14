@@ -13,6 +13,7 @@ import requests
 from dbconn import CgBase
 import util
 from dbdetails import dbdetails
+import jinja_filters
 
 from flask import Blueprint, request, redirect, url_for, jsonify
 
@@ -196,6 +197,17 @@ def sync():
         base.update_last_sync(sync_time)
         sync_summary = {"synced_up": synced_up, "synced_down": synced}
         sync_msg = handle_sync_result(sync_summary)
+        with open('log.txt', 'a') as f:
+            f.writelines('\n'.join([
+                jinja_filters.datetimeformat(datetime.now()),
+                #"shellupdate:",
+                #str(shell_updatestr),
+                "updatemsg:",
+                str(sync_msg),
+                "sync",
+                json.dumps(sync_summary),
+                "-----\n"
+            ]))
         return redirect("/home?msg=" + sync_msg)
 
 def handle_sync_result(sync_summary):
