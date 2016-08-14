@@ -55,6 +55,10 @@ def home():
     return resp
 
 
+@home_page.route('/hello', methods=['GET'])
+def hello():
+    return "Hello World"
+
 @home_page.route('/purchases', methods=['GET'])
 def purchases():
     # get/post and cookie

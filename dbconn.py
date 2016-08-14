@@ -221,7 +221,7 @@ class CgBase:
             where[1].append(jinja_filters.dateformat(onlydate) + " 00:00:00")
             where[1].append(jinja_filters.dateformat(onlydate) + " 23:59:59")
         if newerthan is not None:
-            where[0] += " AND purchases.edited < %s"
+            where[0] += " AND purchases.edited > %s"
             where[1].append(util.datestring(newerthan))
         if notsynced:
             where[0] += " AND purchases.status <> 3"
@@ -406,7 +406,7 @@ class CgBase:
             where[0] += " AND edited <> %s"
             where[1].append(notnow)
         if newerthan is not None:
-            where[0] += " AND edited < %s"
+            where[0] += " AND edited > %s"
             where[1].append(util.datestring(newerthan))
         if notsynced:
             where[0] += " AND status <> 3"
@@ -437,7 +437,7 @@ class CgBase:
             where[0] += " AND location = %s"
             where[1].append(self.location)
         if newerthan is not None:
-            where[0] += " AND edited < %s"
+            where[0] += " AND edited > %s"
             where[1].append(util.datestring(newerthan))
         if notsynced:
             where[0] += " AND status <> 3"

@@ -194,7 +194,24 @@ def sync():
                         else:
                             base.mark_container_synced(sync_id)
         base.update_last_sync(sync_time)
-        return jsonify(synced_up=input, synced_down=synced)
+        sync_summary = {"synced_up": synced_up, "synced_down": synced}
+        sync_msg = handle_sync_result(sync_summary)
+        return redirect("/home?msg=" + sync_msg)
+
+def handle_sync_result(sync_summary):
+    if (not sync_json['synced_down']['deleted']['purchases']
+            and not sync_json['synced_down']['added']['purchases']
+            and not sync_json['synced_up']['deleted']['purchases']
+            and not sync_json['synced_up']['added']['purchases']
+            and not sync_json['synced_down']['deleted']['shifts']
+            and not sync_json['synced_down']['added']['shifts']
+            and not sync_json['synced_up']['deleted']['shifts']
+            and not sync_json['synced_up']['added']['shifts']
+            and not sync_json['synced_up']['edited']['stock']
+            and not sync_json['synced_down']['edited']['stock']):
+        return "Nothing to sync"
+    elif success:
+        return "Sync done"
 
 def insert_item(base, _type, item, sync_time):
     status = 0 if dbdetails.server else 3

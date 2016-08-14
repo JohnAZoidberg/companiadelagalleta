@@ -55,7 +55,7 @@
                   </ul>
                 </div>
               </li>
-              <li><a href="admin.py"><span class="glyphicon glyphicon-refresh"></span> {{ "Update" if server else "Update&Sync" }}</a></li>
+              <li><a href="/api/v1.0/sync"><span class="glyphicon glyphicon-refresh"></span> {{ "Update" if server else "Update&Sync" }}</a></li>
               <li><a href="stats"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
               {% endblock %}
             </ul>
