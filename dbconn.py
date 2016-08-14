@@ -122,8 +122,6 @@ class CgBase:
                         location=None, status=0, syncId=None,
                         updateStock=False, note=None):
         success = False
-        if dbdetails.server:
-            status = 3
         if note == "":
             note = None
         if location is None:
@@ -172,8 +170,6 @@ class CgBase:
     def insert_shift(self, workerId, start, end, edited,
                      location=None, status=0, syncId=None):
         success = False
-        if dbdetails.server:
-            status = 3
         if location is None:
             location = self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
@@ -479,12 +475,12 @@ class CgBase:
                     {"quantity": quantity, "recounted": now,
                      "edited": now, "status": 1}, False,
                     ("WHERE containerId = %s AND location = %s",
-                     (containerId, (self.location,))))
+                     (containerId, self.location)))
             else:
                 success = success and self.update("stock",
                     {"edited": now, "status": 1}, False,
                     ("WHERE containerId = %s AND location = %s",
-                     (containerId, (self.location,))),
+                     (containerId, self.location)),
                     increment={"quantity": quantity})
         self.db.commit()
         return True
