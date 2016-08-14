@@ -13,12 +13,15 @@ import MySQLdb
 
 import util
 from dbdetails import dbdetails
+import jinja_filters
 
 
 class CgBase:
     def __init__(self, location):
         self.db = self._connectDb()
+        self.db.autocommit(False)
         self.cur = self.db.cursor()
+        self.dict_cur = self.db.cursor(MySQLdb.cursors.DictCursor)
         self.location = location
 
     def _connectDb(self):
@@ -47,10 +50,14 @@ class CgBase:
             str_value += ", %s"
         return str_value, tuple(xs)
 
-    def _fetch(self, table, columns, extra=("", ())):
+    def _fetch(self, table, columns, extra=("", ()), returndict=False):
         try:
-            self.cur.execute("SELECT " + self._list_to_str(columns)
-                             + " FROM " + table + " " + extra[0], extra[1])
+            sql = ("SELECT " + self._list_to_str(columns)
+                             + " FROM " + table + " " + extra[0])
+            if returndict:
+                self.dict_cur.execute(sql, extra[1])
+            else:
+                self.cur.execute(sql, extra[1])
         except:
             raise
 
@@ -63,8 +70,8 @@ class CgBase:
             return result[0]
         return result
 
-    def fetchall(self, table, columns, extra=("", ())):
-        self._fetch(table, columns, extra)
+    def fetchall(self, table, columns, extra=("", ()), returndict=False):
+        self._fetch(table, columns, extra, returndict=returndict)
         return self.cur.fetchall()
 
     def update(self, table, columnsdata, commit, extra, increment={}):
@@ -116,8 +123,8 @@ class CgBase:
                         location=None, status=0, syncId=None,
                         updateStock=False, note=None):
         success = False
-        if dbdetails.server:
-            status = 3
+        if note == "":
+            note = None
         if location is None:
             location = self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
@@ -164,8 +171,6 @@ class CgBase:
     def insert_shift(self, workerId, start, end, edited,
                      location=None, status=0, syncId=None):
         success = False
-        if dbdetails.server:
-            status = 3
         if location is None:
             location = self.location
         # a unique id to identify entries: unixtimestamp + 4 random digits
@@ -185,18 +190,43 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def update_purchase(self, country, card, date, discount, cart, edited,
+                        location=None, status=1, syncId=None,
+                        updateStock=False, note=None):
+        if syncId is None:
+            raise Exception("SyncId can not be None")
+        delete = self.delete_purchase(syncId, False)
+        insert = self.insert_purchase(country, card, date, discount, cart, edited,
+                        location, status, syncId,
+                        updateStock, note)
+        return delete and insert
+
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None,
             newerthan=None, datestring=False, notsynced=False, simplecart=False,
-            allLocations=False):
+            allLocations=False, notnow=False):
         where = ["WHERE purchases.syncId = cart.syncId "
                  + "AND boxes.boxesEntryId = cart.boxId",
                 []]
-        if allLocations:
-            where[0] += " AND location = %s"
-            where[1].append(self.location)
         pt = "purchases"
         ct = "cart"
         bt = "boxes"
+        if not allLocations:
+            where[0] += " AND purchases.location = %s"
+            where[1].append(self.location)
+        if notnow:
+            where[0] += " AND purchases.edited <> %s"
+            where[1].append(notnow)
+        if onlydate is not None:
+            where[0] += " AND purchases.date BETWEEN %s  AND %s"
+            where[1].append(jinja_filters.dateformat(onlydate) + " 00:00:00")
+            where[1].append(jinja_filters.dateformat(onlydate) + " 23:59:59")
+        if newerthan is not None:
+            where[0] += " AND purchases.edited > %s"
+            where[1].append(util.datestring(newerthan))
+        if notsynced:
+            where[0] += " AND purchases.status <> 3"
+        if not getDeleted:
+            where[0] += " AND purchases.status <> 2"
         result = self.fetchall(
             pt+", "+ct+", "+bt,
             [pt+".syncId", pt+".country", pt+".card", pt+".discount",
@@ -204,21 +234,11 @@ class CgBase:
              pt+".note",
              ct+".quantity", ct+".price",
              bt+".boxesEntryId", bt+".title"],
-            (where[0] + " ORDER BY " + pt + ".date DESC", tuple(where[1])))
+            (where[0] + " ORDER BY "+pt+".date DESC", tuple(where[1])))
         purchases = OrderedDict()
         for row in result:
             (syncId, country, card, discount, date, status, edited,
              location, note, quantity, price, boxId, title) = row
-            if onlydate is not None:
-                if not util.is_same_day(onlydate, date):
-                    continue
-            if newerthan is not None:
-                if newerthan > edited:
-                    continue
-            if notsynced and status == 3:
-                continue
-            if not getDeleted and status == 2:
-                continue
             if datestring:
                 date = util.datestring(date)
                 edited = util.datestring(edited)
@@ -226,6 +246,12 @@ class CgBase:
             if key not in purchases:
                 purchases[key] = {}
                 if prettydict:
+                    purchases[key] = {
+                        "syncId": key, "status": status, "country": country,
+                        "card": card, "discount": discount, "date": date,
+                        "edited": edited, "location": location, "note": note
+                    }
+                    # TODO remove this shit
                     purchases[key]['purchase'] = {
                         "syncId": key, "status": status, "country": country,
                         "card": card, "discount": discount, "date": date,
@@ -259,7 +285,7 @@ class CgBase:
         if updateStock:
             success = success and self.cur.execute(
                 "UPDATE stock, boxes, cart SET stock.edited = '" + edited + "', stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
-                + " WHERE stock.location = " + str(self.location) + " AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = " + syncId
+                + " WHERE stock.location = " + str(self.location) + " AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = " + str(syncId)
             )
         if success:
             self.db.commit()
@@ -274,14 +300,15 @@ class CgBase:
             self.db.commit()
         return success
 
-    def delete_purchase(self, syncId):
+    def delete_purchase(self, syncId, commit=True):
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
             p_rows = self.cur.rowcount
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             c_rows = self.cur.rowcount
-            self.db.commit()
+            if commit:
+                self.db.commit()
             if p_rows > 0 and c_rows > 0:
                 return True
         except:
@@ -350,13 +377,13 @@ class CgBase:
         return self.insert_shift(workerId, now, None, now)
 
     def end_work(self, workerId):
-        try:
-            self.update("shifts", {"end": util.datestring(datetime.now())},
-                True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
-            return True
-        except:
-            # TODO write error to log
+        end = util.datestring(datetime.now())
+        i = self.update("shifts", {"end": end},
+            True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
+        if i == 0:
             return False
+        else:
+            return end
 
     def get_workers(self):
         working = self.fetchall("shifts", ["workerId"],
@@ -369,13 +396,22 @@ class CgBase:
         return workers
 
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False,
-                   newerthan=None, returndict=False, allLocations=False):
+                   newerthan=None, returndict=False, allLocations=False,
+                   notnow=False):
         where = ["WHERE end IS NOT NULL", []]
-        if notsynced:
-            where[0] += " AND status <> 3"
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
+        if notnow:
+            where[0] += " AND edited <> %s"
+            where[1].append(notnow)
+        if newerthan is not None:
+            where[0] += " AND edited > %s"
+            where[1].append(util.datestring(newerthan))
+        if notsynced:
+            where[0] += " AND status <> 3"
+        if not getDeleted:
+            where[0] += " AND status <> 2"
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))
@@ -387,11 +423,6 @@ class CgBase:
             if datestring:
                 start = util.datestring(start)
                 end = "null" if end is None else util.datestring(end)
-            if not getDeleted and status == 2:
-                continue
-            if newerthan is not None:
-                if newerthan > edited:
-                    continue
             shifts.append({"syncId": key, "workerId": workerId, "start": start,
                            "end": end, "status": status, "location": location})
         if returndict:
@@ -399,14 +430,20 @@ class CgBase:
         return shifts
 
     def get_stock(self, allLocations=False, notsynced=False, datestring=False,
-                  newerthan=None, returndict=False, containerIndexed=False):
+                  newerthan=None, returndict=False, containerIndexed=False, notnow=False):
         # the syncId check if unnecessary but done to have a first WHERE
         where = ["WHERE syncId IS NOT NULL", []]
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
+        if newerthan is not None:
+            where[0] += " AND edited > %s"
+            where[1].append(util.datestring(newerthan))
         if notsynced:
             where[0] += " AND status <> 3"
+        if notnow:
+            where[0] += " AND edited <> %s"
+            where[1].append(notnow)
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
              "status", "edited", "recounted"], (where[0], tuple(where[1])))
@@ -414,9 +451,6 @@ class CgBase:
         for row in result:
             (containerId, quantity, location, syncId,
              status, edited, recounted) = row
-            if newerthan is not None:
-                if newerthan > edited:
-                    continue
             if datestring:
                 edited = util.datestring(edited)
                 recounted = util.datestring(recounted)
@@ -443,23 +477,23 @@ class CgBase:
                     {"quantity": quantity, "recounted": now,
                      "edited": now, "status": 1}, False,
                     ("WHERE containerId = %s AND location = %s",
-                     (containerId, (self.location,))))
+                     (containerId, self.location)))
             else:
                 success = success and self.update("stock",
                     {"edited": now, "status": 1}, False,
                     ("WHERE containerId = %s AND location = %s",
-                     (containerId, (self.location,))),
+                     (containerId, self.location)),
                     increment={"quantity": quantity})
         self.db.commit()
         return True
 
     def update_container(self, syncId, containerId, quantity,
-                         location, edited, recounted):
+                         location, edited, recounted, status=1):
         last_recount = self.fetchone("stock", ["recounted"],
                                      ("WHERE syncId = %s", (syncId,)))
         if edited > last_recount:
             return self.update("stock",
                 {"quantity": quantity, "recounted": recounted,
-                 "status": 3, "edited": edited}, True,
+                 "status": status, "edited": edited}, True,
                 ("WHERE syncId = %s AND location = %s",
                  (syncId, self.location)))

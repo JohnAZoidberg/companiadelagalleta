@@ -22,7 +22,7 @@ def git_update():
 
 def db_update():
     result = ""
-    base = CgBase(util.get_location())
+    base = CgBase(util.get_location()[1])
     new_version = 502  # 0.5.2
     version = 0
     failure = False

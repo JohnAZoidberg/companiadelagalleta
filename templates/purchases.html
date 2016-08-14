@@ -1,0 +1,38 @@
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <td align="right" style="font-weight: bold; vertical-align:bottom" colspan="4">
+                  Total: <span title="VISA">{{ total[0]|moneyformat }}</span> + <span title="efectivo">{{ total[1]|moneyformat }}</span> = {{ (total[0] + total[1])|moneyformat }}<br>
+               </td>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              {% for daytime in purchases %}
+              {% for purchase in daytime['ps'] %}
+              <tr class="{{ 'info' if purchase['purchase']['status'] == 3 else 'danger' }} clickable deletable-row" data-syncid="{{ purchase['purchase']['syncId'] }}">
+                <td>
+                  {{ purchase['purchase']['date']|timeformat }}
+                  {% if purchase['purchase']['note'] is not none %}
+                  <span style="float:right;"title="{{ purchase['purchase']['note'] }}" class="glyphicon glyphicon-info-sign"></span>
+                  {% endif %}
+                </td>
+                <td>{{ purchase['purchase']['country']|countryformat }}</td>
+                <td>{{ purchase['purchase']['card']|cardformat }}</td>
+                <td align="right">{{ purchase['purchase']['discount']|discountformat }}{{ purchase['purchase']['total']|moneyformat }}</td>
+              </tr>
+              {% for item in purchase['cart'] %}
+              <tr>
+                <td align="right" colspan="2">{{ item['title'] }}</td>
+                <td>x{{ item['quantity'] }}</td>
+                <td align="right">{{ item['price']|moneyformat }}</td>
+              </tr>
+              {% endfor %}
+              {% endfor %}
+              {% if daytime['ps'] %}
+              <tr style="font-weight: bold;">
+                <td align="right" colspan="4"><span title="VISA">{{ daytime['total']["card"]|moneyformat }}</span> + <span title="efectivo">{{ daytime['total']["cash"]|moneyformat }}</span> = {{ (daytime['total']["card"] + daytime['total']["cash"])|moneyformat }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
