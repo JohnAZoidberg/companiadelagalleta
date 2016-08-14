@@ -110,10 +110,10 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
           }
       });
 
-      // display error when submitting without boxes
       $("#myForm").on("submit", function(e) {
           e.preventDefault();
-          if ($('.added-box').length <= 0 && false) {
+          // display error when submitting without boxes
+          if ($('.added-box').length <= 0) {
               $(".box-inputs").addClass("has-error");
           } else {
               //$("#submit").attr("disabled", "true");

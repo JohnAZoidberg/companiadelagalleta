@@ -199,18 +199,23 @@ def sync():
         return redirect("/home?msg=" + sync_msg)
 
 def handle_sync_result(sync_summary):
-    if (not sync_json['synced_down']['deleted']['purchases']
-            and not sync_json['synced_down']['added']['purchases']
-            and not sync_json['synced_up']['deleted']['purchases']
-            and not sync_json['synced_up']['added']['purchases']
-            and not sync_json['synced_down']['deleted']['shifts']
-            and not sync_json['synced_down']['added']['shifts']
-            and not sync_json['synced_up']['deleted']['shifts']
-            and not sync_json['synced_up']['added']['shifts']
-            and not sync_json['synced_up']['edited']['stock']
-            and not sync_json['synced_down']['edited']['stock']):
+    if (not sync_summary['synced_down']['deleted']['purchase']
+            and not sync_summary['synced_down']['added']['purchase']
+            and not sync_summary['synced_down']['edited']['purchase']
+            and not sync_summary['synced_up']['deleted']['purchase']
+            and not sync_summary['synced_up']['added']['purchase']
+            and not sync_summary['synced_up']['edited']['purchase']
+            and not sync_summary['synced_down']['deleted']['shift']
+            and not sync_summary['synced_down']['added']['shift']
+            and not sync_summary['synced_down']['edited']['shift']
+            and not sync_summary['synced_up']['deleted']['shift']
+            and not sync_summary['synced_up']['added']['shift']
+            and not sync_summary['synced_up']['edited']['stock']
+            and not sync_summary['synced_down']['deleted']['shift']
+            and not sync_summary['synced_down']['added']['shift']
+            and not sync_summary['synced_down']['edited']['stock']):
         return "Nothing to sync"
-    elif success:
+    else:
         return "Sync done"
 
 def insert_item(base, _type, item, sync_time):
