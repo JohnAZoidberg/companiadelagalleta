@@ -85,6 +85,7 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
       $("#purchases-container").on("click", ".deletable-row", function(e) {
           if (confirm("Really delete?")) {
               syncId = $(this).data("syncid");
+              $("#table-body > .syncid-" + syncId).addClass("greyfont")
               $.ajax({
                   type: "DELETE",
                   url: "api/v1.0/purchase/" + syncId,
@@ -102,6 +103,7 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
       reload_purchases();
                   },
                   error: function(xhr, status, error) {
+                    $("#table-body > ." + syncId).removeClass("greyfont")
                     console.log(xhr.responseText)
                     console.log(status)
                     console.log(error)
@@ -150,6 +152,7 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
 
               })
               console.log(JSON.stringify(content))
+              sdfsdf
               $.ajax({
                   type: "POST",
                   url: "api/v1.0/purchase",
