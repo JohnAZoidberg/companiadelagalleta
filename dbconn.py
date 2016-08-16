@@ -386,7 +386,7 @@ class CgBase:
 
     def end_work(self, workerId):
         end = util.datestring(datetime.now())
-        i = self.update("shifts", {"end": end},
+        i = self.update("shifts", {"end": end, "edited": datetime.now()},
             True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
         if i == 0:
             return False
