@@ -140,8 +140,9 @@ def sync():
             elif status == 1:
                 if existing_status == 0:
                     edit_item(base, _type, item, sync_time)
-                elif existing_status == 1\
-                        or existing_status == 2:
+                elif (existing_status == 1
+                     or existing_status == 2
+                     or existing_status == 3):
                     if edited > existing_edited:
                         edit_item(base, _type, item, sync_time)
                 elif existing_status is None:
@@ -150,7 +151,7 @@ def sync():
             elif status == 2:
                 if existing_status == 0:
                     delete_item(base, _type, item, sync_time)
-                elif existing_status == 1:
+                elif existing_status == 1 or existing_status == 3:
                     if edited > existing_edited:
                         delete_item(base, _type, item, sync_time)
                 elif existing_status == 2:

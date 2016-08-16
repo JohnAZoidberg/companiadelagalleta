@@ -195,7 +195,7 @@ class CgBase:
                         updateStock=False, note=None):
         if syncId is None:
             raise Exception("SyncId can not be None")
-        delete = self.delete_purchase(syncId, False)
+        delete = self.delete_purchase(syncId, False, True, edited=edited, updateStock=updateStock)
         insert = self.insert_purchase(country, card, date, discount, cart, edited,
                         location, status, syncId,
                         updateStock, note)
@@ -300,20 +300,27 @@ class CgBase:
             self.db.commit()
         return success
 
-    def delete_purchase(self, syncId, commit=True):
+    def delete_purchase(self, syncId, commit=True, updateStock=False,
+                        edited=None):
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
             p_rows = self.cur.rowcount
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             c_rows = self.cur.rowcount
-            if commit:
-                self.db.commit()
-            if p_rows > 0 and c_rows > 0:
+            if updateStock:
+                success = self.cur.execute(
+                    "UPDATE stock, boxes, cart SET stock.edited = %s, stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
+                    + " WHERE stock.location = %s AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = %s"
+                , (edited, self.location, syncId))
+            if p_rows > 0 and c_rows > 0 and success:
+                if commit:
+                    self.db.commit()
                 return True
+
         except:
-            self.db.rollback()
             raise
+        self.db.rollback()
         return False
 
     def delete_shift(self, syncId):
