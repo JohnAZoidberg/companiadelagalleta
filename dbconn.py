@@ -195,7 +195,7 @@ class CgBase:
                         updateStock=False, note=None):
         if syncId is None:
             raise Exception("SyncId can not be None")
-        delete = self.delete_purchase(syncId, False, True, edited=edited, updateStock=updateStock)
+        delete = self.delete_purchase(syncId, edited=edited, updateStock=updateStock)
         insert = self.insert_purchase(country, card, date, discount, cart, edited,
                         location, status, syncId,
                         updateStock, note)
@@ -308,8 +308,9 @@ class CgBase:
             p_rows = self.cur.rowcount
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             c_rows = self.cur.rowcount
+            success = True
             if updateStock:
-                success = self.cur.execute(
+                success = success and self.cur.execute(
                     "UPDATE stock, boxes, cart SET stock.edited = %s, stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
                     + " WHERE stock.location = %s AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = %s"
                 , (edited, self.location, syncId))
