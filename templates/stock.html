@@ -75,8 +75,10 @@
           if ($input.value == 'relative') {
               $('.container-modifier').html("+");
               $('.container-inputs').each(function(i, obj) {
+                  $quantity = $(this).find('.quantity')[0];
                   quantity = $(this).data('quantity');
-                  new_quantity = $(this).find('.quantity')[0].value;
+                  $quantity.value = "0"
+                  new_quantity = $quantity.value;
                   result = parseInt(quantity) + parseInt(new_quantity);
                   $result = $(this).find('.container-result');
                   $result.html("= " + result)
@@ -84,7 +86,10 @@
           } else if ($input.value == 'absolute') {
               $('.container-modifier').html("=>");
               $('.container-inputs').each(function(i, obj) {
-                  new_quantity = $(this).find('.quantity')[0].value;
+                  $quantity = $(this).find('.quantity')[0];
+                  quantity = $(this).data('quantity');
+                  $quantity.value = quantity
+                  new_quantity = $quantity.value;
                   $result = $(this).find('.container-result');
                   $result.html("= " + new_quantity)
               });
