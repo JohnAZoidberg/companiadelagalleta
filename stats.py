@@ -49,10 +49,11 @@ def create_stats_file():
         ventas["B" + row] = util.country_list[purchase['country']]
         ventas["C" + row] = purchase['discount']
         ventas["D" + row] = purchase['card']
+        ventas["G" + row] = purchase['note']
         total_price = 0
         total_boxes = 0
         for item in cart:
-            col = 6 + item['boxId']
+            col = 7 + item['boxId']
             quantity = item['quantity']
             total_price += quantity * item['price']
             total_boxes += quantity
