@@ -112,7 +112,7 @@ def split_purchases(purchases):
     morning = {"ps": [], "total": {"cash": 0, "card": 0}}
     evening = {"ps": [], "total": {"cash": 0, "card": 0}}
     for p in purchases:
-        if not earlier_than(16, 0, p['purchase']['date']):
+        if not earlier_than(17, 0, p['purchase']['date']):
             morning['ps'].append(p)
         else:
             evening['ps'].append(p)
