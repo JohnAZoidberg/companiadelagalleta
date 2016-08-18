@@ -18,10 +18,10 @@ home_page = Blueprint('home_page', __name__, template_folder='templates')
 @home_page.route('/', methods=['GET'])
 @home_page.route('/home', methods=['GET'])
 def home():
-    new_cookies = {}
     # get/post and cookie
     showndate = request.args.get('date', None)
     msg = request.args.get('msg', None)
+    new_cookies = {}
     location_cookie, location = util.get_location()
     if not location_cookie:
         new_cookies = {"location": str(location)}
@@ -58,6 +58,17 @@ def home():
 @home_page.route('/hello', methods=['GET'])
 def hello():
     return "Hello World"
+
+
+@home_page.route('/test', methods=['GET'])
+def test():
+    base = CgBase(0)
+    #base.insert_stock(0, 2, False)
+    #base.insert_stock(1, 3, False)
+    #base.insert_stock(1, 2, False)
+    base.db.commit()
+    result = base.get_stock()
+    return str(result)
 
 @home_page.route('/purchases', methods=['GET'])
 def purchases():

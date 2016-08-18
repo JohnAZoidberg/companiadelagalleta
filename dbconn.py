@@ -74,6 +74,10 @@ class CgBase:
         self._fetch(table, columns, extra, returndict=returndict)
         return self.cur.fetchall()
 
+    def simple_fetchall(self, sql, extras):
+        self.cur.execute(sql, extras)
+        return self.cur.fetchall()
+
     def update(self, table, columnsdata, commit, extra, increment={}):
         try:
             first = True
@@ -120,8 +124,7 @@ class CgBase:
             return False
 
     def insert_purchase(self, country, card, date, discount, cart, edited,
-                        location=None, status=0, syncId=None,
-                        updateStock=False, note=None):
+                        location=None, status=0, syncId=None, note=None):
         success = False
         if note == "":
             note = None
@@ -145,16 +148,6 @@ class CgBase:
                                   {"syncId": syncId, "boxId": boxId,
                                    "quantity": quantity, "price": price},
                                   False)
-            # update stock
-            if updateStock:
-                success = success and self.update(
-                        "stock",
-                        {"edited": edited, "status": 1},
-                        False,
-                        ("WHERE location = %s AND containerId = %s",
-                         (location, containerId)),
-                        increment={"quantity": -quantity}
-                )
         success = success and self.insert("purchases",
             {"country": country, "card": int(card),
              "date": util.datestring(date), "discount": discount,
@@ -191,14 +184,12 @@ class CgBase:
         return success
 
     def update_purchase(self, country, card, date, discount, cart, edited,
-                        location=None, status=1, syncId=None,
-                        updateStock=False, note=None):
+                        location=None, status=1, syncId=None, note=None):
         if syncId is None:
             raise Exception("SyncId can not be None")
-        delete = self.delete_purchase(syncId, edited=edited, updateStock=updateStock)
+        delete = self.delete_purchase(syncId, edited=edited)
         insert = self.insert_purchase(country, card, date, discount, cart, edited,
-                        location, status, syncId,
-                        updateStock, note)
+                        location, status, syncId, note)
         return delete and insert
 
     def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None,
@@ -276,17 +267,12 @@ class CgBase:
                 purchases[key]['cart'].append((title, boxId, quantity, price))
         return [val for k, val in purchases.iteritems()]
 
-    def mark_purchase_deleted(self, syncId, updateStock=False):
+    def mark_purchase_deleted(self, syncId):
         syncStr = str(syncId)
         edited = util.datestring(datetime.now())
         success = self.update("purchases",
             {"status": 2, "edited": edited},
             False, ("WHERE syncId = %s", (syncStr,)))
-        if updateStock:
-            success = success and self.cur.execute(
-                "UPDATE stock, boxes, cart SET stock.edited = '" + edited + "', stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
-                + " WHERE stock.location = " + str(self.location) + " AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = " + str(syncId)
-            )
         if success:
             self.db.commit()
         return success
@@ -300,8 +286,7 @@ class CgBase:
             self.db.commit()
         return success
 
-    def delete_purchase(self, syncId, commit=True, updateStock=False,
-                        edited=None):
+    def delete_purchase(self, syncId, commit=True, edited=None):
         syncStr = str(syncId)
         try:
             self.cur.execute("DELETE FROM purchases WHERE syncId = " + syncStr)
@@ -309,11 +294,6 @@ class CgBase:
             self.cur.execute("DELETE FROM cart WHERE syncId = " + syncStr)
             c_rows = self.cur.rowcount
             success = True
-            if updateStock:
-                success = success and self.cur.execute(
-                    "UPDATE stock, boxes, cart SET stock.edited = %s, stock.status = 1, stock.quantity = stock.quantity + cart.quantity"
-                    + " WHERE stock.location = %s AND stock.containerId = boxes.container AND boxes.boxesEntryId = cart.boxId AND cart.syncId = %s"
-                , (edited, self.location, syncId))
             if p_rows > 0 and c_rows > 0 and success:
                 if commit:
                     self.db.commit()
@@ -351,12 +331,9 @@ class CgBase:
     def mark_shift_synced(self, syncId):
         return self.change_shift_status(syncId, 3)
 
-    def change_container_status(self, syncId, status):
-        return self.update("stock", {"status": status},
-                           True, ("WHERE syncId = %s", (syncId,)))
-
     def mark_container_synced(self, syncId):
-        return self.change_container_status(syncId, 3)
+        return self.update("stock", {"status": 3},
+                           True, ("WHERE syncId = %s", (syncId,)))
 
     def get_boxes(self):
         boxes = OrderedDict()
@@ -437,9 +414,27 @@ class CgBase:
             shifts = {shift["syncId"]: shift for shift in shifts}
         return shifts
 
-    def get_stock(self, allLocations=False, notsynced=False, datestring=False,
+    def get_stock(self):
+        sql =("SELECT i.containerId, SUM(i.quantity) "
+              "FROM stock i "
+              "WHERE status <> 2 AND location = %s "
+              "AND edited >= ("
+              "  SELECT edited FROM stock j "
+              "  WHERE i.containerId = j.containerId "
+              "  AND i.location = j.location AND recounted = 1 "
+              "  ORDER BY j.edited DESC LIMIT 1) "
+              "GROUP BY i.containerId")
+
+        result = self.simple_fetchall(sql, (self.location,))
+        containers = {}
+        for row in result:
+            (containerId, quantity) = row
+            containers[containerId] = {'quantity': quantity}
+        return containers
+
+    def get_sync_stock(self, allLocations=False, notsynced=False, datestring=False,
                   newerthan=None, returndict=False, containerIndexed=False, notnow=False):
-        # the syncId check if unnecessary but done to have a first WHERE
+        # the syncId check is unnecessary but done to have a first WHERE
         where = ["WHERE syncId IS NOT NULL", []]
         if not allLocations:
             where[0] += " AND location = %s"
@@ -476,32 +471,28 @@ class CgBase:
                         if returndict else stock
         return stock
 
+    def insert_stock(self, containerId, quantity, recounted, syncId=None):
+        if syncId is None:
+            syncId = util.uniqueId()
+        return self.insert("stock",
+                   {"containerId": containerId,
+                    "quantity": quantity,
+                    "location": self.location,
+                    "syncId": util.uniqueId(),
+                    "status": 0,
+                    "edited": datetime.now(),
+                    "recounted": recounted
+                   },
+                   False
+        )
+
     def update_stock(self, containers, absolute):
         success = True
-        now = util.datestring(datetime.now())
         for containerId, quantity in containers.iteritems():
-            if absolute:
-                success = success and self.update("stock",
-                    {"quantity": quantity, "recounted": now,
-                     "edited": now, "status": 1}, False,
-                    ("WHERE containerId = %s AND location = %s",
-                     (containerId, self.location)))
-            else:
-                success = success and self.update("stock",
-                    {"edited": now, "status": 1}, False,
-                    ("WHERE containerId = %s AND location = %s",
-                     (containerId, self.location)),
-                    increment={"quantity": quantity})
-        self.db.commit()
-        return True
-
-    def update_container(self, syncId, containerId, quantity,
-                         location, edited, recounted, status=1):
-        last_recount = self.fetchone("stock", ["recounted"],
-                                     ("WHERE syncId = %s", (syncId,)))
-        if edited > last_recount:
-            return self.update("stock",
-                {"quantity": quantity, "recounted": recounted,
-                 "status": status, "edited": edited}, True,
-                ("WHERE syncId = %s AND location = %s",
-                 (syncId, self.location)))
+            success = success and self.insert_stock(containerId, quantity,
+                                                    absolute)
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
