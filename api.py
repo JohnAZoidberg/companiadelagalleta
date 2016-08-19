@@ -225,10 +225,13 @@ def handle_sync_result(sync_summary):
             and not sync_summary['synced_down']['edited']['shift']
             and not sync_summary['synced_up']['deleted']['shift']
             and not sync_summary['synced_up']['added']['shift']
-            and not sync_summary['synced_up']['edited']['stock']
-            and not sync_summary['synced_down']['deleted']['shift']
-            and not sync_summary['synced_down']['added']['shift']
-            and not sync_summary['synced_down']['edited']['stock']):
+            and not sync_summary['synced_up']['edited']['shift']
+            and not sync_summary['synced_down']['deleted']['stock']
+            and not sync_summary['synced_down']['added']['stock']
+            and not sync_summary['synced_down']['edited']['stock']
+            and not sync_summary['synced_up']['deleted']['stock']
+            and not sync_summary['synced_up']['added']['stock']
+            and not sync_summary['synced_up']['edited']['stock']):
         return "Nothing to sync"
     else:
         return "Sync done"
