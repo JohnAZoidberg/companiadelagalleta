@@ -33,7 +33,7 @@ def save_purchase():
         insert_success = base.insert_purchase(
             purchase['country'], purchase['card'], purchase['datetime'],
             purchase['discount'], purchase['boxes'], edited,
-            note=purchase['note'], updateStock=True)
+            note=purchase['note'])
         if insert_success:
             resp = jsonify({"save_purchase": "Successful"})
             resp.status_code = 201
@@ -46,7 +46,7 @@ def save_purchase():
 @api_page.route('/api/v1.0/purchase/<int:sync_id>', methods=['DELETE'])
 def delete_purchase(sync_id):
     base = CgBase(util.get_location()[1])
-    success = base.mark_purchase_deleted(sync_id, updateStock=True)
+    success = base.mark_purchase_deleted(sync_id)
     if success:
         return jsonify({"purchase_deleted": sync_id})
     else:
@@ -541,7 +541,7 @@ def end_work(worker_id):
         })
 
 
-@api_page.route('/api/v1.0/stock', methods=['POST'])
+@api_page.route('/api/v1.0/stock/form', methods=['POST'])
 def update_stock():
     base = CgBase(util.get_location()[1])
     method = request.form.get('count-method', None)
@@ -554,9 +554,9 @@ def update_stock():
     containers = {}
     for containerId in util.containers.keys():
         containerId = str(containerId)
-        count_field = request.form.get('container_' + containerId, 0)
-        count = int(count_field)
-        if absolute or not count == 0:
+        count = int(request.form.get('container_' + containerId, 0))
+        old_count = int(request.form.get('old_' + containerId, 0))
+        if (absolute and count != old_count) or not count == 0:
             containers[containerId] = count
     success = base.update_stock(containers, absolute)
     if success:

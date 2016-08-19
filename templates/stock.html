@@ -5,7 +5,7 @@
               <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 {% endblock %}
 {% block content %}
-      <form action="api/v1.0/stock" method="post" class="form-horizontal" role="form">
+      <form action="api/v1.0/stock/form" method="post" class="form-horizontal" role="form">
         <input type="hidden" name="redirect" value="yep">
         <div class="row">
           {% for i in range(3) %}
@@ -18,6 +18,7 @@
               <label class="control-label col-sm-5" for="box">{{ details['title'] }}: </label>
               <div class="col-sm-7 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
                 <div class="input-group-addon">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
+                <input type="hidden" name="old_{{ containerId }}" value="{{ stock[containerId]['quantity'] }}">
                 <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0" required>
                 <div class="input-group-addon container-result">= {{ stock[containerId]['quantity'] }}</div>
               </div>

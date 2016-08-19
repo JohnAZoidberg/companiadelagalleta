@@ -416,7 +416,13 @@ class CgBase:
 
     def get_stock(self):
         sql =("SELECT i.containerId, SUM(i.quantity) "
-              "FROM stock i "
+              "FROM ("
+              "  SELECT containerId, quantity, status, location, edited FROM stock "
+              "  UNION ALL "
+              "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.edited "
+              "  FROM boxes, cart, purchases "
+              "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
+              ") AS i "
               "WHERE status <> 2 AND location = %s "
               "AND edited >= ("
               "  SELECT edited FROM stock j "
