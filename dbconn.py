@@ -286,6 +286,15 @@ class CgBase:
             self.db.commit()
         return success
 
+    def mark_stock_item_deleted(self, syncId):
+        syncStr = str(syncId)
+        success = self.update("stock",
+            {"status": 2, "edited": util.datestring(datetime.now())},
+            False, ("WHERE syncId = %s", (syncStr,)))
+        if success:
+            self.db.commit()
+        return success
+
     def delete_purchase(self, syncId, commit=True, edited=None):
         syncStr = str(syncId)
         try:
@@ -317,6 +326,32 @@ class CgBase:
             raise
         return False
 
+    def delete_shift(self, syncId):
+        syncStr = str(syncId)
+        try:
+            self.cur.execute("DELETE FROM shifts WHERE syncId = " + syncStr)
+            rows = self.cur.rowcount
+            self.db.commit()
+            if rows > 0:
+                return True
+        except:
+            self.db.rollback()
+            raise
+        return False
+
+    def delete_stock_item(self, syncId):
+        syncStr = str(syncId)
+        try:
+            self.cur.execute("DELETE FROM stock WHERE syncId = " + syncStr)
+            rows = self.cur.rowcount
+            self.db.commit()
+            if rows > 0:
+                return True
+        except:
+            self.db.rollback()
+            raise
+        return False
+
     def change_purchase_status(self, syncId, status):
         return self.update("purchases", {"status": status},
                            True, ("WHERE syncId = %s", (syncId,)))
@@ -331,7 +366,7 @@ class CgBase:
     def mark_shift_synced(self, syncId):
         return self.change_shift_status(syncId, 3)
 
-    def mark_container_synced(self, syncId):
+    def mark_stock_item_synced(self, syncId):
         return self.update("stock", {"status": 3},
                            True, ("WHERE syncId = %s", (syncId,)))
 
@@ -438,7 +473,7 @@ class CgBase:
             containers[containerId] = {'quantity': quantity}
         return containers
 
-    def get_sync_stock(self, allLocations=False, notsynced=False, datestring=False,
+    def get_stock_items(self, allLocations=False, notsynced=False, datestring=False,
                   newerthan=None, returndict=False, containerIndexed=False, notnow=False):
         # the syncId check is unnecessary but done to have a first WHERE
         where = ["WHERE syncId IS NOT NULL", []]
@@ -477,16 +512,18 @@ class CgBase:
                         if returndict else stock
         return stock
 
-    def insert_stock(self, containerId, quantity, recounted, syncId=None):
+    def insert_stock_item(self, containerId, quantity, recounted, edited, location=None, status=0, syncId=None):
         if syncId is None:
             syncId = util.uniqueId()
+        if location is None:
+            location = self.location
         return self.insert("stock",
                    {"containerId": containerId,
                     "quantity": quantity,
-                    "location": self.location,
+                    "location": location,
                     "syncId": util.uniqueId(),
                     "status": 0,
-                    "edited": datetime.now(),
+                    "edited": edited,
                     "recounted": recounted
                    },
                    False
@@ -495,8 +532,9 @@ class CgBase:
     def update_stock(self, containers, absolute):
         success = True
         for containerId, quantity in containers.iteritems():
-            success = success and self.insert_stock(containerId, quantity,
-                                                    absolute)
+            success = success and \
+                      self.insert_stock_item(containerId, quantity,
+                          absolute, datetime.now())
         if success:
             self.db.commit()
         else:

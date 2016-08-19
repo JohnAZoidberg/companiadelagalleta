@@ -68,7 +68,7 @@ def sync():
         up_data['data']['shift'] = base.get_shifts(
                 getDeleted=True, datestring=True, notsynced=True,
                 allLocations=True)
-        up_data['data']['stock'] = base.get_stock(
+        up_data['data']['stock'] = base.get_stock_items(
                 datestring=True, notsynced=True, allLocations=True)
         r = requests.put(dbdetails.serverroot + "/api/v1.0/sync",
                         data=json.dumps(up_data),
@@ -172,7 +172,7 @@ def sync():
         result['data']['shift'] = base.get_shifts(
             getDeleted=True, datestring=True,
             newerthan=last_sync, allLocations=True, notnow=sync_time)
-        result['data']['stock'] = base.get_stock(
+        result['data']['stock'] = base.get_stock_items(
                 datestring=True, newerthan=last_sync,
                 allLocations=True, notnow=sync_time)
         return jsonify(result)
@@ -245,7 +245,11 @@ def insert_item(base, _type, item, sync_time):
                 syncId=item['syncId'])
         pass
     elif _type == "stock":
-        pass  # it is not possible to insert stock
+        base.insert_stock_item(item['containerId'],
+                item['quantity'], item['recounted'], sync_time,
+                location=item['location'], status=status,
+                syncId=item['syncId']
+        )
 
 
 def edit_item(base, _type, item, sync_time):
@@ -263,9 +267,7 @@ def edit_item(base, _type, item, sync_time):
     elif _type == "shift":
         pass  # it is not possible to edit a shift
     elif _type == "stock":
-        base.update_container(item['syncId'], item['containerId'],
-                item['quantity'], item['location'], sync_time,
-                item['recounted'], status=status)
+        pass # it is not possible to edit a stock item
 
 
 def delete_item(base, _type, item, sync_time):
@@ -281,7 +283,10 @@ def delete_item(base, _type, item, sync_time):
         else:
             base.delete_shift(sync_id)
     elif _type == "stock":
-        pass  # it is not possible to delete stock
+        if dbdetails.server:
+            base.mark_stock_item_deleted(sync_id)
+        else:
+            base.delete_stock_item(sync_id)
 
 
 def sync_down():
@@ -415,7 +420,7 @@ def sync_up():
         base.mark_shift_synced(syncId)
     # stock
     for syncId in jres["stock"]["edited"]:
-        base.mark_container_synced(syncId)
+        base.mark_stock_item_synced(syncId)
     return {"synced_up": {
         "purchases": {"deleted": jres["purchases"]['deleted'],
                       "added": jres["purchases"]['added']},
