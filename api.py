@@ -194,7 +194,7 @@ def sync():
                         if action == "deleted":
                             pass # not possible to delete stock
                         else:
-                            base.mark_container_synced(sync_id)
+                            base.mark_stock_item_synced(sync_id)
         base.update_last_sync(sync_time)
         sync_summary = {"synced_up": synced_up, "synced_down": synced}
         sync_msg = handle_sync_result(sync_summary)

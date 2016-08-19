@@ -497,7 +497,6 @@ class CgBase:
              status, edited, recounted) = row
             if datestring:
                 edited = util.datestring(edited)
-                recounted = util.datestring(recounted)
             stock.append({
                 "containerId": containerId, "quantity": quantity,
                 "location": location, "syncId": syncId, "status": status,
