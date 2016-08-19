@@ -43,8 +43,9 @@ country_list = OrderedDict([
 workers = OrderedDict([
     (0, "Daniel"),
     (1, "Patricia"),
-    (2, "Raquel"),
-    (3, "Roberta")
+    #(2, "Raquel"),
+    (3, "Roberta"),
+    (4, "Paula")
 ])
 
 locations = OrderedDict([
