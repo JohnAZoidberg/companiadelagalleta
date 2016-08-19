@@ -454,7 +454,7 @@ class CgBase:
               "FROM ("
               "  SELECT containerId, quantity, status, location, edited FROM stock "
               "  UNION ALL "
-              "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.edited "
+              "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
               "  FROM boxes, cart, purchases "
               "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
               ") AS i "

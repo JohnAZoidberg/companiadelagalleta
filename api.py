@@ -161,6 +161,7 @@ def sync():
                 elif existing_status is None:
                     insert_item(base, _type, item, sync_time)
                 synced['deleted'][_type].append(sync_id)
+    base.db.commit()
 
     if dbdetails.server:
         # get data to return
@@ -239,12 +240,10 @@ def insert_item(base, _type, item, sync_time):
                 item['discount'], item['cart'], sync_time,
                 location=item['location'], status=status,
                 syncId=item['syncId'], note=item['note'])
-        pass
     elif _type == "shift":
         base.insert_shift(item['workerId'], item['start'], item['end'],
                 sync_time, location=item['location'], status=status,
                 syncId=item['syncId'])
-        pass
     elif _type == "stock":
         base.insert_stock_item(item['containerId'],
                 item['quantity'], item['recounted'], sync_time,
@@ -343,8 +342,7 @@ def update_stock():
     for containerId in util.containers.keys():
         containerId = str(containerId)
         count = int(request.form.get('container_' + containerId, 0))
-        old_count = int(request.form.get('old_' + containerId, 0))
-        if (absolute and count != old_count) or not count == 0:
+        if absolute or not count == 0:
             containers[containerId] = count
     success = base.update_stock(containers, absolute)
     if success:
