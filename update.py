@@ -24,7 +24,7 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(0)#util.get_location()[1])
-    new_version = 600  # 0.6.0
+    new_version = 601  # 0.6.1
     version = 0
     failure = False
     try:
@@ -276,7 +276,6 @@ def db_update():
         base.db.commit()
         result += "Change how stock is counted \n"
         result += "Enable possibility of stock history \n"
-    if True:
         for locationId in util.locations.keys():
             for container in util.containers.keys():
                 base.insert("stock",
@@ -284,8 +283,11 @@ def db_update():
                              "syncId": (container*1000+locationId),
                              "quantity": 0, "recounted": True},
                             False)
-
         base.db.commit()
+    if version < 601:
+        base.cur.execute("UPDATE cart SET price = price * 100")
+        base.db.commit()
+        result += "Increase price accuracy by two orders of magnitude\n"
 
     if new_version is not None and not failure:
         base.update("config",

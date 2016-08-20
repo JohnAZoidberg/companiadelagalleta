@@ -59,13 +59,13 @@ def create_stats_file():
             total_boxes += quantity
             ventas[colnum_string(col) + row] = quantity
         ventas['E' + row] = total_boxes
-        ventas['F' + row] = total_price / 100.0
+        ventas['F' + row] = total_price / 10000.0
 
     cajas = wb.get_sheet_by_name("Cajas")
     for boxId, box in boxes.iteritems():
         row = str(boxId+1)
         title = box['title']
-        price = box['price'] / 100.0
+        price = box['price'] / 10000.0
         cajas["A" + row] = boxId
         cajas["B" + row] = title
         cajas["C" + row] = price

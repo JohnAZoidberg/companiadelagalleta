@@ -19,8 +19,8 @@ def timeformat(value):
 
 
 def moneyformat(value):
-    extrazero = "0" if value % 10 == 0 else ""
-    return Markup(str((value / 100.0)) + extrazero + "&nbsp;€")
+    extrazero = "0" if value % 1000 == 0 else ""
+    return Markup(str((value / 10000.0)) + extrazero + "&nbsp;€")
 
 
 def countryformat(value):
