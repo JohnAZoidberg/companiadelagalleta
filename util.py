@@ -113,7 +113,7 @@ def split_purchases(purchases):
     morning = {"ps": [], "total": {"cash": 0, "card": 0}}
     evening = {"ps": [], "total": {"cash": 0, "card": 0}}
     for p in purchases:
-        if not earlier_than(17, 0, p['purchase']['date']):
+        if not earlier_than(17, 0, p['date']):
             morning['ps'].append(p)
         else:
             evening['ps'].append(p)
@@ -129,10 +129,10 @@ def calc_purchases_totals(ps):
         cash_sum = 0
         ps = _ps['ps']
         for pk, p in enumerate(ps):
-            ps[pk]['purchase']['total'] = 0
+            ps[pk]['total'] = 0
             for ik, item in enumerate(p['cart']):
-                ps[pk]['purchase']['total'] += item['price'] * item['quantity']
-                if p['purchase']['card']:
+                ps[pk]['total'] += item['price'] * item['quantity']
+                if p['card']:
                     card_sum += item['price'] * item['quantity']
                 else:
                     cash_sum += item['price'] * item['quantity']

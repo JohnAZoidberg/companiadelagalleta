@@ -242,13 +242,7 @@ class CgBase:
                         "card": card, "discount": discount, "date": date,
                         "edited": edited, "location": location, "note": note
                     }
-                    # TODO remove this shit
-                    purchases[key]['purchase'] = {
-                        "syncId": key, "status": status, "country": country,
-                        "card": card, "discount": discount, "date": date,
-                        "edited": edited, "location": location, "note": note
-                    }
-                else:
+                else:  # TODO remove this shit
                     purchases[key]['purchase'] = (
                             key, status, country, card, discount, date
                     )

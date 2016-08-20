@@ -43,13 +43,12 @@ def create_stats_file():
     ventas = wb.get_sheet_by_name("Ventas")
     for i, p in enumerate(reversed(purchases)):
         row = str(i + 2)
-        purchase = p['purchase']
         cart = p['cart']
-        ventas["A" + row] = purchase['date']
-        ventas["B" + row] = util.country_list[purchase['country']]
-        ventas["C" + row] = purchase['discount']
-        ventas["D" + row] = purchase['card']
-        ventas["G" + row] = purchase['note']
+        ventas["A" + row] = p['date']
+        ventas["B" + row] = util.country_list[p['country']]
+        ventas["C" + row] = p['discount']
+        ventas["D" + row] = p['card']
+        ventas["G" + row] = p['note']
         total_price = 0
         total_boxes = 0
         for item in cart:
