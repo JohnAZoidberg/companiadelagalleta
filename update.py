@@ -285,7 +285,8 @@ def db_update():
                             False)
         base.db.commit()
     if version < 601:
-        base.cur.execute("UPDATE cart SET price = price * 100")
+        #base.cur.execute("UPDATE cart SET price = price * 100")
+        base.cur.execute("UPDATE boxes SET price = price * 100")
         base.db.commit()
         result += "Increase price accuracy by two orders of magnitude\n"
 
