@@ -418,6 +418,7 @@ class CgBase:
             where[0] += " AND status <> 3"
         if not getDeleted:
             where[0] += " AND status <> 2"
+        where[0] += " ORDER BY start DESC"
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))

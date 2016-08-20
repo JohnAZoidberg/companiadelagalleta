@@ -17,7 +17,7 @@ from flask import Blueprint, render_template, request, make_response, redirect, 
 stats_download = Blueprint('stats_download', __name__)
 @stats_download.route('/stats')
 def stats():
-    create_stats_file()
+    create_stats_file(util.get_location()[1])
     return send_from_directory('', 'estadisticas.xlsx')
 
 def colnum_string(n):
@@ -34,12 +34,14 @@ def day_to_datetime(day):
     return datetime.strptime(day, '%Y-%m-%d')
 
 
-def create_stats_file():
-    base = CgBase(util.get_location()[1])
+def create_stats_file(location):
+    base = CgBase(location)
     purchases = base.get_purchases(allLocations=True)
     boxes = base.get_boxes()
+    shifts = base.get_shifts(allLocations=True)
 
     wb = load_workbook('stats.xlsx')
+    # Insert sales
     ventas = wb.get_sheet_by_name("Ventas")
     for i, p in enumerate(reversed(purchases)):
         row = str(i + 2)
@@ -60,6 +62,7 @@ def create_stats_file():
         ventas['E' + row] = total_boxes
         ventas['F' + row] = total_price / 10000.0
 
+    # Insert boxes
     cajas = wb.get_sheet_by_name("Cajas")
     for boxId, box in boxes.iteritems():
         row = str(boxId+1)
@@ -69,4 +72,17 @@ def create_stats_file():
         cajas["B" + row] = title
         cajas["C" + row] = price
 
+    # Insert work hours
+    trabajo = wb.get_sheet_by_name("Trabajo")
+    row = 2
+    for item in shifts:
+        s_row = str(row)
+        trabajo["A" + s_row] = util.all_workers[item['workerId']]
+        trabajo["B" + s_row] = item['start']
+        trabajo["C" + s_row] = item['end']
+        row += 1
+
     wb.save("estadisticas.xlsx")
+
+if __name__ == "__main__":
+    create_stats_file(0)
