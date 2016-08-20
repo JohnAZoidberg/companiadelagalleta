@@ -32,7 +32,7 @@ def home():
     base = CgBase(location)
     boxes = base.get_boxes()
     purchases, total = util.calc_purchases_totals(
-        base.get_purchases(onlydate=now, prettydict=True))
+        base.get_purchases(onlydate=now))
     workers = base.get_workers()
     version = base.get_version()
 
@@ -81,7 +81,7 @@ def purchases():
           else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase(location)
     purchases, total = util.calc_purchases_totals(
-        base.get_purchases(onlydate=now, prettydict=True))
+        base.get_purchases(onlydate=now))
 
     return render_template('purchases.html',
         date=now,

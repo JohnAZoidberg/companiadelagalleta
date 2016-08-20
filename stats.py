@@ -36,7 +36,7 @@ def day_to_datetime(day):
 
 def create_stats_file():
     base = CgBase(util.get_location()[1])
-    purchases = base.get_purchases(prettydict=True, allLocations=True)
+    purchases = base.get_purchases(allLocations=True)
     boxes = base.get_boxes()
 
     wb = load_workbook('stats.xlsx')

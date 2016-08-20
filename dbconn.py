@@ -192,8 +192,8 @@ class CgBase:
                         location, status, syncId, note)
         return delete and insert
 
-    def get_purchases(self, getDeleted=False, prettydict=False, onlydate=None,
-            newerthan=None, datestring=False, notsynced=False, simplecart=False,
+    def get_purchases(self, getDeleted=False, onlydate=None, newerthan=None,
+            datestring=False, notsynced=False, simplecart=False,
             allLocations=False, notnow=False):
         where = ["WHERE purchases.syncId = cart.syncId "
                  + "AND boxes.boxesEntryId = cart.boxId",
@@ -236,29 +236,21 @@ class CgBase:
             key = int(syncId)
             if key not in purchases:
                 purchases[key] = {}
-                if prettydict:
-                    purchases[key] = {
-                        "syncId": key, "status": status, "country": country,
-                        "card": card, "discount": discount, "date": date,
-                        "edited": edited, "location": location, "note": note
-                    }
-                else:  # TODO remove this shit
-                    purchases[key]['purchase'] = (
-                            key, status, country, card, discount, date
-                    )
+                purchases[key] = {
+                    "syncId": key, "status": status, "country": country,
+                    "card": card, "discount": discount, "date": date,
+                    "edited": edited, "location": location, "note": note
+                }
                 if simplecart:
                     purchases[key]['cart'] = {}
                 else:
                     purchases[key]['cart'] = []
             if simplecart:
                 purchases[key]['cart'][boxId] = quantity
-            elif prettydict:
-                purchases[key]['cart'].append({
-                    "title": title, "boxId": boxId,
-                    "quantity": quantity, "price": price
-                })
-            else:
-                purchases[key]['cart'].append((title, boxId, quantity, price))
+            purchases[key]['cart'].append({
+                "title": title, "boxId": boxId,
+                "quantity": quantity, "price": price
+            })
         return [val for k, val in purchases.iteritems()]
 
     def mark_purchase_deleted(self, syncId):

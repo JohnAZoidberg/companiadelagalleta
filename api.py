@@ -64,8 +64,8 @@ def sync():
             "last_sync": util.datestring(base.get_last_sync())
         }
         up_data['data']['purchase'] = base.get_purchases(
-                getDeleted=True, datestring=True, prettydict=True,
-                notsynced=True, simplecart=True, allLocations=True)
+                getDeleted=True, datestring=True, notsynced=True,
+                simplecart=True, allLocations=True)
         up_data['data']['shift'] = base.get_shifts(
                 getDeleted=True, datestring=True, notsynced=True,
                 allLocations=True)
@@ -168,7 +168,7 @@ def sync():
         last_sync = util.stringdate(input['last_sync'])
         result = {"data": {}, "synced": synced}
         result['data']['purchase'] = base.get_purchases(
-            prettydict=True, newerthan=last_sync, datestring=True,
+            newerthan=last_sync, datestring=True,
             simplecart=True, getDeleted=True, allLocations=True,
             notnow=sync_time)
         result['data']['shift'] = base.get_shifts(
