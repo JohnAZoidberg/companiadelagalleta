@@ -99,6 +99,8 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
                     if (xhr['status'] == 200) {
                         console.log(xhr['responseJSON']);
                         reload_purchases();
+                        try_sync();
+                        reload_purchases();
                     }
       reload_purchases();
                   },
