@@ -75,8 +75,6 @@ def sync():
                         data=json.dumps(up_data),
                         headers={"Content-Type": "application/json"}
         )
-        # TODO mark everything as synced (status = 3)
-        # TODO write synced items to log file
         try:
             input = r.json()
             synced_up = input['synced']
@@ -211,7 +209,12 @@ def sync():
                 json.dumps(sync_summary),
                 "-----\n"
             ]))
-        return redirect("/home?msg=" + sync_msg)
+
+        redirect_target = request.args.get('redirect', False)
+        if not redirect_target:
+            return jsonify(sync_summary)
+        else:
+            return redirect(str(redirect_target) + "?msg=" + sync_msg)
 
 def handle_sync_result(sync_summary):
     if (not sync_summary['synced_down']['deleted']['purchase']

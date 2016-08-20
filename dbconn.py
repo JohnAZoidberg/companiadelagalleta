@@ -235,7 +235,6 @@ class CgBase:
                 edited = util.datestring(edited)
             key = int(syncId)
             if key not in purchases:
-                purchases[key] = {}
                 purchases[key] = {
                     "syncId": key, "status": status, "country": country,
                     "card": card, "discount": discount, "date": date,
@@ -247,10 +246,11 @@ class CgBase:
                     purchases[key]['cart'] = []
             if simplecart:
                 purchases[key]['cart'][boxId] = quantity
-            purchases[key]['cart'].append({
-                "title": title, "boxId": boxId,
-                "quantity": quantity, "price": price
-            })
+            else:
+                purchases[key]['cart'].append({
+                    "title": title, "boxId": boxId,
+                    "quantity": quantity, "price": price
+                })
         return [val for k, val in purchases.iteritems()]
 
     def mark_purchase_deleted(self, syncId):

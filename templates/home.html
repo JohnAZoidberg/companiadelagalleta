@@ -171,6 +171,8 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
                         $("#added-boxes").html("");
                         // load new purchases
                         reload_purchases();
+                        try_sync();
+                        reload_purchases();
                     }
                   },
                   error: function(xhr, status, error) {
@@ -181,5 +183,24 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
               });
           }
       });
+      function try_sync() {
+          $.ajax({
+              type: "PUT",
+              url: "api/v1.0/sync",
+              contentType: "application/json; charset=utf-8",
+              dataType: "json",
+              success: function(data, status, xhr) {
+                  if (xhr['status'] == 200) {
+                      console.log(data);
+                      console.log(xhr);
+                  }
+              },
+              error: function(xhr, status, error) {
+                  console.log(xhr.responseText)
+                  console.log(status)
+                  console.log(error)
+              }
+          });
+      }
     </script>
 {% endblock %}
