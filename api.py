@@ -134,7 +134,8 @@ def sync():
             except KeyError:
                 existing_status = None
             if status == 0:
-                insert_item(base, _type, item, sync_time)
+                if existing_status is None:
+                    insert_item(base, _type, item, sync_time)
                 synced['added'][_type].append(sync_id)
             elif status == 1:
                 if existing_status == 0:
