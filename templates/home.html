@@ -121,7 +121,7 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
           if ($('.added-box').length <= 0) {
               $(".box-inputs").addClass("has-error");
           } else {
-              //$("#submit").attr("disabled", "true");
+              $("#submit").prop("disabled", true);
               // get card value
               card_str = $("input[name=payment]:checked").val()
               card = false
@@ -177,12 +177,14 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
                         if (try_sync()) {
                             reload_content();
                         }
+                        $("#submit").prop("disabled", false);
                     }
                   },
                   error: function(xhr, status, error) {
                     console.log(xhr.responseText)
                     console.log(status)
                     console.log(error)
+                    $("#submit").prop("disabled", false);
                   }
               });
           }
