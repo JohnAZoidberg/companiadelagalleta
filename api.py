@@ -198,7 +198,7 @@ def sync():
         base.update_last_sync(sync_time)
         sync_summary = {"synced_up": synced_up, "synced_down": synced}
         sync_msg = handle_sync_result(sync_summary)
-        with open('log.txt', 'a') as f:
+        with open(dbdetails.path + '/log.txt', 'a') as f:
             f.writelines('\n'.join([
                 jinja_filters.datetimeformat(datetime.now()),
                 #"shellupdate:",
