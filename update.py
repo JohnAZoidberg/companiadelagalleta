@@ -1,10 +1,14 @@
 #!/usr/bin/python -u
 # coding=utf-8
+import sys
+reload(sys)
+sys.setdefaultencoding("utf8")
 import cgitb
-cgitb.enable()
+cgitb.enable()  # Displays any errors
 
 import subprocess
 
+import jinja_filters
 from dbconn import CgBase
 import util
 
@@ -19,8 +23,8 @@ def git_update():
 
 def db_update():
     result = ""
-    base = CgBase(util.get_location())
-    new_version = 502  # 0.5.2
+    base = CgBase(0)#util.get_location()[1])
+    new_version = 601  # 0.6.1
     version = 0
     failure = False
     try:
@@ -29,8 +33,8 @@ def db_update():
         if str(e) == "(1146, \"Table 'cg.config' doesn't exist\")":
             version = 0  # 0.0.0
     if version < 10:  # 0.1.0
-        carts = base.fetchall("cart", ["syncId"], "")
-        purchases = base.fetchall("purchases", ["syncId"], "")
+        carts = base.fetchall("cart", ["syncId"])
+        purchases = base.fetchall("purchases", ["syncId"])
         for cart in carts:
             if cart not in purchases:
                 result += str(cart)+str(cart in purchases)+"\n"
@@ -88,7 +92,7 @@ def db_update():
         for old_title, new_title in box_update.iteritems():
             base.update("boxes",
                         {"title": new_title}, False,
-                        "WHERE boxesEntryId = " + str(old_title))
+                        ("WHERE boxesEntryId = %s", old_title))
         result += "Removed the 'window' from the names of the Pyramid boxes\n"
         base.db.commit()
     if version < 119:
@@ -112,7 +116,7 @@ def db_update():
         }
         for old_title, new_title in box_update.iteritems():
             base.update("boxes", {"title": new_title}, False,
-                        "WHERE boxesEntryId = " + str(old_title))
+                        ("WHERE boxesEntryId = %s", old_title))
         result += "Shorter names for the boxes\n"
         base.db.commit()
     if version < 120:
@@ -124,7 +128,8 @@ def db_update():
             "xx": "_xx"
         }
         for old, new in country_changes.iteritems():
-            base.update("purchases", {"country": new}, False, "WHERE country='"+old+"'")
+            base.update("purchases", {"country": new}, False,
+                        ("WHERE country= %s", old))
         base.cur.execute("ALTER TABLE purchases MODIFY country VARCHAR(255)")
         result += "More countries and continents\n"
         base.db.commit()
@@ -253,7 +258,7 @@ def db_update():
             }
             for boxId, newPrice in price_change.iteritems():
                 base.update("boxes", {"price": newPrice}, False,
-                            "WHERE boxesEntryId = " + str(boxId))
+                            ("WHERE boxesEntryId = %s", (boxId,)))
             base.db.commit()
             result += "Change prices of mango, basic peq, plumeria and strelitzia\n"
         except Exception as e:
@@ -261,21 +266,44 @@ def db_update():
             failure = True
             base.db.rollback()
             raise
+    if version < 600:
+        result += "Hopefully much faster now \n"
+        base.cur.execute("TRUNCATE TABLE stock")
+        base.cur.execute(
+            "ALTER TABLE stock MODIFY recounted BOOLEAN NOT NULL")
+        base.cur.execute(
+            "ALTER TABLE stock MODIFY status INT NOT NULL DEFAULT 0")
+        base.db.commit()
+        result += "Change how stock is counted \n"
+        result += "Enable possibility of stock history \n"
+        for locationId in util.locations.keys():
+            for container in util.containers.keys():
+                base.insert("stock",
+                            {"containerId": container, "location": locationId,
+                             "syncId": (container*1000+locationId),
+                             "quantity": 0, "recounted": True},
+                            False)
+        base.db.commit()
+    if version < 601:
+        #base.cur.execute("UPDATE cart SET price = price * 100")
+        base.cur.execute("UPDATE boxes SET price = price * 100")
+        base.db.commit()
+        result += "Increase price accuracy by two orders of magnitude\n"
 
     if new_version is not None and not failure:
         base.update("config",
-                    {"version": new_version}, True, "WHERE constant = 'X'")
+                    {"version": new_version}, True, ("WHERE constant = 'X'", ()))
         base.db.commit()
     else:
         base.db.rollback()
     if version != new_version:
         if not failure:
-            result += ("Updated from " + util.readable_version(version)
-                       + " to " + util.readable_version(new_version)+"\n")
+            result += ("Updated from " + jinja_filters.readable_version(version)
+                       + " to " + jinja_filters.readable_version(new_version)+"\n")
         else:
             result += "FAILURE!\n"
     else:
-        result += "No update available("+util.readable_version(version)+")\n"
+        result += "No update available("+jinja_filters.readable_version(version)+")\n"
     return result
 
 if __name__ == "__main__":

@@ -1,3 +1,10 @@
+.greyfont {
+   color: lightgrey;
+}
+
+.gone {
+   display: none;
+}
 textarea {
    resize: vertical;
 }

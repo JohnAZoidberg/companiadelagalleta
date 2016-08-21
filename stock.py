@@ -6,54 +6,59 @@ sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable() # Displays any errors
 
-import os
-import cgi
-
-from jinja2 import Environment, FileSystemLoader
+from datetime import datetime
 
 import util
 from dbconn import CgBase
+from dbdetails import dbdetails
+
+from flask import Blueprint, render_template, request, make_response
+
+stock_page = Blueprint('stock_page', __name__, template_folder='templates')
 
 
-def print_html():
-    # cgi
-    form = cgi.FieldStorage()
-    location = form.getfirst("location")
-    # cookies
-    cookies = util.get_cookies()
+@stock_page.route('/stock')
+def stock():
+    # get/post and cookie
+    msg = request.args.get('msg', None)
     new_cookies = {}
-    if location is None:
-        try:
-            location = int(cookies['location'])
-        except:
-            location = 0
-            new_cookies = {"location": location}
-    else:
-        location = int(location)
-        new_cookies = {"location": location}
+    location_cookie, location = util.get_location()
+    if not location_cookie:
+        new_cookies = {"location": str(location)}
     # data
+    now = datetime.now()
     base = CgBase(location)
-    stock = base.get_stock(returndict=True, containerIndexed=True)
+    stock = base.get_stock()
     workers = base.get_workers()
     version = base.get_version()
 
-    # env
-    THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-    j2_env = Environment(loader=FileSystemLoader(THIS_DIR),
-                         trim_blocks=True, lstrip_blocks=True)
-    j2_env.filters['readable_version'] = util.readable_version
-
-    # printing
-    util.print_header(cookies=new_cookies)
-    print j2_env.get_template('/templates/stock.html').render(
+    resp = make_response(render_template('stock.html',
         title='Stock',
+        date=now,
+        countries=util.country_list.items(),
+        server=dbdetails.server,
+        msg=msg,
         location=location,
         locations=util.locations,
         workers=workers,
         containers=util.containers,
         stock=stock,
         version=version
-    )
+    ))
+    for key, val in new_cookies.iteritems():
+        resp.set_cookie(key, val)
+    return resp
 
-if __name__ == "__main__":
-    print_html()
+
+@stock_page.route('/stock/form')
+def stock_form():
+    # get/post and cookie
+    location_cookie, location = util.get_location()
+    # data
+    base = CgBase(location)
+    stock = base.get_stock()
+
+    return render_template('stock_form.html',
+        containers=util.containers,
+        stock=stock
+    )

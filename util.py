@@ -1,13 +1,13 @@
 # coding=utf-8
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import randint
 import socket
-import Cookie
-import os
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+
+from flask import request
 
 br = "<br>"
 
@@ -43,7 +43,9 @@ country_list = OrderedDict([
 workers = OrderedDict([
     (0, "Daniel"),
     (1, "Patricia"),
-    (3, "Roberta")
+    #(2, "Raquel"),
+    (3, "Roberta"),
+    (4, "Paula")
 ])
 
 locations = OrderedDict([
@@ -75,14 +77,8 @@ containers = {
 }
 
 
-def print_header(t="text/html", cookies={}):
+def print_header(t="text/html"):
     print "Content-Type: " + t + ";charset=utf-8"
-    if cookies:
-        c = Cookie.SimpleCookie()
-        for key, val in cookies.iteritems():
-            c[key] = val
-            c[key]["expires"] = 12 * 30 * 24 * 60 * 60
-        print c
     print
 
 
@@ -92,24 +88,16 @@ def println(*lns):
     print "<br>"
 
 
-def get_cookies():
-    cookies = {}
-    if 'HTTP_COOKIE' in os.environ:
-        raw_cookies = os.environ['HTTP_COOKIE']
-        raw_cookies = raw_cookies.split('; ')
-        for cookie in raw_cookies:
-            cookie = cookie.split('=')
-            cookies[cookie[0]] = cookie[1]
-    return cookies
-
-
 def get_location():
-    cookies = get_cookies()
-    try:
-        location = int(cookies['location'])
-    except:
-        location = 0
-    return location
+    location = request.args.get('location', None)
+    cookie_set = False
+    if location is None:
+        try:
+            location = request.cookies['location']
+            cookie_set = True
+        except:
+            location = 0
+    return cookie_set, int(location)
 
 
 def is_same_day(date1, date2):
@@ -125,7 +113,7 @@ def split_purchases(purchases):
     morning = {"ps": [], "total": {"cash": 0, "card": 0}}
     evening = {"ps": [], "total": {"cash": 0, "card": 0}}
     for p in purchases:
-        if not earlier_than(16, 0, p['purchase']['date']):
+        if not earlier_than(17, 0, p['date']):
             morning['ps'].append(p)
         else:
             evening['ps'].append(p)
@@ -141,10 +129,10 @@ def calc_purchases_totals(ps):
         cash_sum = 0
         ps = _ps['ps']
         for pk, p in enumerate(ps):
-            ps[pk]['purchase']['total'] = 0
+            ps[pk]['total'] = 0
             for ik, item in enumerate(p['cart']):
-                ps[pk]['purchase']['total'] += item['price'] * item['quantity']
-                if p['purchase']['card']:
+                ps[pk]['total'] += item['price'] * item['quantity']
+                if p['card']:
                     card_sum += item['price'] * item['quantity']
                 else:
                     cash_sum += item['price'] * item['quantity']
@@ -186,56 +174,3 @@ def datestring(date):
 
 def stringdate(string):
     return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
-
-
-# Jinja Filters:
-def dateformat(value):
-    return value.strftime('%Y-%m-%d')
-
-
-def datetimeformat(value):
-    return value.strftime('%Y-%m-%d %H:%M')
-
-
-def timeformat(value):
-    return value.strftime('%H:%M')
-
-
-def moneyformat(value):
-    extrazero = "0" if value % 10 == 0 else ""
-    return str((value / 100.0)) + extrazero + "&nbsp;€"
-
-
-def countryformat(value):
-    return country_list[value]
-
-
-def cardformat(value):
-    return "VISA" if value else ""
-
-
-def discountformat(value):
-    return "(-" + str(value) + "%) " if value > 0 else ""
-
-
-def adddays(date, summand):
-    return date + timedelta(days=summand)
-
-
-def readable_version(value):
-    version_str = str(value % 100)
-    for i in xrange(1):
-        value = value / 100
-        version_str = str(value % 100) + "." + version_str
-    value = value / 100
-    version_str = str(value) + "." + version_str
-    return version_str
-
-
-# Jinja Tests:
-def is_continent(value):
-    return value[0] == "_"
-
-
-def is_today(value):
-    return is_same_day(datetime.now(), value)

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {% block head %}
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/jquery-2.2.4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <style>
+    </style>
+    <title>{% block title %}{% endblock %} - Compania de la Galleta</title>
+    {% endblock %}
+  </head>
+  <body>
+    <div class="container-fluid">
+      <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+          {% block header %}
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <span class="navbar-brand">Ventas (v{{ version|readable_version }})</span>
+            <span class="navbar-brand" id="working-now">
+            {% for wid, worker in workers.iteritems() if worker["working"] %}
+              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
+            {% endfor %}
+            </span>
+          </div>
+          <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+              {% block menu %}
+              <li>
+                <div class="dropdown margin-5">
+                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
+                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
+                    {% for lid, location in locations.iteritems() %}
+                    <li><a href="?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <div class="dropdown margin-5">
+                  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
+                  </button>
+                  <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                    {% for wid, worker in workers.iteritems() if not worker["working"] %}
+                    <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </li>
+              {% if not server %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
+              <li><a href="stats"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
+              {% endblock %}
+            </ul>
+          </div>
+          {% endblock %}
+        </div>
+      </nav>
+      {% if msg != None %}
+      <div class="alert alert-info fade in">
+        <a href="?" class="close">&times;</a>
+        {{ msg }}
+      </div>
+      {% endif %}
+      {% block content %}
+      {% endblock %}
+    </div>
+    {% block script %}
+      // create jQuery methods for PUT and DELETE
+      jQuery.each( [ "put", "delete" ], function( i, method ) {
+        jQuery[ method ] = function( url, data, callback, type ) {
+          if ( jQuery.isFunction( data ) ) {
+            type = type || callback;
+            callback = data;
+            data = undefined;
+          }
+
+          return jQuery.ajax({
+            url: url,
+            type: method,
+            dataType: type,
+            data: data,
+            success: callback
+          });
+        };
+      });
+      // manage working status
+      var workers = {{ workers|tojson|safe }}
+      function updateWorkingStr() {
+          workingstr = "";
+          not_workingstr = "";
+          $.each( workers, function( index, value ){
+              if (value["working"]) {
+                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
+              } else {
+                  not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> ';
+              }
+          });
+          $("#working-now").html(workingstr);
+          $("#not-working-now").html(not_workingstr);
+      }
+      // start work
+      $("#not-working-now").on('click', '.begin-work', function() {
+          worker = $(this).html();
+          if (confirm("Comenzar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = true;
+              $.put("api/v1.0/shifts/"+workerId+"/begin", function(result) {
+                  success = result["worker_id"]==workerId;
+                  if (success) updateWorkingStr();
+              });
+          }
+      });
+      // end work
+      $("#working-now").on('click', '.end-work', function() {
+          worker = $(this).html();
+          if (confirm("Acabar trabajo como " + worker + "?")) {
+              workerId = $(this).data("worker");
+              workers[workerId]["working"] = false;
+              $.put("api/v1.0/shifts/"+workerId+"/end", function(result) {
+                  success = result["worker_id"]==workerId;
+                  if (success) updateWorkingStr();
+              });
+          }
+      });
+      // sync asynchronously
+      function try_sync() {
+          $.ajax({
+              type: "PUT",
+              url: "api/v1.0/sync",
+              contentType: "application/json; charset=utf-8",
+              dataType: "json",
+              success: function(data, status, xhr) {
+                  if (xhr['status'] == 200) {
+                      console.log(data);
+                      console.log(xhr);
+                      reload_content();
+                  }
+              },
+              error: function(xhr, status, error) {
+                  console.log(xhr.responseText)
+                  console.log(status)
+                  console.log(error)
+              }
+          });
+          return false;
+      }
+      $("#sync-now").click(function(e) {
+          try_sync();
+      });
+    {% endblock %}
+  </body>
+</html>

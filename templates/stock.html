@@ -1,95 +1,17 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <script src="js/jquery-2.2.4.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <style>
-    </style>
-    <title>{{ title }}</title>
-  </head>
-  <body>
-    <div class="container-fluid">
-      <nav class="navbar navbar-inverse">
-        <div class="container-fluid">
-          <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-              <span class="icon-bar"></span>
-            </button>
-            <span class="navbar-brand">{{ title }} (v{{ version|readable_version }})</span>
-            <span class="navbar-brand" id="working-now">
-            {% for wid, worker in workers.iteritems() if worker["working"] %}
-              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
-            {% endfor %}
-            </span>
-          </div>
-          <div class="collapse navbar-collapse" id="myNavbar">
-            <ul class="nav navbar-nav navbar-right">
-              <li>
-                <div class="dropdown margin-5">
-                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
-                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
-                    {% for lid, location in locations.iteritems() %}
-                    <li><a href="stock.py?location={{ lid }}">{{ location }} </a></li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </li>
-              <li><a href="index.py"><span class="glyphicon glyphicon-home"></span> Home</a></li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-      <form action="api.py" method="post" class="form-horizontal" role="form">
-        <input type="hidden" name="action" value="update_stock">
-        <input type="hidden" name="redirect" value="stock.py">
-        <div class="row">
-          {% for i in range(3) %}
-          <div class="col-sm-4">
-            {% for containerId, details in containers.iteritems() %}
-            {% if (i == 0 and containerId >=  0 and containerId <  7)
-               or (i == 1 and containerId >=  7 and containerId < 13)
-               or (i == 2 and containerId >= 13 and containerId < 19) %}
-            <div class="form-group">
-              <label class="control-label col-sm-5" for="box">{{ details['title'] }}: </label>
-              <div class="col-sm-7 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
-                <div class="input-group-addon">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
-                <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0" required>
-                <div class="input-group-addon container-result">= {{ stock[containerId]['quantity'] }}</div>
-              </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-          </div>
-          {% endfor %}
-        </div>
-        <div class="row">
-          <div class="col-sm-12">
-            <div class="form-group">
-              <div class="col-sm-offset-10 col-sm-2">
-                <div class="radio">
-                  <label><input type="radio" name="count-method" value="relative" class="count-method" checked required>&nbsp;Add/Remove</label>
-                </div>
-                <div class="radio">
-                  <label><input type="radio" name="count-method" value="absolute" class="count-method" required>&nbsp;Total</label>
-                </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="col-sm-offset-10 col-sm-2">
-                <button type="submit" id="submit" class="btn btn-primary">Guardar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block menu %}
+  {{ super() }}
+              <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+{% endblock %}
+{% block content %}
+      <div id="stock-container">
+      {% include "stock_form.html" %}
+      </div>
+{% endblock %}
+{% block script %}
     <script>
+  {{ super() }}
       $('.container-inputs').on('keyup mouseup', '.quantity', function(e) {
           $input = $('.count-method:checked');
           $target = $(e.target).parent();
@@ -113,8 +35,10 @@
           if ($input.value == 'relative') {
               $('.container-modifier').html("+");
               $('.container-inputs').each(function(i, obj) {
+                  $quantity = $(this).find('.quantity')[0];
                   quantity = $(this).data('quantity');
-                  new_quantity = $(this).find('.quantity')[0].value;
+                  $quantity.value = "0"
+                  new_quantity = $quantity.value;
                   result = parseInt(quantity) + parseInt(new_quantity);
                   $result = $(this).find('.container-result');
                   $result.html("= " + result)
@@ -122,12 +46,21 @@
           } else if ($input.value == 'absolute') {
               $('.container-modifier').html("=>");
               $('.container-inputs').each(function(i, obj) {
-                  new_quantity = $(this).find('.quantity')[0].value;
+                  $quantity = $(this).find('.quantity')[0];
+                  quantity = $(this).data('quantity');
+                  $quantity.value = quantity
+                  new_quantity = $quantity.value;
                   $result = $(this).find('.container-result');
                   $result.html("= " + new_quantity)
               });
           }
       })
+      function reload_stock() {
+          $("#stock-container")
+              .load("stock/form");
+      }
+      function reload_content() {
+          reload_stock();
+      }
     </script>
-  </body>
-</html>
+{% endblock %}
