@@ -188,8 +188,8 @@ class CgBase:
         if syncId is None:
             raise Exception("SyncId can not be None")
         delete = self.delete_purchase(syncId, edited=edited)
-        insert = self.insert_purchase(country, card, date, discount, cart, edited,
-                        location, status, syncId, note)
+        insert = self.insert_purchase(country, card, date, discount, cart,
+                        edited, location, status, syncId, note)
         return delete and insert
 
     def get_purchases(self, getDeleted=False, onlydate=None, newerthan=None,
