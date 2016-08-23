@@ -134,7 +134,8 @@ def sync():
             except KeyError:
                 existing_status = None
             if status == 0:
-                insert_item(base, _type, item, sync_time)
+                if existing_status is None:
+                    insert_item(base, _type, item, sync_time)
                 synced['added'][_type].append(sync_id)
             elif status == 1:
                 if existing_status == 0:
@@ -241,6 +242,7 @@ def handle_sync_result(sync_summary):
 
 def insert_item(base, _type, item, sync_time):
     status = 0 if dbdetails.server else 3
+    status = 2 if item['status'] == 2 else status
     if _type == "purchase":
         base.insert_purchase(item['country'], item['card'], item['date'],
                 item['discount'], item['cart'], sync_time,
