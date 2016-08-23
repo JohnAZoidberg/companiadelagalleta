@@ -308,4 +308,5 @@ def db_update():
 
 if __name__ == "__main__":
     util.print_header()
-    print db_update()
+    #print db_update()
+    print git_update()
