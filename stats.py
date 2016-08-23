@@ -36,7 +36,8 @@ def day_to_datetime(day):
 
 def create_stats_file(location):
     base = CgBase(location)
-    purchases = base.get_purchases(allLocations=True)
+    purchases = base.get_purchases(allLocations=True,
+            newerthan=datetime(2016, 8, 1, 0, 0))
     boxes = base.get_boxes()
     shifts = base.get_shifts(allLocations=True)
 
