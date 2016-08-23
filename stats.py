@@ -10,6 +10,7 @@ from datetime import datetime
 
 from dbconn import CgBase
 import util
+from dbdetails import dbdetails
 
 from openpyxl import load_workbook
 from flask import Blueprint, render_template, request, make_response, redirect, send_from_directory
@@ -41,8 +42,8 @@ def create_stats_file(location):
     boxes = base.get_boxes()
     shifts = base.get_shifts(allLocations=True)
 
-    wb = load_workbook('stats.xlsx')
     # Insert sales
+    wb = load_workbook(dbdetails.path + '/stats.xlsx')
     ventas = wb.get_sheet_by_name("Ventas")
     for i, p in enumerate(reversed(purchases)):
         row = str(i + 2)
@@ -83,7 +84,7 @@ def create_stats_file(location):
         trabajo["C" + s_row] = item['end']
         row += 1
 
-    wb.save("estadisticas.xlsx")
+    wb.save(dbdetails.path + "/estadisticas.xlsx")
 
 if __name__ == "__main__":
     create_stats_file(0)

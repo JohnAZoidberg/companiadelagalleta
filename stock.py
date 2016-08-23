@@ -15,9 +15,11 @@ from dbdetails import dbdetails
 from flask import Blueprint, render_template, request, make_response
 
 stock_page = Blueprint('stock_page', __name__, template_folder='templates')
+
+
 @stock_page.route('/stock')
 def stock():
-    # temp
+    # get/post and cookie
     msg = request.args.get('msg', None)
     new_cookies = {}
     location_cookie, location = util.get_location()
@@ -46,3 +48,17 @@ def stock():
     for key, val in new_cookies.iteritems():
         resp.set_cookie(key, val)
     return resp
+
+
+@stock_page.route('/stock/form')
+def stock_form():
+    # get/post and cookie
+    location_cookie, location = util.get_location()
+    # data
+    base = CgBase(location)
+    stock = base.get_stock()
+
+    return render_template('stock_form.html',
+        containers=util.containers,
+        stock=stock
+    )

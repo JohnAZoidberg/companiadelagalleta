@@ -55,7 +55,7 @@
                   </ul>
                 </div>
               </li>
-              {% if not server %}<li><a href="/api/v1.0/sync?redirect=home"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
+              {% if not server %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
               <li><a href="stats"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
               {% endblock %}
             </ul>
@@ -129,6 +129,31 @@
                   if (success) updateWorkingStr();
               });
           }
+      });
+      // sync asynchronously
+      function try_sync() {
+          $.ajax({
+              type: "PUT",
+              url: "api/v1.0/sync",
+              contentType: "application/json; charset=utf-8",
+              dataType: "json",
+              success: function(data, status, xhr) {
+                  if (xhr['status'] == 200) {
+                      console.log(data);
+                      console.log(xhr);
+                      reload_content();
+                  }
+              },
+              error: function(xhr, status, error) {
+                  console.log(xhr.responseText)
+                  console.log(status)
+                  console.log(error)
+              }
+          });
+          return false;
+      }
+      $("#sync-now").click(function(e) {
+          try_sync();
       });
     {% endblock %}
   </body>

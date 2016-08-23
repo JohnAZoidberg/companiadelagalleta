@@ -134,7 +134,8 @@ def sync():
             except KeyError:
                 existing_status = None
             if status == 0:
-                insert_item(base, _type, item, sync_time)
+                if existing_status is None:
+                    insert_item(base, _type, item, sync_time)
                 synced['added'][_type].append(sync_id)
             elif status == 1:
                 if existing_status == 0:
@@ -198,7 +199,7 @@ def sync():
         base.update_last_sync(sync_time)
         sync_summary = {"synced_up": synced_up, "synced_down": synced}
         sync_msg = handle_sync_result(sync_summary)
-        with open('log.txt', 'a') as f:
+        with open(dbdetails.path + '/log.txt', 'a') as f:
             f.writelines('\n'.join([
                 jinja_filters.datetimeformat(datetime.now()),
                 #"shellupdate:",
@@ -252,7 +253,7 @@ def insert_item(base, _type, item, sync_time):
                 syncId=item['syncId'])
     elif _type == "stock":
         base.insert_stock_item(item['containerId'],
-                item['quantity'], item['recounted'], sync_time,
+                item['quantity'], item['recounted'], item['edited'],
                 location=item['location'], status=status,
                 syncId=item['syncId']
         )

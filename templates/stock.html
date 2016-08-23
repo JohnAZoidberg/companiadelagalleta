@@ -5,49 +5,9 @@
               <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 {% endblock %}
 {% block content %}
-      <form action="api/v1.0/stock/form" method="post" class="form-horizontal" role="form">
-        <input type="hidden" name="redirect" value="yep">
-        <div class="row">
-          {% for i in range(3) %}
-          <div class="col-sm-4">
-            {% for containerId, details in containers.iteritems() %}
-            {% if (i == 0 and containerId >=  0 and containerId <  7)
-               or (i == 1 and containerId >=  7 and containerId < 13)
-               or (i == 2 and containerId >= 13 and containerId < 19) %}
-            <div class="form-group">
-              <label class="control-label col-sm-5" for="box">{{ details['title'] }}: </label>
-              <div class="col-sm-7 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
-                <div class="input-group-addon">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
-                <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0" required>
-                <div class="input-group-addon container-result">= {{ stock[containerId]['quantity'] }}</div>
-              </div>
-            </div>
-            {% endif %}
-            {% endfor %}
-          </div>
-          {% endfor %}
-        </div>
-        <div class="row">
-          <div class="col-sm-12">
-            <div class="form-group">
-              <div class="col-sm-offset-10 col-sm-2">
-                <div class="radio">
-                  <label><input type="radio" name="count-method" value="relative" class="count-method" checked required>&nbsp;Add/Remove</label>
-                </div>
-                <div class="radio">
-                  <label><input type="radio" name="count-method" value="absolute" class="count-method" required>&nbsp;Total</label>
-                </div>
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="col-sm-offset-10 col-sm-2">
-                <button type="submit" id="submit" class="btn btn-primary">Guardar</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
-    </div>
+      <div id="stock-container">
+      {% include "stock_form.html" %}
+      </div>
 {% endblock %}
 {% block script %}
     <script>
@@ -95,5 +55,22 @@
               });
           }
       })
+      $('#stock-form').on('keyup keypress', function(e) {
+          var keyCode = e.keyCode || e.which;
+          if (keyCode === 13) {
+            e.preventDefault();
+            return false;
+          }
+      });
+      $('#stock-form').on('submit', function(e) {
+          $("#submit").prop("disabled", true);
+      });
+      function reload_stock() {
+          $("#stock-container")
+              .load("stock/form");
+      }
+      function reload_content() {
+          reload_stock();
+      }
     </script>
 {% endblock %}
