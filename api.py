@@ -242,6 +242,7 @@ def handle_sync_result(sync_summary):
 
 def insert_item(base, _type, item, sync_time):
     status = 0 if dbdetails.server else 3
+    status = 2 if item['status'] == 2 else status
     if _type == "purchase":
         base.insert_purchase(item['country'], item['card'], item['date'],
                 item['discount'], item['cart'], sync_time,
