@@ -45,8 +45,9 @@ def create_stats_file(location):
     # Insert sales
     wb = load_workbook(dbdetails.path + '/stats.xlsx')
     ventas = wb.get_sheet_by_name("Ventas")
+    old_entries = 553  # the number of entries in june and july
     for i, p in enumerate(reversed(purchases)):
-        row = str(i + 2)
+        row = str(i + old_entries)
         cart = p['cart']
         ventas["A" + row] = p['date']
         ventas["B" + row] = util.country_list[p['country']]
