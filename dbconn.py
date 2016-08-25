@@ -447,11 +447,11 @@ class CgBase:
               "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
               ") AS i "
               "WHERE status <> 2 AND location = %s "
-              "AND edited >= ("
+              "AND date >= ("
               "  SELECT date FROM stock j "
               "  WHERE i.containerId = j.containerId "
               "  AND i.location = j.location AND recounted = 1 "
-              "  ORDER BY j.edited DESC LIMIT 1) "
+              "  ORDER BY j.date DESC LIMIT 1) "
               "GROUP BY i.containerId")
 
         result = self.simple_fetchall(sql, (self.location,))

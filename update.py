@@ -303,7 +303,7 @@ def db_update():
         new_version = 602  # 0.6.2
     if version < 603:
         try:
-            #base.cur.execute("ALTER TABLE stock ADD date datetime")
+            base.cur.execute("ALTER TABLE stock ADD date datetime")
             base.cur.execute("UPDATE stock SET date = edited")
             base.cur.execute(
                 "ALTER TABLE stock MODIFY COLUMN date DATETIME NOT NULL")
