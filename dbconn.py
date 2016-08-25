@@ -440,7 +440,7 @@ class CgBase:
     def get_stock(self):
         sql =("SELECT i.containerId, SUM(i.quantity) "
               "FROM ("
-              "  SELECT containerId, quantity, status, location, edited FROM stock "
+              "  SELECT containerId, quantity, status, location, date FROM stock "
               "  UNION ALL "
               "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
               "  FROM boxes, cart, purchases "
@@ -448,7 +448,7 @@ class CgBase:
               ") AS i "
               "WHERE status <> 2 AND location = %s "
               "AND edited >= ("
-              "  SELECT edited FROM stock j "
+              "  SELECT date FROM stock j "
               "  WHERE i.containerId = j.containerId "
               "  AND i.location = j.location AND recounted = 1 "
               "  ORDER BY j.edited DESC LIMIT 1) "
@@ -478,17 +478,17 @@ class CgBase:
             where[1].append(notnow)
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
-             "status", "edited", "recounted"], (where[0], tuple(where[1])))
+             "status", "edited", "recounted", "date"], (where[0], tuple(where[1])))
         stock = []
         for row in result:
             (containerId, quantity, location, syncId,
-             status, edited, recounted) = row
+             status, edited, recounted, date) = row
             if datestring:
                 edited = util.datestring(edited)
             stock.append({
                 "containerId": containerId, "quantity": quantity,
                 "location": location, "syncId": syncId, "status": status,
-                "edited": edited, "recounted": recounted
+                "edited": edited, "recounted": recounted, "date": date
             })
         if returndict:
             if containerIndexed:
@@ -499,7 +499,8 @@ class CgBase:
                         if returndict else stock
         return stock
 
-    def insert_stock_item(self, containerId, quantity, recounted, edited, location=None, status=0, syncId=None):
+    def insert_stock_item(self, containerId, quantity, recounted, edited, date,
+                          location=None, status=0, syncId=None):
         if syncId is None:
             syncId = util.uniqueId()
         if location is None:
@@ -511,17 +512,19 @@ class CgBase:
                     "syncId": util.uniqueId(),
                     "status": 0,
                     "edited": edited,
-                    "recounted": recounted
+                    "recounted": recounted,
+                    "date": date,
                    },
                    False
         )
 
     def update_stock(self, containers, absolute):
+        now = datetime.now()
         success = True
         for containerId, quantity in containers.iteritems():
             success = success and \
                       self.insert_stock_item(containerId, quantity,
-                          absolute, datetime.now())
+                          absolute, now, now)
         if success:
             self.db.commit()
         else:

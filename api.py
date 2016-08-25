@@ -254,7 +254,7 @@ def insert_item(base, _type, item, sync_time):
                 syncId=item['syncId'])
     elif _type == "stock":
         base.insert_stock_item(item['containerId'],
-                item['quantity'], item['recounted'], item['edited'],
+                item['quantity'], item['recounted'], sync_time, item['date'],
                 location=item['location'], status=status,
                 syncId=item['syncId']
         )
