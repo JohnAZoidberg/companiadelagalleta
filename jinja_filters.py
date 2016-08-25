@@ -47,3 +47,12 @@ def readable_version(value):
     value = value / 100
     version_str = str(value) + "." + version_str
     return version_str
+
+def durationformat(value):
+    seconds = value.total_seconds()
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    hourzero = "0" if hours < 10 else ""
+    minutezero = "0" if minutes < 10 else ""
+    return '{}{}:{}{}'.format(hourzero, hours, minutes, minutezero)
+

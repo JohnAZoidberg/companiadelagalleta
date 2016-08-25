@@ -438,6 +438,32 @@ class CgBase:
             shifts = {shift["syncId"]: shift for shift in shifts}
         return shifts
 
+    def get_shift_stats(self):
+        base.cur.execute((
+            "SELECT workerId, DATE(start), TIMEDIFF(end, start),"
+            " start, end, status"
+            " FROM shifts"
+            " WHERE location = 0 AND status <> 2"
+            " AND MONTH(start) = 8 AND YEAR(start) = 2016"
+            " ORDER BY start DESC"
+        ))
+        result = base.cur.fetchall()
+        workdays = OrderedDict()
+        for row in result:
+            (workerId, workdate, duration, start, end, status) = row
+            shift = {
+                "workerId": workerId,
+                "worker": util.all_workers[workerId],
+                "duration": duration,
+                "start": start,
+                "end": end,
+                "status": status
+            }
+            try:
+                workdays[workdate].append(shift)
+            except KeyError:
+                workdays[workdate] = [shift]
+
     def get_stock(self):
         sql =("SELECT i.containerId, SUM(i.quantity) "
               "FROM ("

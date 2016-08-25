@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block menu %}
+  {{ super() }}
+              <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+{% endblock %}
+{% block content %}
+      <div class="row">
+        <div class="col-sm-6"><!-- Days -->
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <td>{{ month }}</td>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+            {% for workdate, workday in workdays.iteritems() %}
+              <tr>
+                <td colspan="3">
+                  {{ workdate|dateformat }}
+                </td>
+              </tr>
+              {% for shift in workday %}
+              <tr class="{{ 'info' if shift['status'] == 3 else 'danger' }} clickable deletable-row">
+                <td align="right">{{ shift['worker'] }}</td>
+                <td>{{ shift['duration']|durationformat }}</td>
+                <td>{{ shift['start']|timeformat }} - {{ shift['end']|timeformat }}</td>
+              </tr>
+              {% endfor %}
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-sm-6"><!-- Workers -->
+            Test
+        </div>
+      </div>
+{% endblock %}
+{% block script %}
+    <script>
+  {{ super() }}
+    </script>
+{% endblock %}
