@@ -316,8 +316,8 @@ def db_update():
             raise
         base.db.commit()
         new_version = 603  # 0.6.3
-    if version < 604:
-        new_version = 604  # 0.6.4
+    if version < 700:
+        new_version = 700  # 0.7.0
 
     if new_version is not None and not failure:
         base.update("config",
