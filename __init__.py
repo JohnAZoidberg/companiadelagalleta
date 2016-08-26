@@ -11,6 +11,7 @@ from inspect import getmembers, isfunction
 import util
 from home import home_page
 from stock import stock_page
+from shifts import shifts_page
 from stats import stats_download
 from api import api_page
 import jinja_filters
@@ -38,6 +39,7 @@ app.jinja_env.lstrip_blocks = True
 
 app.register_blueprint(home_page)
 app.register_blueprint(stock_page)
+app.register_blueprint(shifts_page)
 app.register_blueprint(api_page)
 app.register_blueprint(stats_download)
 
