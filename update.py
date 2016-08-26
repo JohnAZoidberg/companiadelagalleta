@@ -301,6 +301,23 @@ def db_update():
         base.db.commit()
         result += "Change prices of Vegan Strelitzia and Mango\n"
         new_version = 602  # 0.6.2
+    if version < 603:
+        try:
+            base.cur.execute("ALTER TABLE stock ADD date datetime")
+            base.cur.execute("UPDATE stock SET date = edited")
+            base.cur.execute(
+                "ALTER TABLE stock MODIFY COLUMN date DATETIME NOT NULL")
+            base.cur.execute((
+                "ALTER TABLE stock"
+                " ADD UNIQUE `unique_index`(date, containerId, location)"
+            ))
+        except:
+            base.db.rollback()
+            raise
+        base.db.commit()
+        new_version = 603  # 0.6.3
+    if version < 604:
+        new_version = 604  # 0.6.4
 
     if new_version is not None and not failure:
         base.update("config",

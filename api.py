@@ -83,7 +83,13 @@ def sync():
             try:
                 input = json.loads(r.text)
             except ValueError:
-                return ("ERROR ON SERVERSIDE!<br>\n" + r.text)
+                return (
+                    "ERROR ON SERVERSIDE!<br>\n"
+                    + "For up_data:\n"
+                    + json.dumps(up_data)
+                    + "\nServerresponse:\n"
+                    + r.text
+                )
             except:
                 raise
         except:
@@ -254,7 +260,7 @@ def insert_item(base, _type, item, sync_time):
                 syncId=item['syncId'])
     elif _type == "stock":
         base.insert_stock_item(item['containerId'],
-                item['quantity'], item['recounted'], item['edited'],
+                item['quantity'], item['recounted'], sync_time, item['date'],
                 location=item['location'], status=status,
                 syncId=item['syncId']
         )

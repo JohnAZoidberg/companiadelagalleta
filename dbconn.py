@@ -188,8 +188,8 @@ class CgBase:
         if syncId is None:
             raise Exception("SyncId can not be None")
         delete = self.delete_purchase(syncId, edited=edited)
-        insert = self.insert_purchase(country, card, date, discount, cart, edited,
-                        location, status, syncId, note)
+        insert = self.insert_purchase(country, card, date, discount, cart,
+                        edited, location, status, syncId, note)
         return delete and insert
 
     def get_purchases(self, getDeleted=False, onlydate=None, newerthan=None,
@@ -440,18 +440,18 @@ class CgBase:
     def get_stock(self):
         sql =("SELECT i.containerId, SUM(i.quantity) "
               "FROM ("
-              "  SELECT containerId, quantity, status, location, edited FROM stock "
+              "  SELECT containerId, quantity, status, location, date FROM stock "
               "  UNION ALL "
               "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
               "  FROM boxes, cart, purchases "
               "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
               ") AS i "
               "WHERE status <> 2 AND location = %s "
-              "AND edited >= ("
-              "  SELECT edited FROM stock j "
+              "AND date >= ("
+              "  SELECT date FROM stock j "
               "  WHERE i.containerId = j.containerId "
               "  AND i.location = j.location AND recounted = 1 "
-              "  ORDER BY j.edited DESC LIMIT 1) "
+              "  ORDER BY j.date DESC LIMIT 1) "
               "GROUP BY i.containerId")
 
         result = self.simple_fetchall(sql, (self.location,))
@@ -478,17 +478,18 @@ class CgBase:
             where[1].append(notnow)
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
-             "status", "edited", "recounted"], (where[0], tuple(where[1])))
+             "status", "edited", "recounted", "date"], (where[0], tuple(where[1])))
         stock = []
         for row in result:
             (containerId, quantity, location, syncId,
-             status, edited, recounted) = row
+             status, edited, recounted, date) = row
             if datestring:
                 edited = util.datestring(edited)
+                date = util.datestring(date)
             stock.append({
                 "containerId": containerId, "quantity": quantity,
                 "location": location, "syncId": syncId, "status": status,
-                "edited": edited, "recounted": recounted
+                "edited": edited, "recounted": recounted, "date": date
             })
         if returndict:
             if containerIndexed:
@@ -499,7 +500,8 @@ class CgBase:
                         if returndict else stock
         return stock
 
-    def insert_stock_item(self, containerId, quantity, recounted, edited, location=None, status=0, syncId=None):
+    def insert_stock_item(self, containerId, quantity, recounted, edited, date,
+                          location=None, status=0, syncId=None, commit=True):
         if syncId is None:
             syncId = util.uniqueId()
         if location is None:
@@ -508,20 +510,22 @@ class CgBase:
                    {"containerId": containerId,
                     "quantity": quantity,
                     "location": location,
-                    "syncId": util.uniqueId(),
-                    "status": 0,
+                    "syncId": syncId,
+                    "status": status,
                     "edited": edited,
-                    "recounted": recounted
+                    "recounted": recounted,
+                    "date": date,
                    },
-                   False
+                   commit
         )
 
     def update_stock(self, containers, absolute):
+        now = datetime.now()
         success = True
         for containerId, quantity in containers.iteritems():
             success = success and \
                       self.insert_stock_item(containerId, quantity,
-                          absolute, datetime.now())
+                          absolute, now, now, commit=False)
         if success:
             self.db.commit()
         else:
