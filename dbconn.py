@@ -196,8 +196,7 @@ class CgBase:
                  "end": end, "location": location, "status": status,
                  "edited": edited},
                 False,
-                "WHERE syncId = %s",
-                (syncId,)
+                ("WHERE syncId = %s", (syncId,))
         )
         if success:
             self.db.commit()
