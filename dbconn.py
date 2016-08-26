@@ -501,7 +501,7 @@ class CgBase:
         return stock
 
     def insert_stock_item(self, containerId, quantity, recounted, edited, date,
-                          location=None, status=0, syncId=None):
+                          location=None, status=0, syncId=None, commit=True):
         if syncId is None:
             syncId = util.uniqueId()
         if location is None:
@@ -510,13 +510,13 @@ class CgBase:
                    {"containerId": containerId,
                     "quantity": quantity,
                     "location": location,
-                    "syncId": util.uniqueId(),
-                    "status": 0,
+                    "syncId": syncId,
+                    "status": status,
                     "edited": edited,
                     "recounted": recounted,
                     "date": date,
                    },
-                   False
+                   commit
         )
 
     def update_stock(self, containers, absolute):
@@ -525,7 +525,7 @@ class CgBase:
         for containerId, quantity in containers.iteritems():
             success = success and \
                       self.insert_stock_item(containerId, quantity,
-                          absolute, now, now)
+                          absolute, now, now, commit=False)
         if success:
             self.db.commit()
         else:
