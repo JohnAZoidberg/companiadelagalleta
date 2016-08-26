@@ -10,21 +10,22 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <td>{{ month }}</td>
+                <th>{{ month }}</th>
               </tr>
             </thead>
             <tbody id="table-body">
             {% for workdate, workday in workdays.iteritems() %}
               <tr>
-                <td colspan="3">
+                <td colspan="4">
                   {{ workdate|dateformat }}
                 </td>
               </tr>
               {% for shift in workday %}
-              <tr class="{{ 'info' if shift['status'] == 3 else 'danger' }} clickable deletable-row">
+              <tr class="{{ 'info' if shift['status'] == 3 else 'danger' }}">
                 <td align="right">{{ shift['worker'] }}</td>
                 <td>{{ shift['duration']|durationformat }}</td>
                 <td>{{ shift['start']|timeformat }} - {{ shift['end']|timeformat }}</td>
+                <td>{{ shift['sales']|moneyformat }}</td>
               </tr>
               {% endfor %}
             {% endfor %}
@@ -32,7 +33,26 @@
           </table>
         </div>
         <div class="col-sm-6"><!-- Workers -->
-            Test
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Horas</th>
+                <th>Total</th>
+                <th>Commision</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+            {% for summary in shift_totals %}
+              <tr>
+                <td>{{ summary["worker"] }}</td>
+                <td>{{ summary["hours"]|durationformat }}</td>
+                <td>{{ summary["sales"]|moneyformat }}</td>
+                <td>{{ (summary["sales"] * 0.03)|moneyformat }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
 {% endblock %}

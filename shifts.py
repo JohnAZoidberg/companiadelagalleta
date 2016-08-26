@@ -33,16 +33,8 @@ def shifts():
     stock = base.get_stock()
     workers = base.get_workers()
     version = base.get_version()
-    workdays = [
-            {"date": datetime.now(), "shifts": [
-                {"workerId": 0, "duration": "5h", "status": 0},
-                {"workerId": 4, "duration": "2h", "status": 3}
-            ]},
-            {"date": datetime(2016, 8, 12), "shifts": [
-                {"workerId": 1, "duration": "1h", "status": 0},
-                {"workerId": 3, "duration": "3h", "status": 3}
-            ]}
-    ]
+    workdays, shift_totals = base.get_shift_stats()
+    #shift_totals = base.get_shift_totals()
 
     resp = make_response(render_template('shifts.html',
         title='Shifts',
@@ -54,6 +46,7 @@ def shifts():
         locations=util.locations,
         workers=workers,
         workdays=workdays,
+        shift_totals=shift_totals,
         month="Agosto",
         version=version
     ))

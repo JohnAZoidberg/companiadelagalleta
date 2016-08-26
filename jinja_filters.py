@@ -53,6 +53,7 @@ def durationformat(value):
     hours = int(seconds // 3600)
     minutes = int((seconds % 3600) // 60)
     hourzero = "0" if hours < 10 else ""
+    hourzero = "-0" if hours > -10 and hours < 0 else ""
     minutezero = "0" if minutes < 10 else ""
     return '{}{}:{}{}'.format(hourzero, hours, minutes, minutezero)
 
