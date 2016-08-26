@@ -183,6 +183,28 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def update_shift(self, workerId, start, end, edited,
+                     location, status, syncId):
+        success = False
+        # a unique id to identify entries: unixtimestamp + 4 random digits
+        if syncId is None:
+            syncId = str(util.uniqueId())
+        if end is not None:
+            end = util.datestring(end)
+        success = self.update("shifts",
+                {"workerId": workerId, "start": util.datestring(start),
+                 "end": end, "location": location, "status": status,
+                 "edited": edited},
+                False,
+                "WHERE syncId = %s",
+                (syncId,)
+        )
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
+
     def update_purchase(self, country, card, date, discount, cart, edited,
                         location=None, status=1, syncId=None, note=None):
         if syncId is None:

@@ -272,7 +272,8 @@ def edit_item(base, _type, item, sync_time):
                 location=item['location'], status=status,
                 syncId=item['syncId'], note=item['note'])
     elif _type == "shift":
-        pass  # it is not possible to edit a shift
+        base.update_shift(item['workerId'], item['start'], item['end'],
+                sync_time, item['location'], status, item['syncId'])
     elif _type == "stock":
         pass # it is not possible to edit a stock item
 
