@@ -7,7 +7,7 @@ import cgitb
 cgitb.enable()  # Displays any errors
 
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import MySQLdb
 
@@ -176,6 +176,27 @@ class CgBase:
                  "end": end, "location": location, "status": status,
                  "syncId": syncId, "edited": edited},
                 False
+        )
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
+
+    def update_shift(self, workerId, start, end, edited,
+                     location, status, syncId):
+        success = False
+        # a unique id to identify entries: unixtimestamp + 4 random digits
+        if syncId is None:
+            syncId = str(util.uniqueId())
+        if end is not None:
+            end = util.datestring(end)
+        success = self.update("shifts",
+                {"workerId": workerId, "start": util.datestring(start),
+                 "end": end, "location": location, "status": status,
+                 "edited": edited},
+                False,
+                ("WHERE syncId = %s", (syncId,))
         )
         if success:
             self.db.commit()
@@ -418,6 +439,7 @@ class CgBase:
             where[0] += " AND status <> 3"
         if not getDeleted:
             where[0] += " AND status <> 2"
+        where[0] += " ORDER BY start DESC"
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))
@@ -436,6 +458,79 @@ class CgBase:
         if returndict:
             shifts = {shift["syncId"]: shift for shift in shifts}
         return shifts
+
+    def get_shift_stats(self, month=8, year=2016):
+        self.cur.execute((
+            "SELECT s.workerId, DATE(s.start), TIMEDIFF(end, start),"
+            " start, end, status,"
+            " ("
+            "   SELECT SUM(c.price * c.quantity) AS total"
+            "   FROM cart c, purchases p"
+            "   WHERE p.location = 0 AND p.status <> 2"
+            "   AND c.syncId = p.syncId"
+            "   AND s.start < p.date AND p.date < s.end"
+            " ) AS sales"
+            " FROM shifts AS s"
+            " WHERE location = 0 AND status <> 2"
+            " AND MONTH(start) = %s AND YEAR(start) = %s"
+            " ORDER BY start DESC"
+        ), (month, year))
+        result = self.cur.fetchall()
+        workdays = OrderedDict()
+        summary = OrderedDict()
+        for row in result:
+            (workerId, workdate, duration, start, end, status, sales) = row
+            sales = (0 if sales is None else int(sales))
+            shift = {
+                "workerId": workerId,
+                "worker": util.all_workers[workerId],
+                "duration": duration,
+                "start": start,
+                "end": end,
+                "status": status,
+                "sales": sales
+            }
+            try:
+                summary[workerId]["hours"] += duration
+                summary[workerId]["sales"] += sales
+            except KeyError:
+                summary[workerId] = {
+                    "worker": util.all_workers[workerId],
+                    "workerId": workerId,
+                    "hours": duration,
+                    "sales": sales
+                }
+            try:
+                workdays[workdate].append(shift)
+            except KeyError:
+                workdays[workdate] = [shift]
+        return workdays, summary.values()
+
+    def get_shift_totals(self, month=8, year=2016):
+        self.cur.execute((
+            "SELECT s.workerId,  SUM(c.price * c.quantity),"
+            " SEC_TO_TIME(SUM(TIME_TO_SEC(s.end) - TIME_TO_SEC(s.start)))"
+            " FROM shifts s, purchases p, cart c"
+            " WHERE s.location = 0 AND s.status <> 2"
+            " AND p.location = 0 AND p.status <> 2"
+            " AND MONTH(start) = %s AND YEAR(start) = %s"
+            " AND p.syncId = c.syncId"
+            " AND s.start < p.date AND p.date < s.end"
+            " GROUP BY s.workerId"
+            " ORDER BY s.workerId ASC"
+        ), (month, year))
+        results = self.cur.fetchall()
+        totals = []
+        for row in results:
+            (workerId, sales, hours) = row
+            total = {
+                "worker": util.all_workers[workerId],
+                "workerId": workerId,
+                "hours": hours,
+                "sales": int(sales)
+            }
+            totals.append(total)
+        return totals
 
     def get_stock(self):
         sql =("SELECT i.containerId, SUM(i.quantity) "
