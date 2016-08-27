@@ -473,6 +473,7 @@ class CgBase:
             " FROM shifts AS s"
             " WHERE location = %s AND status <> 2"
             " AND MONTH(start) = %s AND YEAR(start) = %s"
+            " AND end IS NOT NULL"
             " ORDER BY start DESC"
         ), (self.location, self.location, month, year))
         result = self.cur.fetchall()
@@ -480,7 +481,8 @@ class CgBase:
         summary = OrderedDict()
         for row in result:
             (workerId, workdate, duration, start, end, status, sales) = row
-            sales = (0 if sales is None else int(sales))
+            duration = timedelta(0) if duration is None else duration
+            sales = 0 if sales is None else int(sales)
             shift = {
                 "workerId": workerId,
                 "worker": util.all_workers[workerId],
