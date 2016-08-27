@@ -9,7 +9,7 @@
             <tbody id="table-body">
               {% for daytime in purchases %}
               {% for purchase in daytime['ps'] %}
-              <tr class="syncid-{{ purchase['syncId'] }} {{ 'info' if purchase['status'] == 3 else 'danger' }} clickable deletable-row" data-syncid="{{ purchase['syncId'] }}">
+              <tr class="syncid-{{ purchase['syncId'] }} {{ 'danger' if purchase['status'] != 3 and not server else 'info' }} clickable deletable-row" data-syncid="{{ purchase['syncId'] }}">
                 <td>
                   {{ purchase['date']|timeformat }}
                   {% if purchase['note'] is not none %}

@@ -55,6 +55,16 @@
               });
           }
       })
+      $('#stock-form').on('keyup keypress', function(e) {
+          var keyCode = e.keyCode || e.which;
+          if (keyCode === 13) {
+            e.preventDefault();
+            return false;
+          }
+      });
+      $('#stock-form').on('submit', function(e) {
+          $("#submit").prop("disabled", true);
+      });
       function reload_stock() {
           $("#stock-container")
               .load("stock/form");

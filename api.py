@@ -83,7 +83,13 @@ def sync():
             try:
                 input = json.loads(r.text)
             except ValueError:
-                return ("ERROR ON SERVERSIDE!<br>\n" + r.text)
+                return (
+                    "ERROR ON SERVERSIDE!<br>\n"
+                    + "For up_data:\n"
+                    + json.dumps(up_data)
+                    + "\nServerresponse:\n"
+                    + r.text
+                )
             except:
                 raise
         except:
@@ -136,6 +142,8 @@ def sync():
             if status == 0:
                 if existing_status is None:
                     insert_item(base, _type, item, sync_time)
+                elif edited > existing_edited:
+                    edit_item(base, _type, item, sync_time)
                 synced['added'][_type].append(sync_id)
             elif status == 1:
                 if existing_status == 0:
@@ -242,6 +250,7 @@ def handle_sync_result(sync_summary):
 
 def insert_item(base, _type, item, sync_time):
     status = 0 if dbdetails.server else 3
+    status = 2 if item['status'] == 2 else status
     if _type == "purchase":
         base.insert_purchase(item['country'], item['card'], item['date'],
                 item['discount'], item['cart'], sync_time,
@@ -253,7 +262,7 @@ def insert_item(base, _type, item, sync_time):
                 syncId=item['syncId'])
     elif _type == "stock":
         base.insert_stock_item(item['containerId'],
-                item['quantity'], item['recounted'], item['edited'],
+                item['quantity'], item['recounted'], sync_time, item['date'],
                 location=item['location'], status=status,
                 syncId=item['syncId']
         )
@@ -272,7 +281,8 @@ def edit_item(base, _type, item, sync_time):
                 location=item['location'], status=status,
                 syncId=item['syncId'], note=item['note'])
     elif _type == "shift":
-        pass  # it is not possible to edit a shift
+        base.update_shift(item['workerId'], item['start'], item['end'],
+                sync_time, item['location'], status, item['syncId'])
     elif _type == "stock":
         pass # it is not possible to edit a stock item
 

@@ -18,7 +18,7 @@ from flask import Blueprint, render_template, request, make_response, redirect, 
 stats_download = Blueprint('stats_download', __name__)
 @stats_download.route('/stats')
 def stats():
-    create_stats_file()
+    create_stats_file(util.get_location()[1])
     return send_from_directory('', 'estadisticas.xlsx')
 
 def colnum_string(n):
@@ -35,15 +35,19 @@ def day_to_datetime(day):
     return datetime.strptime(day, '%Y-%m-%d')
 
 
-def create_stats_file():
-    base = CgBase(util.get_location()[1])
-    purchases = base.get_purchases(allLocations=True)
+def create_stats_file(location):
+    base = CgBase(location)
+    purchases = base.get_purchases(allLocations=True,
+            newerthan=datetime(2016, 8, 1, 0, 0))
     boxes = base.get_boxes()
+    shifts = base.get_shifts(allLocations=True)
 
+    # Insert sales
     wb = load_workbook(dbdetails.path + '/stats.xlsx')
     ventas = wb.get_sheet_by_name("Ventas")
+    old_entries = 553  # the number of entries in june and july
     for i, p in enumerate(reversed(purchases)):
-        row = str(i + 2)
+        row = str(i + old_entries)
         cart = p['cart']
         ventas["A" + row] = p['date']
         ventas["B" + row] = util.country_list[p['country']]
@@ -61,6 +65,7 @@ def create_stats_file():
         ventas['E' + row] = total_boxes
         ventas['F' + row] = total_price / 10000.0
 
+    # Insert boxes
     cajas = wb.get_sheet_by_name("Cajas")
     for boxId, box in boxes.iteritems():
         row = str(boxId+1)
@@ -70,4 +75,17 @@ def create_stats_file():
         cajas["B" + row] = title
         cajas["C" + row] = price
 
+    # Insert work hours
+    trabajo = wb.get_sheet_by_name("Trabajo")
+    row = 2
+    for item in shifts:
+        s_row = str(row)
+        trabajo["A" + s_row] = util.all_workers[item['workerId']]
+        trabajo["B" + s_row] = item['start']
+        trabajo["C" + s_row] = item['end']
+        row += 1
+
     wb.save(dbdetails.path + "/estadisticas.xlsx")
+
+if __name__ == "__main__":
+    create_stats_file(0)

@@ -7,7 +7,7 @@ import cgitb
 cgitb.enable()  # Displays any errors
 
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import MySQLdb
 
@@ -183,13 +183,34 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def update_shift(self, workerId, start, end, edited,
+                     location, status, syncId):
+        success = False
+        # a unique id to identify entries: unixtimestamp + 4 random digits
+        if syncId is None:
+            syncId = str(util.uniqueId())
+        if end is not None:
+            end = util.datestring(end)
+        success = self.update("shifts",
+                {"workerId": workerId, "start": util.datestring(start),
+                 "end": end, "location": location, "status": status,
+                 "edited": edited},
+                False,
+                ("WHERE syncId = %s", (syncId,))
+        )
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
+
     def update_purchase(self, country, card, date, discount, cart, edited,
                         location=None, status=1, syncId=None, note=None):
         if syncId is None:
             raise Exception("SyncId can not be None")
         delete = self.delete_purchase(syncId, edited=edited)
-        insert = self.insert_purchase(country, card, date, discount, cart, edited,
-                        location, status, syncId, note)
+        insert = self.insert_purchase(country, card, date, discount, cart,
+                        edited, location, status, syncId, note)
         return delete and insert
 
     def get_purchases(self, getDeleted=False, onlydate=None, newerthan=None,
@@ -418,6 +439,7 @@ class CgBase:
             where[0] += " AND status <> 3"
         if not getDeleted:
             where[0] += " AND status <> 2"
+        where[0] += " ORDER BY start DESC"
         result = self.fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))
@@ -437,21 +459,70 @@ class CgBase:
             shifts = {shift["syncId"]: shift for shift in shifts}
         return shifts
 
+    def get_shift_stats(self, month=8, year=2016):
+        self.cur.execute((
+            "SELECT s.workerId, DATE(s.start), TIMEDIFF(end, start),"
+            " start, end, status,"
+            " ("
+            "   SELECT SUM(c.price * c.quantity) AS total"
+            "   FROM cart c, purchases p"
+            "   WHERE p.location = %s AND p.status <> 2"
+            "   AND c.syncId = p.syncId"
+            "   AND s.start < p.date AND p.date < s.end"
+            " ) AS sales"
+            " FROM shifts AS s"
+            " WHERE location = %s AND status <> 2"
+            " AND MONTH(start) = %s AND YEAR(start) = %s"
+            " AND end IS NOT NULL"
+            " ORDER BY start DESC"
+        ), (self.location, self.location, month, year))
+        result = self.cur.fetchall()
+        workdays = OrderedDict()
+        summary = OrderedDict()
+        for row in result:
+            (workerId, workdate, duration, start, end, status, sales) = row
+            duration = timedelta(0) if duration is None else duration
+            sales = 0 if sales is None else int(sales)
+            shift = {
+                "workerId": workerId,
+                "worker": util.all_workers[workerId],
+                "duration": duration,
+                "start": start,
+                "end": end,
+                "status": status,
+                "sales": sales
+            }
+            try:
+                summary[workerId]["hours"] += duration
+                summary[workerId]["sales"] += sales
+            except KeyError:
+                summary[workerId] = {
+                    "worker": util.all_workers[workerId],
+                    "workerId": workerId,
+                    "hours": duration,
+                    "sales": sales
+                }
+            try:
+                workdays[workdate].append(shift)
+            except KeyError:
+                workdays[workdate] = [shift]
+        return workdays, summary.values()
+
     def get_stock(self):
         sql =("SELECT i.containerId, SUM(i.quantity) "
               "FROM ("
-              "  SELECT containerId, quantity, status, location, edited FROM stock "
+              "  SELECT containerId, quantity, status, location, date FROM stock "
               "  UNION ALL "
               "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
               "  FROM boxes, cart, purchases "
               "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
               ") AS i "
               "WHERE status <> 2 AND location = %s "
-              "AND edited >= ("
-              "  SELECT edited FROM stock j "
+              "AND date >= ("
+              "  SELECT date FROM stock j "
               "  WHERE i.containerId = j.containerId "
               "  AND i.location = j.location AND recounted = 1 "
-              "  ORDER BY j.edited DESC LIMIT 1) "
+              "  ORDER BY j.date DESC LIMIT 1) "
               "GROUP BY i.containerId")
 
         result = self.simple_fetchall(sql, (self.location,))
@@ -478,17 +549,18 @@ class CgBase:
             where[1].append(notnow)
         result = self.fetchall("stock",
             ["containerId", "quantity", "location", "syncId",
-             "status", "edited", "recounted"], (where[0], tuple(where[1])))
+             "status", "edited", "recounted", "date"], (where[0], tuple(where[1])))
         stock = []
         for row in result:
             (containerId, quantity, location, syncId,
-             status, edited, recounted) = row
+             status, edited, recounted, date) = row
             if datestring:
                 edited = util.datestring(edited)
+                date = util.datestring(date)
             stock.append({
                 "containerId": containerId, "quantity": quantity,
                 "location": location, "syncId": syncId, "status": status,
-                "edited": edited, "recounted": recounted
+                "edited": edited, "recounted": recounted, "date": date
             })
         if returndict:
             if containerIndexed:
@@ -499,7 +571,8 @@ class CgBase:
                         if returndict else stock
         return stock
 
-    def insert_stock_item(self, containerId, quantity, recounted, edited, location=None, status=0, syncId=None):
+    def insert_stock_item(self, containerId, quantity, recounted, edited, date,
+                          location=None, status=0, syncId=None, commit=True):
         if syncId is None:
             syncId = util.uniqueId()
         if location is None:
@@ -508,20 +581,22 @@ class CgBase:
                    {"containerId": containerId,
                     "quantity": quantity,
                     "location": location,
-                    "syncId": util.uniqueId(),
-                    "status": 0,
+                    "syncId": syncId,
+                    "status": status,
                     "edited": edited,
-                    "recounted": recounted
+                    "recounted": recounted,
+                    "date": date,
                    },
-                   False
+                   commit
         )
 
     def update_stock(self, containers, absolute):
+        now = datetime.now()
         success = True
         for containerId, quantity in containers.iteritems():
             success = success and \
                       self.insert_stock_item(containerId, quantity,
-                          absolute, datetime.now())
+                          absolute, now, now, commit=False)
         if success:
             self.db.commit()
         else:

@@ -73,6 +73,7 @@
       {% endblock %}
     </div>
     {% block script %}
+      var server = {{ "true" if server else "false" }};
       // create jQuery methods for PUT and DELETE
       jQuery.each( [ "put", "delete" ], function( i, method ) {
         jQuery[ method ] = function( url, data, callback, type ) {
@@ -132,6 +133,7 @@
       });
       // sync asynchronously
       function try_sync() {
+          if (server) return true;
           $.ajax({
               type: "PUT",
               url: "api/v1.0/sync",

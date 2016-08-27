@@ -47,7 +47,15 @@ workers = OrderedDict([
     (1, "Patricia"),
     #(2, "Raquel"),
     (3, "Roberta"),
-    (4, "Paula")
+    (4, "Paola")
+])
+
+all_workers = OrderedDict([
+    (0, "Daniel"),
+    (1, "Patricia"),
+    (2, "Raquel"),
+    (3, "Roberta"),
+    (4, "Paola")
 ])
 
 locations = OrderedDict([

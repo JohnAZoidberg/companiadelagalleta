@@ -24,7 +24,6 @@ def git_update():
 def db_update():
     result = ""
     base = CgBase(0)#util.get_location()[1])
-    new_version = 601  # 0.6.1
     version = 0
     failure = False
     try:
@@ -285,10 +284,40 @@ def db_update():
                             False)
         base.db.commit()
     if version < 601:
-        #base.cur.execute("UPDATE cart SET price = price * 100")
+        base.cur.execute("UPDATE cart SET price = price * 100")
         base.cur.execute("UPDATE boxes SET price = price * 100")
         base.db.commit()
         result += "Increase price accuracy by two orders of magnitude\n"
+    if version < 602:
+        price_change = {
+            # Strelitzia vegana 1495 => 1595
+            62: 1595,
+            # Mango vegana 1495 => 1595
+            64: 1595,
+        }
+        for boxId, newPrice in price_change.iteritems():
+            base.update("boxes", {"price": newPrice}, False,
+                        ("WHERE boxesEntryId = %s", (boxId,)))
+        base.db.commit()
+        result += "Change prices of Vegan Strelitzia and Mango\n"
+        new_version = 602  # 0.6.2
+    if version < 603:
+        try:
+            base.cur.execute("ALTER TABLE stock ADD date datetime")
+            base.cur.execute("UPDATE stock SET date = edited")
+            base.cur.execute(
+                "ALTER TABLE stock MODIFY COLUMN date DATETIME NOT NULL")
+            base.cur.execute((
+                "ALTER TABLE stock"
+                " ADD UNIQUE `unique_index`(date, containerId, location)"
+            ))
+        except:
+            base.db.rollback()
+            raise
+        base.db.commit()
+        new_version = 603  # 0.6.3
+    if version < 700:
+        new_version = 700  # 0.7.0
 
     if new_version is not None and not failure:
         base.update("config",
