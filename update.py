@@ -11,10 +11,29 @@ import subprocess
 import jinja_filters
 from dbconn import CgBase
 import util
+from dbdetails import dbdetails
 
+from flask import Blueprint, render_template, request, make_response, jsonify
+
+
+update_page = Blueprint('update_page', __name__, template_folder='templates')
+
+
+@update_page.route('/update', methods=['GET'])
+def update():
+    return jsonify(git_update(), db_update())
+
+@update_page.route('/update/git', methods=['GET'])
+def update_git():
+    return jsonify(git_update())
+
+@update_page.route('/update/db', methods=['GET'])
+def update_db():
+    return jsonify(db_update())
 
 def git_update():
-    process = subprocess.Popen(["./update.sh"],
+    process = subprocess.Popen(
+        [dbdetails.path + "/update.sh", dbdetails.path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     returncode = process.wait()
@@ -25,6 +44,7 @@ def db_update():
     result = ""
     base = CgBase(0)#util.get_location()[1])
     version = 0
+    new_version = None
     failure = False
     try:
         version = base.get_version()
@@ -319,17 +339,15 @@ def db_update():
     if version < 700:
         new_version = 700  # 0.7.0
 
-    if new_version is not None and not failure:
-        base.update("config",
-                    {"version": new_version}, True, ("WHERE constant = 'X'", ()))
-        base.db.commit()
-    else:
-        base.db.rollback()
-    if version != new_version:
+    if new_version is not None:
         if not failure:
+            base.update("config",
+                        {"version": new_version}, True, ("WHERE constant = 'X'", ()))
+            base.db.commit()
             result += ("Updated from " + jinja_filters.readable_version(version)
-                       + " to " + jinja_filters.readable_version(new_version)+"\n")
+                    + " to " + jinja_filters.readable_version(new_version)+"\n")
         else:
+            base.db.rollback()
             result += "FAILURE!\n"
     else:
         result += "No update available("+jinja_filters.readable_version(version)+")\n"
