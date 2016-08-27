@@ -21,7 +21,7 @@
                 </td>
               </tr>
               {% for shift in workday %}
-              <tr class="{{ 'info' if shift['status'] == 3 else 'danger' }}">
+              <tr class="{{ 'danger' if shift['status'] != 3 and not server else 'info' }}">
                 <td align="right">{{ shift['worker'] }}</td>
                 <td>{{ shift['duration']|durationformat }}</td>
                 <td>{{ shift['start']|timeformat }} - {{ shift['end']|timeformat }}</td>
