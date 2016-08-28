@@ -5,13 +5,10 @@ if [ -z "$1" ]
     echo "No path supplied"
     exit 1
 fi
-if [ -z "$2" ]
-  then
-    echo "No wsgi location supplied"
-    exit 1
-fi
 cd $1
 echo "Updating..."
+sudo git checkout -- .
 sudo git pull
-sudo touch $2
 echo "Update finished"
+sudo /etc/init.d/apache2 reload
+echo "Apache reloaded"

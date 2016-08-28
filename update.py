@@ -33,7 +33,7 @@ def update_db():
 
 def git_update():
     process = subprocess.Popen(
-        [dbdetails.path + "/update.sh", dbdetails.path, dbdetails.wsgi],
+        [dbdetails.path + "/update.sh", dbdetails.path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     returncode = process.wait()
