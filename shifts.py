@@ -34,7 +34,6 @@ def shifts():
     workers = base.get_workers()
     version = base.get_version()
     workdays, shift_totals = base.get_shift_stats()
-    #shift_totals = base.get_shift_totals()
 
     resp = make_response(render_template('shifts.html',
         title='Shifts',
