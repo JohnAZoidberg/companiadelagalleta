@@ -7,7 +7,7 @@ if [ -z "$1" ]
 fi
 cd $1
 echo "Updating..."
-sudo git checkout -- .
+#sudo git checkout -- .
 sudo git pull
 echo "Update finished"
 sudo /etc/init.d/apache2 reload

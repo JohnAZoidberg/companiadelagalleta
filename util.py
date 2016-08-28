@@ -9,6 +9,9 @@ except ImportError:
 
 from flask import request
 
+from dbdetails import dbdetails
+import jinja_filters
+
 br = "<br>"
 
 country_list = OrderedDict([
@@ -184,3 +187,16 @@ def datestring(date):
 
 def stringdate(string):
     return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
+
+def log(*lines):
+    lines = [str(v) for v in lines]
+    with open(dbdetails.path + '/log.txt', 'a') as f:
+        f.writelines('\n'.join(
+            [jinja_filters.datetimeformat(datetime.now())]
+            + lines
+            + ["-----\n"]
+        ))
+
+def html_newlines(input_str):
+    return input_str.replace("\n", br)

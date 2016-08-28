@@ -13,23 +13,32 @@ from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template, request, make_response, jsonify
+from flask import Blueprint, redirect, flash, url_for
 
 
 update_page = Blueprint('update_page', __name__, template_folder='templates')
 
 
-@update_page.route('/update', methods=['GET'])
-def update():
-    return jsonify(git_update(), db_update())
-
 @update_page.route('/update/git', methods=['GET'])
 def update_git():
-    return jsonify(git_update())
+    success, git_msg = git_update()
+    util.log(git_msg)
+    if success:
+        if "Already up-to-date.\n" in git_msg:
+            flash("Already up-to-date.")
+        else:
+            flash("Successfully updated.")
+        return redirect("update/db")
+    else:
+        flash("Problem during updating!! Please report to Daniel")
+        return redirect(url_for("home_page.home"))
 
 @update_page.route('/update/db', methods=['GET'])
 def update_db():
-    return jsonify(db_update())
+    update_msg = db_update()
+    util.log(update_msg)
+    flash(util.html_newlines(update_msg))
+    return redirect(url_for("home_page.home"))
 
 def git_update():
     process = subprocess.Popen(
@@ -37,7 +46,7 @@ def git_update():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     returncode = process.wait()
-    return (returncode == 0, process.stdout.read())
+    return [returncode == 0, process.stdout.read()]
 
 
 def db_update():
