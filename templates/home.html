@@ -193,5 +193,9 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
       function reload_content() {
           reload_purchases();
       }
+      $("#optional-title").click(function(e) {
+          $("#optional-input").removeClass("gone");
+          $(this).addClass("gone");
+      });
     </script>
 {% endblock %}
