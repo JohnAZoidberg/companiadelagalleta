@@ -7,13 +7,13 @@ import cgitb
 cgitb.enable()  # Displays any errors
 
 import subprocess
+import os
 
 import jinja_filters
 from dbconn import CgBase
 import util
-from dbdetails import dbdetails
 
-from flask import Blueprint, redirect, flash, url_for
+from flask import Blueprint, redirect, flash, url_for, current_app as app
 
 
 update_page = Blueprint('update_page', __name__, template_folder='templates')
@@ -37,12 +37,12 @@ def update_git():
 def update_db():
     update_msg = db_update()
     util.log(update_msg)
-    flash(util.html_newlines(update_msg), 'info')
+    flash(update_msg, 'info')
     return redirect(url_for("home_page.home"))
 
 def git_update():
     process = subprocess.Popen(
-        [dbdetails.path + "/update.sh", dbdetails.path],
+        [os.path.join(app.root_path, "update.sh"), app.root_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
     returncode = process.wait()

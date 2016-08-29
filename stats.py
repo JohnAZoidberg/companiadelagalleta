@@ -7,13 +7,13 @@ import cgitb
 cgitb.enable()
 
 from datetime import datetime
+import os
 
 from dbconn import CgBase
 import util
-from dbdetails import dbdetails
 
 from openpyxl import load_workbook
-from flask import Blueprint, render_template, request, make_response, redirect, send_from_directory
+from flask import Blueprint, send_from_directory, current_app as app
 
 stats_download = Blueprint('stats_download', __name__)
 @stats_download.route('/stats')
@@ -43,7 +43,7 @@ def create_stats_file(location):
     shifts = base.get_shifts(allLocations=True)
 
     # Insert sales
-    wb = load_workbook(dbdetails.path + '/stats.xlsx')
+    wb = load_workbook(os.path.join(app.root_path, 'stats.xlsx'))
     ventas = wb.get_sheet_by_name("Ventas")
     old_entries = 553  # the number of entries in june and july
     for i, p in enumerate(reversed(purchases)):
@@ -85,7 +85,7 @@ def create_stats_file(location):
         trabajo["C" + s_row] = item['end']
         row += 1
 
-    wb.save(dbdetails.path + "/estadisticas.xlsx")
+    wb.save(os.path.join(app.root_path, "/estadisticas.xlsx"))
 
 if __name__ == "__main__":
     create_stats_file(0)

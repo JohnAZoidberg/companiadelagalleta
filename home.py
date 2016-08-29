@@ -64,42 +64,8 @@ def hello():
 @home_page.route('/test', methods=['GET'])
 def test():
     base = CgBase(0)
-    base.cur.execute((
-        "SELECT workerId, c.boxId, c.quantity"
-        " FROM shifts AS s, purchases AS p, cart AS c"
-        " WHERE s.location = 0 AND s.status <> 2"
-        " AND p.location = 0 AND p.status <> 2"
-        " AND s.start < p.date AND p.date < s.end"
-        " AND p.syncId = c.syncId"
-        " ORDER BY c.boxID ASC"
-    ))
-    base.cur.execute((
-        "SELECT workerId, SUM(TIMESTAMPDIFF(SECOND, start, end)) / 3600"
-        " FROM shifts"
-        " WHERE location = 0 AND status <> 2"
-        " GROUP BY workerId"
-    ))
-    base.cur.execute((
-        "SELECT workerId, DATE(start), start, end, TIMEDIFF(start, end)"
-        " FROM shifts"
-        " WHERE location = 0 AND status <> 2"
-        " AND MONTH(start) = 8 AND YEAR(start) = 2016"
-        " ORDER BY start DESC"
-    ))
-    result = base.cur.fetchall()
-    workdays = OrderedDict()
-    for row in result:
-        (workerId, workdate, start, end, duration) = row
-        shift = {
-            "workerId": workerId,
-            "worker": util.all_workers[workerId],
-            "duration": duration
-        }
-        try:
-            workdays[workdate].append(shift)
-        except KeyError:
-            workdays[workdate] = [shift]
-    return str(workdays)
+    util.log("Testlog")
+    return "Done"
 
 @home_page.route('/purchases', methods=['GET'])
 def purchases():
