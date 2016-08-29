@@ -9,19 +9,23 @@ cgitb.enable()  # Displays any errors
 from inspect import getmembers, isfunction
 
 import util
-from dbdetails import dbdetails
 from home import home_page
 from stock import stock_page
 from shifts import shifts_page
 from update import update_page
 from stats import stats_download
 from api import api_page
+from login import login_page, User
 import jinja_filters
 import jinja_tests
 
-from flask import Flask
+from flask import Flask, g
+from flask_login import LoginManager, UserMixin, current_user
 
 app = Flask(__name__)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login_page.login'
 # add filters with inspection
 my_filters = {name: function
                   for name, function in getmembers(jinja_filters)
@@ -44,7 +48,18 @@ app.register_blueprint(stock_page)
 app.register_blueprint(shifts_page)
 app.register_blueprint(update_page)
 app.register_blueprint(api_page)
+app.register_blueprint(login_page)
 app.register_blueprint(stats_download)
+
+@app.before_request
+def before_request():
+    g.user = current_user
+
+@login_manager.user_loader
+def load_user(id):
+    return User.get(id)
+
+
 
 if __name__ == "__main__":
     from dbdetails import dbdetails

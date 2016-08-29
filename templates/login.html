@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block menu %}
+  {{ super() }}
+              <li><a href="stock"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
+{% endblock %}
+{% block content %}
+    {% if g.user.is_authenticated %}
+        <h2><a href="{{ url_for('login_page.logout') }}">Logout</a></h2>
+    {% endif %}
+    {% if not g.user.is_authenticated %}
+        <h2><a href="{{ url_for('login_page.login') }}">Login</a></h2>
+    {% endif %}
+    <form action="" method=post class="form-horizontal">
+        <h2>Signin</h2>
+        <div class="control-group">
+            <div class="controls">
+              <input type="text" id="username" name="username" class="input-xlarge"
+                placeholder="Enter Username" required>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+              <input type="password" id="password" name="password" class="input-xlarge"
+                placeholder="Enter Password" required>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="controls">
+              <button type="submit" class="btn btn-success">Signin</button>
+            </div>
+        </div>
+      </form>
+{% endblock %}
+{% block script %}
+    <script>
+  {{ super() }}
+    </script>
+{% endblock %}
