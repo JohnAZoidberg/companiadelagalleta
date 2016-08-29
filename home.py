@@ -58,7 +58,7 @@ def home():
 
 @home_page.route('/hello', methods=['GET'])
 def hello():
-    return "Hello World"
+    return "Hello beautiful World"
 
 
 @home_page.route('/test', methods=['GET'])

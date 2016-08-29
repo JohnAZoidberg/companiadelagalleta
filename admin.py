@@ -31,28 +31,6 @@ def perform_updates():
     reload(update)
     updatemsg = update.db_update()
 
-    if not dbdetails.server:
-        success, syncstr = api.sync()
-        sync_json = syncstr
-        if (not sync_json['synced_down']['purchases']['deleted']
-                and not sync_json['synced_down']['purchases']['added']
-                and not sync_json['synced_up']['purchases']['deleted']
-                and not sync_json['synced_up']['purchases']['added']
-                and not sync_json['synced_down']['shifts']['deleted']
-                and not sync_json['synced_down']['shifts']['added']
-                and not sync_json['synced_up']['shifts']['deleted']
-                and not sync_json['synced_up']['shifts']['added']
-                and not sync_json['synced_up']['stock']['edited']
-                and not sync_json['synced_down']['stock']['edited']):
-            updatemsg += "\nNothing to sync"
-        elif success:
-            updatemsg += "\nSync done"
-        else:
-            updatemsg += "\nSync problem!!!"
-    else:
-        success = True
-        syncstr = "Server -> no sync"
-
     with open('log.txt', 'a') as f:
         f.writelines('\n'.join([
             util.datetimeformat(datetime.now()),
@@ -60,8 +38,6 @@ def perform_updates():
             str(shell_updatestr),
             "updatemsg",
             str(updatemsg),
-            "sync",
-            str((success, syncstr)),
             "-----\n"
         ]))
     return updatemsg

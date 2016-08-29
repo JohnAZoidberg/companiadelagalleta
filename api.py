@@ -207,17 +207,7 @@ def sync():
         base.update_last_sync(sync_time)
         sync_summary = {"synced_up": synced_up, "synced_down": synced}
         sync_msg = handle_sync_result(sync_summary)
-        with open(dbdetails.path + '/log.txt', 'a') as f:
-            f.writelines('\n'.join([
-                jinja_filters.datetimeformat(datetime.now()),
-                #"shellupdate:",
-                #str(shell_updatestr),
-                "updatemsg:",
-                str(sync_msg),
-                "sync",
-                json.dumps(sync_summary),
-                "-----\n"
-            ]))
+        util.log(str(sync_msg), json.dumps(sync_summary))
 
         redirect_target = request.args.get('redirect', False)
         if not redirect_target:
