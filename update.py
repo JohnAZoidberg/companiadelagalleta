@@ -25,19 +25,19 @@ def update_git():
     util.log(git_msg)
     if success:
         if "Already up-to-date.\n" in git_msg:
-            flash("Already up-to-date.")
+            flash("Already up-to-date.", 'info')
         else:
-            flash("Successfully updated.")
+            flash("Successfully updated.", 'info')
         return redirect("update/db")
     else:
-        flash("Problem during updating!! Please report to Daniel")
+        flash("Problem during updating!! Please report to Daniel", 'danger')
         return redirect(url_for("home_page.home"))
 
 @update_page.route('/update/db', methods=['GET'])
 def update_db():
     update_msg = db_update()
     util.log(update_msg)
-    flash(util.html_newlines(update_msg))
+    flash(util.html_newlines(update_msg), 'info')
     return redirect(url_for("home_page.home"))
 
 def git_update():
