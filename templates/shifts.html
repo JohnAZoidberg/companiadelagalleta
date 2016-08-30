@@ -17,7 +17,7 @@
             {% for workdate, workday in workdays.iteritems() %}
               <tr>
                 <td colspan="4">
-                  {{ workdate|dateformat }}
+                  {{ workdate|dateformat }} {{ workdate|weekdayformat }}
                 </td>
               </tr>
               {% for shift in workday %}

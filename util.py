@@ -2,14 +2,28 @@
 from datetime import datetime
 from random import randint
 import socket
+import os
 try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+from calendar import TimeEncoding, day_name, day_abbr
 
-from flask import request
+from flask import request, current_app as app
+
+import jinja_filters
 
 br = "<br>"
+
+weekdays = [
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+    "Domingo"
+]
 
 country_list = OrderedDict([
     ('_??', "Desconocido"),
@@ -184,3 +198,16 @@ def datestring(date):
 
 def stringdate(string):
     return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
+
+def log(*lines):
+    lines = [str(v) for v in lines]
+    with open(os.path.join(app.root_path, 'log.txt'), 'a') as f:
+        f.writelines('\n'.join(
+            [jinja_filters.datetimeformat(datetime.now())]
+            + lines
+            + ["-----\n"]
+        ))
+
+def html_newlines(input_str):
+    return input_str.replace("\n", br)

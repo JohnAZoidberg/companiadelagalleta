@@ -1,10 +1,14 @@
 #!/bin/bash
-sudo chmod 666 log.txt
-sudo git checkout -- .
-sudo git pull
-
-PIP_MODULES=$(pip list)
-if ! [[ $PIP_MODULES == *"Flask"* ]]
-then
-  sudo -H pip install Flask
+#git pull
+if [ -z "$1" ]
+  then
+    echo "No path supplied"
+    exit 1
 fi
+cd $1
+echo "Updating..."
+#sudo git checkout -- .
+sudo git pull
+echo "Update finished"
+sudo /etc/init.d/apache2 reload
+echo "Apache reloaded"
