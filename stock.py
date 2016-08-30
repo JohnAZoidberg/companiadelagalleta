@@ -13,11 +13,13 @@ from dbconn import CgBase
 from dbdetails import dbdetails
 
 from flask import Blueprint, render_template, request, make_response
+from flask_login import login_required
 
 stock_page = Blueprint('stock_page', __name__, template_folder='templates')
 
 
 @stock_page.route('/stock')
+@login_required
 def stock():
     # get/post and cookie
     msg = request.args.get('msg', None)
@@ -51,6 +53,7 @@ def stock():
 
 
 @stock_page.route('/stock/form')
+@login_required
 def stock_form():
     # get/post and cookie
     location_cookie, location = util.get_location()

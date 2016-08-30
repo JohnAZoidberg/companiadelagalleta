@@ -18,6 +18,7 @@ from flask_login import login_required
 home_page = Blueprint('home_page', __name__, template_folder='templates')
 @home_page.route('/', methods=['GET'])
 @home_page.route('/home', methods=['GET'])
+@login_required
 def home():
     # get/post and cookie
     showndate = request.args.get('date', None)
@@ -60,12 +61,12 @@ def hello():
 
 
 @home_page.route('/test', methods=['GET'])
-@login_required
 def test():
     base = CgBase(0)
     #util.log("Testlog")
     return "Done"
 
+@login_required
 @home_page.route('/purchases', methods=['GET'])
 def purchases():
     # get/post and cookie
