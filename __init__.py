@@ -20,13 +20,29 @@ import jinja_filters
 import jinja_tests
 
 from flask import Flask, g
-from flask_login import LoginManager, UserMixin, current_user
+from flask_login import LoginManager, session
 
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_page.login'
-# add filters with inspection
+login_manager.session_protection = "strong"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
+
+@app.before_request
+def load_session_user():
+    if "user_id" in session:
+        user = User.get(session["user_id"])
+    else:
+        user = {"name": "Guest"}  # Make it better, use an anonymous User instead
+
+    g.user = user
+
+# add jinja filters and testswith inspection
 my_filters = {name: function
                   for name, function in getmembers(jinja_filters)
                   if isfunction(function)}
@@ -50,15 +66,6 @@ app.register_blueprint(update_page)
 app.register_blueprint(api_page)
 app.register_blueprint(login_page)
 app.register_blueprint(stats_download)
-
-@app.before_request
-def before_request():
-    g.user = current_user
-
-@login_manager.user_loader
-def load_user(id):
-    return User.get(id)
-
 
 
 if __name__ == "__main__":

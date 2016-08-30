@@ -14,9 +14,11 @@ import util
 
 from flask import Blueprint, render_template, request, make_response,\
                   flash, redirect, url_for
-from flask_login import UserMixin, login_user, logout_user, current_user
+from flask_login import UserMixin, login_user, logout_user
 
 login_page = Blueprint('login_page', __name__, template_folder='templates')
+
+
 @login_page.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
@@ -27,16 +29,16 @@ def login():
                                            password=password)
     if registered_user is None:
         flash('Username or Password is invalid', 'danger')
-        print "Invalid pw"
         return redirect(url_for('login_page.login'))
     login_user(registered_user, remember=True)
     flash('Logged in successfully', 'info')
-    print "Successful login", current_user
     return redirect(request.args.get('next') or url_for('login_page.login'))
 
 @login_page.route('/logout')
 def logout():
+    flash('Logged out successfully', 'info')
     logout_user()
+    return redirect(url_for('login_page.login'))
     return redirect(url_for('home_page.home'))
 
 def show_login():
@@ -67,13 +69,24 @@ def show_login():
 
 class User(UserMixin):
     # proxy for a database of users
-    user_database = {"JohnDoe": ("JohnZoidberg", "mannfred"),
-                     "JaneDoe": ("test", "test")}
+    user_database = {"tienda": ("tienda", "tienda")}
 
     def __init__(self, username, password):
         self.id = username
         self.username = username
         self.password = password
+
+    def is_authenticated(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        return self.id
 
     @classmethod
     def query_filter_by(cls, username=None, password=None):
