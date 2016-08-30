@@ -48,6 +48,7 @@ def readable_version(value):
     version_str = str(value) + "." + version_str
     return version_str
 
+
 def durationformat(value):
     seconds = value.total_seconds()
     hours = int(seconds // 3600)
@@ -57,3 +58,6 @@ def durationformat(value):
     minutezero = "0" if minutes < 10 else ""
     return '{}{}:{}{}'.format(hourzero, hours, minutezero, minutes)
 
+
+def weekdayformat(value):
+    return util.weekdays[value.weekday()]

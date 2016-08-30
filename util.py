@@ -7,13 +7,23 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+from calendar import TimeEncoding, day_name, day_abbr
 
 from flask import request, current_app as app
 
-from dbdetails import dbdetails
 import jinja_filters
 
 br = "<br>"
+
+weekdays = [
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+    "Domingo"
+]
 
 country_list = OrderedDict([
     ('_??', "Desconocido"),
