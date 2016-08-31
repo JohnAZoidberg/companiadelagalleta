@@ -32,14 +32,13 @@ def login():
         return redirect(url_for('login_page.login'))
     login_user(registered_user)
     flash('Logged in successfully', 'info')
-    return redirect(request.args.get('next') or url_for('login_page.login'))
+    return redirect(request.args.get('next') or url_for('home_page.home'))
 
 @login_page.route('/logout')
 def logout():
     flash('Logged out successfully', 'info')
     logout_user()
     return redirect(url_for('login_page.login'))
-    return redirect(url_for('home_page.home'))
 
 def show_login():
     # get/post and cookie
