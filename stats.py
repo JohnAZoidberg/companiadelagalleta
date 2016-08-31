@@ -14,9 +14,11 @@ import util
 
 from openpyxl import load_workbook
 from flask import Blueprint, send_from_directory, current_app as app
+from flask_login import login_required
 
 stats_download = Blueprint('stats_download', __name__)
 @stats_download.route('/stats')
+@login_required
 def stats():
     create_stats_file(util.get_location()[1])
     return send_from_directory('', 'estadisticas.xlsx')

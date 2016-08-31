@@ -6,22 +6,22 @@ sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable()  # Displays any errors
 
-from collections import OrderedDict
 from datetime import datetime
 
 from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template, request, make_response, jsonify
+from flask import Blueprint, render_template, request, make_response
+from flask_login import login_required
 
 home_page = Blueprint('home_page', __name__, template_folder='templates')
 @home_page.route('/', methods=['GET'])
 @home_page.route('/home', methods=['GET'])
+@login_required
 def home():
     # get/post and cookie
     showndate = request.args.get('date', None)
-    msg = request.args.get('msg', None)
     new_cookies = {}
     location_cookie, location = util.get_location()
     if not location_cookie:
@@ -44,7 +44,6 @@ def home():
         boxes=boxes.items(),
         purchases=purchases,
         total=total,
-        msg=msg,
         server=dbdetails.server,
         workers=workers,
         location=location,
@@ -64,9 +63,10 @@ def hello():
 @home_page.route('/test', methods=['GET'])
 def test():
     base = CgBase(0)
-    util.log("Testlog")
+    #util.log("Testlog")
     return "Done"
 
+@login_required
 @home_page.route('/purchases', methods=['GET'])
 def purchases():
     # get/post and cookie
