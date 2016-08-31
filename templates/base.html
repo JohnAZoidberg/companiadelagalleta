@@ -25,10 +25,12 @@
               <span class="icon-bar"></span>
             </button>
             <span class="navbar-brand">Ventas (v{{ version|readable_version }})</span>
+            {% if g.user.is_authenticated() %}
             <span class="navbar-brand" id="working-now">
-            {% for wid, worker in workers.iteritems() if worker["working"] %}
+              {% for wid, worker in workers.iteritems() if worker["working"] %}
               <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
-            {% endfor %}
+              {% endfor %}
+            {% endif %}
             </span>
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
@@ -36,7 +38,7 @@
               <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
               <li><a href="stock"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
               <li><a href="shifts"><span class="glyphicon glyphicon-user"></span> Trabajo</a></li>
-              {% if g.user.is_authenticated %}
+              {% if g.user.is_authenticated() %}
               <li>
                 <div class="dropdown margin-5">
                   <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
