@@ -13,9 +13,9 @@ import requests
 from dbconn import CgBase
 import util
 from dbdetails import dbdetails
-import jinja_filters
 
 from flask import Blueprint, request, redirect, url_for, jsonify
+from flask_login import login_required
 
 
 api_page = Blueprint('api_page', __name__, template_folder='templates')

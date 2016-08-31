@@ -25,7 +25,7 @@
                 <td align="right">{{ shift['worker'] }}</td>
                 <td>{{ shift['duration']|durationformat }}</td>
                 <td>{{ shift['start']|timeformat }} - {{ shift['end']|timeformat }}</td>
-                <td>{{ shift['sales']|moneyformat }}</td>
+                <td>{{ shift['sales']|moneyformat }} ({{ (shift['sales'] * 0.03)|moneyformat }})</td>
               </tr>
               {% endfor %}
             {% endfor %}
@@ -39,7 +39,7 @@
                 <th>Nombre</th>
                 <th>Horas</th>
                 <th>Total</th>
-                <th>Commision</th>
+                <th>Comisión</th>
               </tr>
             </thead>
             <tbody id="table-body">

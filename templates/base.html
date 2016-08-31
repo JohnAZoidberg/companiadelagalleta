@@ -34,6 +34,7 @@
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
               {% block menu %}
+                {% if g.user.is_authenticated %}
               <li>
                 <div class="dropdown margin-5">
                   <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
@@ -57,6 +58,7 @@
               </li>
               {% if not server %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
               <li><a href="stats"><span class="glyphicon glyphicon-list"></span> Descargar</a></li>
+                {% endif %}
               {% endblock %}
             </ul>
           </div>
@@ -66,14 +68,14 @@
       {% for msg_type in ["info", "danger"] %}
         {% with messages = get_flashed_messages(category_filter=[msg_type]) %}
           {% if messages %}
-          <div class="alert alert-{{ msg_type }} fade in">
-          <ul class="flashes">
+      <div class="alert alert-{{ msg_type }} fade in">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        <ul class="flashes">
           {% for message in messages %}
-            <li>{{ message }}</li>
+          <li>{{ message }}</li>
           {% endfor %}
-          </ul>
-          <a href="?" class="close">&times;</a>
-        </div>
+        </ul>
+      </div>
           {% endif %}
         {% endwith %}
       {% endfor %}

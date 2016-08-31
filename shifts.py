@@ -6,7 +6,6 @@ sys.setdefaultencoding("utf8")
 import cgitb
 cgitb.enable() # Displays any errors
 
-from collections import OrderedDict
 from datetime import datetime
 
 import util
@@ -14,12 +13,14 @@ from dbconn import CgBase
 from dbdetails import dbdetails
 
 from flask import Blueprint, render_template, request, make_response
+from flask_login import login_required
 
 shifts_page = Blueprint('shifts_page', __name__,
         template_folder='templates')
 
 
 @shifts_page.route('/shifts')
+@login_required
 def shifts():
     # get/post and cookie
     msg = request.args.get('msg', None)
@@ -30,7 +31,6 @@ def shifts():
     # data
     now = datetime.now()
     base = CgBase(location)
-    stock = base.get_stock()
     workers = base.get_workers()
     version = base.get_version()
     workdays, shift_totals = base.get_shift_stats()

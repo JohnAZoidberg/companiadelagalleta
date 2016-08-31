@@ -9,20 +9,40 @@ cgitb.enable()  # Displays any errors
 from inspect import getmembers, isfunction
 
 import util
-from dbdetails import dbdetails
 from home import home_page
 from stock import stock_page
 from shifts import shifts_page
 from update import update_page
 from stats import stats_download
 from api import api_page
+from login import login_page, User
 import jinja_filters
 import jinja_tests
 
-from flask import Flask
+from flask import Flask, g
+from flask_login import LoginManager, session
 
 app = Flask(__name__)
-# add filters with inspection
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login_page.login'
+login_manager.session_protection = "strong"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
+
+@app.before_request
+def load_session_user():
+    if "user_id" in session:
+        user = User.get(session["user_id"])
+    else:
+        user = {"name": "Guest"}  # Make it better, use an anonymous User instead
+
+    g.user = user
+
+# add jinja filters and testswith inspection
 my_filters = {name: function
                   for name, function in getmembers(jinja_filters)
                   if isfunction(function)}
@@ -44,9 +64,11 @@ app.register_blueprint(stock_page)
 app.register_blueprint(shifts_page)
 app.register_blueprint(update_page)
 app.register_blueprint(api_page)
+app.register_blueprint(login_page)
 app.register_blueprint(stats_download)
+
 
 if __name__ == "__main__":
     from dbdetails import dbdetails
     app.config['SECRET_KEY'] = dbdetails.secret
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)
