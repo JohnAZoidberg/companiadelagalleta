@@ -40,7 +40,6 @@ def shifts():
         date=now,
         countries=util.country_list.items(),
         server=dbdetails.server,
-        msg=msg,
         location=location,
         locations=util.locations,
         workers=workers,
@@ -52,3 +51,24 @@ def shifts():
     for key, val in new_cookies.iteritems():
         resp.set_cookie(key, val)
     return resp
+
+
+@shifts_page.route('/shifts/table')
+@login_required
+def shifts_table():
+    # get/post and cookie
+    showndate = request.args.get('date', None)
+    location_cookie, location = util.get_location()
+    # data
+    now = datetime.now() if showndate is None\
+          else datetime.strptime(showndate, '%Y-%m-%d')
+    base = CgBase(location)
+    workdays, shift_totals = base.get_shift_stats()
+
+    return render_template('shifts_table.html',
+        date=now,
+        server=dbdetails.server,
+        shift_totals=shift_totals,
+        workdays=workdays,
+        month="Agosto",
+    )

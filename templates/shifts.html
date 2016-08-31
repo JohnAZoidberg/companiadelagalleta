@@ -1,63 +1,20 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
-{% block menu %}
-  {{ super() }}
-              <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
-{% endblock %}
 {% block content %}
-      <div class="row">
-        <div class="col-sm-6"><!-- Days -->
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>{{ month }}</th>
-              </tr>
-            </thead>
-            <tbody id="table-body">
-            {% for workdate, workday in workdays.iteritems() %}
-              <tr>
-                <td colspan="4">
-                  {{ workdate|dateformat }} {{ workdate|weekdayformat }}
-                </td>
-              </tr>
-              {% for shift in workday %}
-              <tr class="{{ 'danger' if shift['status'] != 3 and not server else 'info' }}">
-                <td align="right">{{ shift['worker'] }}</td>
-                <td>{{ shift['duration']|durationformat }}</td>
-                <td>{{ shift['start']|timeformat }} - {{ shift['end']|timeformat }}</td>
-                <td>{{ shift['sales']|moneyformat }} ({{ (shift['sales'] * 0.03)|moneyformat }})</td>
-              </tr>
-              {% endfor %}
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        <div class="col-sm-6"><!-- Workers -->
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Horas</th>
-                <th>Total</th>
-                <th>Comisión</th>
-              </tr>
-            </thead>
-            <tbody id="table-body">
-            {% for summary in shift_totals %}
-              <tr>
-                <td>{{ summary["worker"] }}</td>
-                <td>{{ summary["hours"]|durationformat }}</td>
-                <td>{{ summary["sales"]|moneyformat }}</td>
-                <td>{{ (summary["sales"] * 0.03)|moneyformat }}</td>
-              </tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
+      <div class="row" id="shifts-container">
+  {% include "shifts_table.html" %}
       </div>
 {% endblock %}
 {% block script %}
     <script>
   {{ super() }}
+      function reload_shifts() {
+          $("#shifts-container")
+              .load("shifts/table?date={{ date|dateformat }}");
+      }
+      // gets called from base.html
+      function reload_content() {
+          reload_shifts();
+      }
     </script>
 {% endblock %}
