@@ -41,7 +41,7 @@ def logout():
     return redirect(url_for('login_page.login'))
 
 def show_login():
-    if g.user.is_authenticated:
+    if g.user.is_authenticated():
         return redirect(url_for('home_page.home'))
     # get/post and cookie
     new_cookies = {}
@@ -71,6 +71,7 @@ def show_login():
 class User(UserMixin):
     # proxy for a database of users
     user_database = {
+        "anon": ("anon", "anon", False),
         "tienda": ("tienda", "tienda", False),
         "Roberta": ("Roberta", "danidelverano", True)
     }
@@ -82,10 +83,10 @@ class User(UserMixin):
         self.admin = admin
 
     def is_authenticated(self):
-        return True
+        return not self.is_anonymous()
 
     def is_anonymous(self):
-        return False
+        return self.username == "anon"
 
     def is_active(self):
         return True

@@ -38,7 +38,7 @@ def load_session_user():
     if "user_id" in session:
         user = User.get(session["user_id"])
     else:
-        user = {"name": "Guest"}  # Make it better, use an anonymous User instead
+        user = User.get("anon")
 
     g.user = user
 
