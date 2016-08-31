@@ -22,7 +22,6 @@ api_page = Blueprint('api_page', __name__, template_folder='templates')
 
 
 @api_page.route('/api/v1.0/purchase', methods=['POST'])
-@login_required
 def save_purchase():
     purchase = request.get_json()
     base = CgBase(util.get_location()[1])
@@ -45,7 +44,6 @@ def save_purchase():
 
 
 @api_page.route('/api/v1.0/purchase/<int:sync_id>', methods=['DELETE'])
-@login_required
 def delete_purchase(sync_id):
     base = CgBase(util.get_location()[1])
     success = base.mark_purchase_deleted(sync_id)
@@ -56,7 +54,6 @@ def delete_purchase(sync_id):
 
 
 @api_page.route('/api/v1.0/sync', methods=['GET', 'PUT'])
-@login_required
 def sync():
     base = CgBase(util.get_location()[1])
     if not dbdetails.server:  # Clientside
@@ -301,7 +298,6 @@ def delete_item(base, _type, item, sync_time):
 
 @api_page.route('/api/v1.0/shifts/<int:worker_id>/begin',
                 methods=['PUT'])
-@login_required
 def begin_(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.begin_work(worker_id)
@@ -322,7 +318,6 @@ def begin_(worker_id):
 
 @api_page.route('/api/v1.0/shifts/<int:worker_id>/end',
                 methods=['PUT'])
-@login_required
 def end_work(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.end_work(worker_id)
@@ -341,7 +336,6 @@ def end_work(worker_id):
 
 
 @api_page.route('/api/v1.0/stock/form', methods=['POST'])
-@login_required
 def update_stock():
     base = CgBase(util.get_location()[1])
     method = request.form.get('count-method', None)
