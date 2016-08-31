@@ -71,4 +71,4 @@ app.register_blueprint(stats_download)
 if __name__ == "__main__":
     from dbdetails import dbdetails
     app.config['SECRET_KEY'] = dbdetails.secret
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)

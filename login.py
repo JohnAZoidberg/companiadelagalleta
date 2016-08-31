@@ -30,7 +30,7 @@ def login():
     if registered_user is None:
         flash('Username or Password is invalid', 'danger')
         return redirect(url_for('login_page.login'))
-    login_user(registered_user, remember=True)
+    login_user(registered_user)
     flash('Logged in successfully', 'info')
     return redirect(request.args.get('next') or url_for('login_page.login'))
 

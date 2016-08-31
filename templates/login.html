@@ -5,32 +5,28 @@
               <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
 {% endblock %}
 {% block content %}
-    {% if g.user.is_authenticated %}
-        <h2><a href="{{ url_for('login_page.logout') }}">Logout</a></h2>
-    {% endif %}
-    {% if not g.user.is_authenticated %}
-        <h2><a href="{{ url_for('login_page.login') }}">Login</a></h2>
-    {% endif %}
     <form action="" method=post class="form-horizontal">
-        <h2>Signin</h2>
-        <div class="control-group">
-            <div class="controls">
-              <input type="text" id="username" name="username" class="input-xlarge"
-                placeholder="Enter Username" required>
-            </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+                  <span><h2>Login</h2></span>
+          </div>
         </div>
-
-        <div class="control-group">
-            <div class="controls">
-              <input type="password" id="password" name="password" class="input-xlarge"
-                placeholder="Enter Password" required>
-            </div>
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="username">Username:</label>
+          <div class="col-sm-3" style="padding: 0 15px;">
+              <input type="text" class="form-control" id="username" name="username" placeholder="Enter Username" required>
+          </div>
         </div>
-
-        <div class="control-group">
-            <div class="controls">
-              <button type="submit" class="btn btn-success">Signin</button>
-            </div>
+        <div class="form-group">
+          <label class="control-label col-sm-2" for="password">Password:</label>
+          <div class="col-sm-3" style="padding: 0 15px;">
+            <input type="password" class="form-control" id="password" name="password" placeholder="Enter Password" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-success">Signin</button>
+          </div>
         </div>
       </form>
 {% endblock %}
