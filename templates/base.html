@@ -58,7 +58,8 @@
                   </ul>
                 </div>
               </li>
-              {% if not server %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
+              {% if not server and False %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
+              <li><a href="logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
               {% endif %}
             </ul>
           </div>

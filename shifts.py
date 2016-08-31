@@ -12,7 +12,7 @@ import util
 from dbconn import CgBase
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template, request, make_response
+from flask import Blueprint, render_template, request, make_response, g, flash, redirect, url_for, abort
 from flask_login import login_required
 
 shifts_page = Blueprint('shifts_page', __name__,
@@ -22,8 +22,10 @@ shifts_page = Blueprint('shifts_page', __name__,
 @shifts_page.route('/shifts')
 @login_required
 def shifts():
+    if not g.user.admin:
+        flash("The requested page is only accessible by admins!", "danger")
+        return redirect(url_for("home_page.home"))
     # get/post and cookie
-    msg = request.args.get('msg', None)
     new_cookies = {}
     location_cookie, location = util.get_location()
     if not location_cookie:
@@ -56,6 +58,8 @@ def shifts():
 @shifts_page.route('/shifts/table')
 @login_required
 def shifts_table():
+    if not g.user.admin:
+        abort(401)
     # get/post and cookie
     showndate = request.args.get('date', None)
     location_cookie, location = util.get_location()
