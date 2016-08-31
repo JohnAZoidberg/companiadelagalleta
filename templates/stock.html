@@ -1,9 +1,5 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
-{% block menu %}
-  {{ super() }}
-              <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
-{% endblock %}
 {% block content %}
       <div id="stock-container">
       {% include "stock_form.html" %}

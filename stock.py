@@ -12,7 +12,7 @@ import util
 from dbconn import CgBase
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template, request, make_response
+from flask import Blueprint, render_template, request, make_response, g, abort, flash, redirect, url_for
 from flask_login import login_required
 
 stock_page = Blueprint('stock_page', __name__, template_folder='templates')
@@ -21,6 +21,9 @@ stock_page = Blueprint('stock_page', __name__, template_folder='templates')
 @stock_page.route('/stock')
 @login_required
 def stock():
+    if not g.user.admin:
+        flash("The requested page is only accessible by admins!", "danger")
+        return redirect(url_for("home_page.home"))
     # get/post and cookie
     msg = request.args.get('msg', None)
     new_cookies = {}
@@ -55,6 +58,8 @@ def stock():
 @stock_page.route('/stock/form')
 @login_required
 def stock_form():
+    if not g.user.admin:
+        abort(401)
     # get/post and cookie
     location_cookie, location = util.get_location()
     # data

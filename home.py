@@ -81,7 +81,6 @@ def purchases():
         base.get_purchases(onlydate=now))
 
     return render_template('purchases.html',
-        date=now,
         purchases=purchases,
         total=total,
         server=dbdetails.server,
