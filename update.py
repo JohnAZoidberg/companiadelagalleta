@@ -350,6 +350,9 @@ def db_update():
         new_version = 603  # 0.6.3
     if version < 700:
         new_version = 700  # 0.7.0
+    if version < 800:
+        result += "Everything behind a login"
+        new_version = 800  # 0.8.0
 
     if new_version is not None:
         if not failure:
