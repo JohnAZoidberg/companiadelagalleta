@@ -7,6 +7,7 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
+from functools import wraps
 
 from flask import request, current_app as app
 
@@ -216,6 +217,7 @@ def only_admins(redirect_home=True):
         from flask import flash, g, redirect, url_for, abort
         from flask_login import login_required
         @login_required
+        @wraps(func)
         def wrapper(*args, **kwargs):
             if not g.user.admin:
                 if redirect_home:
