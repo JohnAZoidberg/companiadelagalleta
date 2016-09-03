@@ -509,27 +509,43 @@ class CgBase:
         return workdays, summary.values()
 
     def get_stock(self):
-        sql =("SELECT i.containerId, SUM(i.quantity) "
-              "FROM ("
-              "  SELECT containerId, quantity, status, location, date FROM stock "
-              "  UNION ALL "
-              "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
-              "  FROM boxes, cart, purchases "
-              "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
-              ") AS i "
-              "WHERE status <> 2 AND location = %s "
-              "AND date >= ("
-              "  SELECT date FROM stock j "
-              "  WHERE i.containerId = j.containerId "
-              "  AND i.location = j.location AND recounted = 1 "
-              "  ORDER BY j.date DESC LIMIT 1) "
-              "GROUP BY i.containerId")
+        quantity_sql =(
+            "SELECT i.containerId, SUM(i.quantity) AS quantity "
+            "FROM ("
+            "  SELECT containerId, quantity, status, location, date FROM stock "
+            "  UNION ALL "
+            "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
+            "  FROM boxes, cart, purchases "
+            "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
+            ") AS i "
+            "WHERE status <> 2 AND location = %s "
+            "AND date >= ("
+            "  SELECT date FROM stock j "
+            "  WHERE i.containerId = j.containerId "
+            "  AND i.location = j.location AND recounted = 1 "
+            "  ORDER BY j.date DESC LIMIT 1) "
+            "GROUP BY i.containerId")
+        status_sql = (
+            "SELECT containerId, status "
+            "FROM stock "
+            "WHERE status <> 2 AND location = %s "
+        )
+        sql = (
+            "SELECT Sub1.containerId, Sub1.quantity, Sub2.status "
+            "FROM (" + quantity_sql + ") Sub1 "
+            "INNER JOIN (" + status_sql + ") Sub2 "
+            "ON Sub1.containerId = Sub2.containerId"
+        )
+        print sql
 
-        result = self.simple_fetchall(sql, (self.location,))
+        result = self.simple_fetchall(sql, (self.location, self.location))
         containers = {}
         for row in result:
-            (containerId, quantity) = row
-            containers[containerId] = {'quantity': quantity}
+            (containerId, quantity, status) = row
+            containers[containerId] = {
+                'quantity': quantity,
+                'status': status
+            }
         return containers
 
     def get_stock_items(self, allLocations=False, notsynced=False, datestring=False,

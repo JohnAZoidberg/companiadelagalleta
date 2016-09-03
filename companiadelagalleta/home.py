@@ -59,8 +59,8 @@ def home():
 def hello():
     return "Hello beautiful World"
 
-
 @home_page.route('/test', methods=['GET'])
+@util.only_admins(redirect_home=False)
 def test():
     base = CgBase(0)
     #util.log("Testlog")
