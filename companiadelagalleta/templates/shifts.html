@@ -8,9 +8,18 @@
 {% block script %}
     <script>
   {{ super() }}
-      function reload_shifts() {
+      $("#shifts-container").on("click", ".select-shift-month", function(e) {
+          month = $(this).data("month");
+          year = $(this).data("year");
+          reload_shifts({"month": month, "year": year});
+      });
+      function reload_shifts(args) {
+          var get_str = "";
+          if (args["month"] && args["year"]) {
+              get_str = "&month=" + args["month"] + "&year=" + args["year"];
+          }
           $("#shifts-container")
-              .load("shifts/table?date={{ date|dateformat }}");
+              .load("shifts/table?date={{ date|dateformat }}" + get_str);
       }
       // gets called from base.html
       function reload_content() {
