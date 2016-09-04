@@ -459,7 +459,7 @@ class CgBase:
             shifts = {shift["syncId"]: shift for shift in shifts}
         return shifts
 
-    def get_shift_stats(self, month=8, year=2016):
+    def get_shift_stats(self, month, year):
         self.cur.execute((
             "SELECT s.workerId, DATE(s.start), TIMEDIFF(end, start),"
             " start, end, status,"

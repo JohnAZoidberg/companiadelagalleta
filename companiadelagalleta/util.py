@@ -25,6 +25,22 @@ weekdays = [
     "Domingo"
 ]
 
+months = [
+    None,
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre"
+]
+
 country_list = OrderedDict([
     ('_??', "Desconocido"),
     ('_eu', "Europa"),
