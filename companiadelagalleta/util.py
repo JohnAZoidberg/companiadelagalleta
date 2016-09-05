@@ -235,7 +235,7 @@ def only_admins(redirect_home=True):
         @login_required
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if not g.user.admin:
+            if not g.user.is_admin():
                 if redirect_home:
                     flash("The requested page is only accessible by admins!", "danger")
                     return redirect(url_for("home_page.home"))

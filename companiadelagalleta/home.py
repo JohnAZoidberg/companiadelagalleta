@@ -12,7 +12,8 @@ from dbconn import CgBase
 import util
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template, request, make_response
+from flask import Blueprint, render_template, request, make_response, g,\
+    redirect, flash, url_for
 from flask_login import login_required
 
 home_page = Blueprint('home_page', __name__, template_folder='templates')
@@ -27,9 +28,15 @@ def home():
     if not location_cookie:
         new_cookies = {"location": str(location)}
 
+    # date
+    if showndate is None:
+        now = datetime.now()
+    elif g.user.is_admin():
+        now = datetime.strptime(showndate, '%Y-%m-%d')
+    else:
+        flash("Only admins can view past dates!", "danger")
+        return redirect(url_for("home_page.home"))
     # data
-    now = datetime.now() if showndate is None\
-          else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase(location)
     boxes = base.get_boxes()
     purchases, total = util.calc_purchases_totals(
@@ -73,9 +80,16 @@ def purchases():
     showndate = request.args.get('date', None)
     location_cookie, location = util.get_location()
 
+    # date
+    if showndate is None:
+        now = datetime.now()
+    elif g.user.is_admin():
+        now = datetime.strptime(showndate, '%Y-%m-%d')
+    else:
+        flash("Only admins can view past dates!", "danger")
+        return redirect(url_for("home_page.home"))
+
     # data
-    now = datetime.now() if showndate is None\
-          else datetime.strptime(showndate, '%Y-%m-%d')
     base = CgBase(location)
     purchases, total = util.calc_purchases_totals(
         base.get_purchases(onlydate=now))
