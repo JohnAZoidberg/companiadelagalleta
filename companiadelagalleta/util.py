@@ -7,7 +7,7 @@ try:
     from collections import OrderedDict
 except ImportError:
     from ordereddict import OrderedDict
-from calendar import TimeEncoding, day_name, day_abbr
+from functools import wraps
 
 from flask import request, current_app as app
 
@@ -23,6 +23,22 @@ weekdays = [
     "Viernes",
     "Sábado",
     "Domingo"
+]
+
+months = [
+    None,
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre"
 ]
 
 country_list = OrderedDict([
@@ -211,3 +227,20 @@ def log(*lines):
 
 def html_newlines(input_str):
     return input_str.replace("\n", br)
+
+def only_admins(redirect_home=True):
+    def decorator(func):
+        from flask import flash, g, redirect, url_for, abort
+        from flask_login import login_required
+        @login_required
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if not g.user.is_admin():
+                if redirect_home:
+                    flash("The requested page is only accessible by admins!", "danger")
+                    return redirect(url_for("home_page.home"))
+                else:
+                    abort(401)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator

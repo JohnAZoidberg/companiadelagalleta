@@ -61,3 +61,6 @@ def durationformat(value):
 
 def weekdayformat(value):
     return util.weekdays[value.weekday()]
+
+def monthformat(value):
+    return util.months[value]

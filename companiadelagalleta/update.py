@@ -19,9 +19,24 @@ from flask_login import login_required
 
 update_page = Blueprint('update_page', __name__, template_folder='templates')
 
+@update_page.route('/update', methods=['GET'])
+@util.only_admins(redirect_home=True)
+def update():
+    success, git_msg = git_update()
+    util.log(git_msg)
+    if success:
+        if "Already up-to-date.\n" in git_msg:
+            flash("Already up-to-date.", 'info')
+        else:
+            flash("Successfully updated.", 'info')
+        return redirect(url_for("update_page.update_db"))
+    else:
+        flash("Problem during updating!! Please report to Daniel", 'danger')
+        return redirect(url_for("home_page.home"))
+
 
 @update_page.route('/update/git', methods=['GET'])
-@login_required
+@util.only_admins(redirect_home=True)
 def update_git():
     success, git_msg = git_update()
     util.log(git_msg)
@@ -30,13 +45,13 @@ def update_git():
             flash("Already up-to-date.", 'info')
         else:
             flash("Successfully updated.", 'info')
-        return redirect("update/db")
+        return redirect(url_for("home_page.home"))
     else:
         flash("Problem during updating!! Please report to Daniel", 'danger')
         return redirect(url_for("home_page.home"))
 
 @update_page.route('/update/db', methods=['GET'])
-@login_required
+@util.only_admins(redirect_home=True)
 def update_db():
     update_msg = db_update()
     util.log(update_msg)
@@ -353,11 +368,18 @@ def db_update():
     if version < 800:
         result += "Everything behind a login"
         new_version = 800  # 0.8.0
+    if version < 801:
+        result += "Show stock and shifts only to admins!<br>"
+        result += "Past purchases only for admins"
+        result += "Show ongoing shifts only for admins"
+        result += "Fix stats excel download"
+        new_version = 801  # 0.8.1
 
     if new_version is not None:
         if not failure:
             base.update("config",
-                        {"version": new_version}, True, ("WHERE constant = 'X'", ()))
+                        {"version": new_version}, True,
+                        ("WHERE constant = 'X'", ()))
             base.db.commit()
             result += ("Updated from " + jinja_filters.readable_version(version)
                     + " to " + jinja_filters.readable_version(new_version)+"\n")

@@ -2,7 +2,18 @@
           <table class="table table-hover">
             <thead>
               <tr>
-                <th>{{ month }}</th>
+                <th>
+                <div class="dropdown">
+                  <button class="text-button dropdown-toggle" type="button" id="monthDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ shown_month|monthformat }} {{ shown_year }} <span class="caret"></button>
+                  <ul class="dropdown-menu" aria-labelledby="monthDropdown">
+                    {% for month, year in months %}
+                    <li{{ ' class="disabled"'|safe if month == shown_month and year == shown_year }}>
+                      <a href="#" class="select-shift-month" data-month="{{ month }}" data-year="{{ year }}">{{ month|monthformat }} {{ year }}</a>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                </th>
               </tr>
             </thead>
             <tbody id="table-body">

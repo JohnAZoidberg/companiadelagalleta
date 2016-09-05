@@ -459,30 +459,33 @@ class CgBase:
             shifts = {shift["syncId"]: shift for shift in shifts}
         return shifts
 
-    def get_shift_stats(self, month=8, year=2016):
+    def get_shift_stats(self, month, year):
         self.cur.execute((
-            "SELECT s.workerId, DATE(s.start), TIMEDIFF(end, start),"
-            " start, end, status,"
+            "SELECT workerId, DATE(start), start, status,"
+            "       nn.end, TIMEDIFF(nn.end, start),"
             " ("
-            "   SELECT SUM(c.price * c.quantity) AS total"
+            "   SELECT COALESCE(SUM(c.price * c.quantity),0) AS total"
             "   FROM cart c, purchases p"
             "   WHERE p.location = %s AND p.status <> 2"
             "   AND c.syncId = p.syncId"
-            "   AND s.start < p.date AND p.date < s.end"
+            "   AND start < p.date AND p.date < nn.end"
             " ) AS sales"
-            " FROM shifts AS s"
+            " FROM shifts"
+            " LEFT JOIN("
+            "   SELECT syncId, COALESCE(end, NOW()) AS end"
+            "   FROM shifts"
+            " ) AS nn"
+            " ON nn.syncId = shifts.syncId"
             " WHERE location = %s AND status <> 2"
             " AND MONTH(start) = %s AND YEAR(start) = %s"
-            " AND end IS NOT NULL"
             " ORDER BY start DESC"
         ), (self.location, self.location, month, year))
         result = self.cur.fetchall()
         workdays = OrderedDict()
         summary = OrderedDict()
         for row in result:
-            (workerId, workdate, duration, start, end, status, sales) = row
-            duration = timedelta(0) if duration is None else duration
-            sales = 0 if sales is None else int(sales)
+            (workerId, workdate, start, status, end, duration, sales) = row
+            sales = int(sales)
             shift = {
                 "workerId": workerId,
                 "worker": util.all_workers[workerId],
@@ -509,27 +512,43 @@ class CgBase:
         return workdays, summary.values()
 
     def get_stock(self):
-        sql =("SELECT i.containerId, SUM(i.quantity) "
-              "FROM ("
-              "  SELECT containerId, quantity, status, location, date FROM stock "
-              "  UNION ALL "
-              "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
-              "  FROM boxes, cart, purchases "
-              "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
-              ") AS i "
-              "WHERE status <> 2 AND location = %s "
-              "AND date >= ("
-              "  SELECT date FROM stock j "
-              "  WHERE i.containerId = j.containerId "
-              "  AND i.location = j.location AND recounted = 1 "
-              "  ORDER BY j.date DESC LIMIT 1) "
-              "GROUP BY i.containerId")
+        quantity_sql =(
+            "SELECT i.containerId, SUM(i.quantity) AS quantity "
+            "FROM ("
+            "  SELECT containerId, quantity, status, location, date FROM stock "
+            "  UNION ALL "
+            "  SELECT boxes.container, cart.quantity * -1, purchases.status, purchases.location, purchases.date "
+            "  FROM boxes, cart, purchases "
+            "  WHERE purchases.syncId = cart.syncId AND cart.boxId = boxes.boxesEntryId "
+            ") AS i "
+            "WHERE status <> 2 AND location = %s "
+            "AND date >= ("
+            "  SELECT date FROM stock j "
+            "  WHERE i.containerId = j.containerId "
+            "  AND i.location = j.location AND recounted = 1 "
+            "  ORDER BY j.date DESC LIMIT 1) "
+            "GROUP BY i.containerId")
+        status_sql = (
+            "SELECT containerId, status "
+            "FROM stock "
+            "WHERE status <> 2 AND location = %s "
+        )
+        sql = (
+            "SELECT Sub1.containerId, Sub1.quantity, Sub2.status "
+            "FROM (" + quantity_sql + ") Sub1 "
+            "INNER JOIN (" + status_sql + ") Sub2 "
+            "ON Sub1.containerId = Sub2.containerId"
+        )
+        print sql
 
-        result = self.simple_fetchall(sql, (self.location,))
+        result = self.simple_fetchall(sql, (self.location, self.location))
         containers = {}
         for row in result:
-            (containerId, quantity) = row
-            containers[containerId] = {'quantity': quantity}
+            (containerId, quantity, status) = row
+            containers[containerId] = {
+                'quantity': quantity,
+                'status': status
+            }
         return containers
 
     def get_stock_items(self, allLocations=False, notsynced=False, datestring=False,

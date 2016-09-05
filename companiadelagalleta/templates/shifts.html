@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+      <div class="row" id="shifts-container">
+  {% include "shifts_table.html" %}
+      </div>
+{% endblock %}
+{% block script %}
+    <script>
+  {{ super() }}
+      $("#shifts-container").on("click", ".select-shift-month", function(e) {
+          month = $(this).data("month");
+          year = $(this).data("year");
+          reload_shifts({"month": month, "year": year});
+      });
+      function reload_shifts(args) {
+          var get_str = "";
+          if (args["month"] && args["year"]) {
+              get_str = "&month=" + args["month"] + "&year=" + args["year"];
+          }
+          $("#shifts-container")
+              .load("shifts/table?date={{ date|dateformat }}" + get_str);
+      }
+      // gets called from base.html
+      function reload_content() {
+          reload_shifts();
+      }
+    </script>
+{% endblock %}

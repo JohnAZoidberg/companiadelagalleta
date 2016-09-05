@@ -12,30 +12,32 @@ import util
 from dbconn import CgBase
 from dbdetails import dbdetails
 
-from flask import Blueprint, render_template, request, make_response, g, flash, redirect, url_for, abort
-from flask_login import login_required
+from flask import Blueprint, render_template, request, make_response
 
 shifts_page = Blueprint('shifts_page', __name__,
         template_folder='templates')
 
+months = [
+    (9, 2016),
+    (8, 2016)
+]
 
 @shifts_page.route('/shifts')
-@login_required
+@util.only_admins(redirect_home=True)
 def shifts():
-    if not g.user.admin:
-        flash("The requested page is only accessible by admins!", "danger")
-        return redirect(url_for("home_page.home"))
+    now = datetime.now()
     # get/post and cookie
     new_cookies = {}
     location_cookie, location = util.get_location()
     if not location_cookie:
         new_cookies = {"location": str(location)}
+    month = int(request.args.get("month", now.month))
+    year = int(request.args.get("year", now.year))
     # data
-    now = datetime.now()
     base = CgBase(location)
     workers = base.get_workers()
     version = base.get_version()
-    workdays, shift_totals = base.get_shift_stats()
+    workdays, shift_totals = base.get_shift_stats(month, year)
 
     resp = make_response(render_template('shifts.html',
         title='Shifts',
@@ -47,7 +49,9 @@ def shifts():
         workers=workers,
         workdays=workdays,
         shift_totals=shift_totals,
-        month="Agosto",
+        shown_month=month,
+        shown_year=year,
+        months=months,
         version=version
     ))
     for key, val in new_cookies.iteritems():
@@ -56,23 +60,23 @@ def shifts():
 
 
 @shifts_page.route('/shifts/table')
-@login_required
+@util.only_admins(redirect_home=False)
 def shifts_table():
-    if not g.user.admin:
-        abort(401)
+    now = datetime.now()
     # get/post and cookie
-    showndate = request.args.get('date', None)
     location_cookie, location = util.get_location()
     # data
-    now = datetime.now() if showndate is None\
-          else datetime.strptime(showndate, '%Y-%m-%d')
+    month = int(request.args.get("month", now.month))
+    year = int(request.args.get("year", now.year))
     base = CgBase(location)
-    workdays, shift_totals = base.get_shift_stats()
+    workdays, shift_totals = base.get_shift_stats(month, year)
 
     return render_template('shifts_table.html',
         date=now,
         server=dbdetails.server,
         shift_totals=shift_totals,
         workdays=workdays,
-        month="Agosto",
+        shown_month=month,
+        shown_year=year,
+        months=months
     )

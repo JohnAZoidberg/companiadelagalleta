@@ -8,6 +8,7 @@
 {% block script %}
     <script>
   {{ super() }}
+      // update the calculations on input change
       $('.container-inputs').on('keyup mouseup', '.quantity', function(e) {
           $input = $('.count-method:checked');
           $target = $(e.target).parent();
@@ -25,7 +26,9 @@
               $('.container-modifier').html("=>");
               $result.html("= " + new_quantity)
           }
+          $result.removeClass("alert-info alert-danger");
       })
+      // change input method: add/remove or recount
       $('.count-method').change(function(e){
           $input = e.target;
           if ($input.value == 'relative') {

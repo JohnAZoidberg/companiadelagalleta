@@ -4,6 +4,7 @@
       <div class="row">
       {% include "form.html" %}
         <div class="col-sm-6"><!-- Sales list -->
+        {% if g.user.is_admin() %}
           <ul class="list-inline">
             <li>
               <form method="get">
@@ -14,6 +15,7 @@
             <li><a href="?" class="btn btn-default">Hoy</a></li>
             <li><a href="?date={{ date|adddays(1)|dateformat }}" class="btn btn-default glyphicon glyphicon-chevron-right"></a></li>
           </ul>
+        {% endif %}
           <div id="purchases-container">
       {% include "purchases.html" %}
           </div>
@@ -113,6 +115,18 @@ if($option.text() === label) { $hiddenInput.val($option.attr('data-value'));
 
       $("#myForm").on("submit", function(e) {
           e.preventDefault();
+          working_number = 0;
+          $.each( workers, function( index, value ){
+              if (value["working"]) {
+                  working_number++;
+              }
+          });
+          if (working_number < 1) {
+              alert("Empezar trabajo!!");
+              return
+          } else if(working_number < 2) {
+              if (!confirm("Estás trabajando solo?")) return;
+          }
           // display error when submitting without boxes
           if ($('.added-box').length <= 0) {
               $(".box-inputs").addClass("has-error");
