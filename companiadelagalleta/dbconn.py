@@ -143,6 +143,7 @@ class CgBase:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0))
+            price = util.round_cent(price)
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart",
                                   {"syncId": syncId, "boxId": boxId,
