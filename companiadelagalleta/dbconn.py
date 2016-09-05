@@ -461,28 +461,31 @@ class CgBase:
 
     def get_shift_stats(self, month, year):
         self.cur.execute((
-            "SELECT s.workerId, DATE(s.start), TIMEDIFF(end, start),"
-            " start, end, status,"
+            "SELECT workerId, DATE(start), start, status,"
+            "       nn.end, TIMEDIFF(nn.end, start),"
             " ("
-            "   SELECT SUM(c.price * c.quantity) AS total"
+            "   SELECT COALESCE(SUM(c.price * c.quantity),0) AS total"
             "   FROM cart c, purchases p"
             "   WHERE p.location = %s AND p.status <> 2"
             "   AND c.syncId = p.syncId"
-            "   AND s.start < p.date AND p.date < s.end"
+            "   AND start < p.date AND p.date < nn.end"
             " ) AS sales"
-            " FROM shifts AS s"
+            " FROM shifts"
+            " LEFT JOIN("
+            "   SELECT syncId, COALESCE(end, NOW()) AS end"
+            "   FROM shifts"
+            " ) AS nn"
+            " ON nn.syncId = shifts.syncId"
             " WHERE location = %s AND status <> 2"
             " AND MONTH(start) = %s AND YEAR(start) = %s"
-            " AND end IS NOT NULL"
             " ORDER BY start DESC"
         ), (self.location, self.location, month, year))
         result = self.cur.fetchall()
         workdays = OrderedDict()
         summary = OrderedDict()
         for row in result:
-            (workerId, workdate, duration, start, end, status, sales) = row
-            duration = timedelta(0) if duration is None else duration
-            sales = 0 if sales is None else int(sales)
+            (workerId, workdate, start, status, end, duration, sales) = row
+            sales = int(sales)
             shift = {
                 "workerId": workerId,
                 "worker": util.all_workers[workerId],
