@@ -368,11 +368,18 @@ def db_update():
     if version < 800:
         result += "Everything behind a login"
         new_version = 800  # 0.8.0
+    if version < 801:
+        result += "Show stock and shifts only to admins!<br>"
+        result += "Past purchases only for admins"
+        result += "Show ongoing shifts only for admins"
+        result += "Fix stats excel download"
+        new_version = 801  # 0.8.1
 
     if new_version is not None:
         if not failure:
             base.update("config",
-                        {"version": new_version}, True, ("WHERE constant = 'X'", ()))
+                        {"version": new_version}, True,
+                        ("WHERE constant = 'X'", ()))
             base.db.commit()
             result += ("Updated from " + jinja_filters.readable_version(version)
                     + " to " + jinja_filters.readable_version(new_version)+"\n")
