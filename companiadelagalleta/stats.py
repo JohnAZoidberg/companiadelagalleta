@@ -86,7 +86,4 @@ def create_stats_file(location):
         trabajo["C" + s_row] = item['end']
         row += 1
 
-    wb.save(os.path.join(app.root_path, "/estadisticas.xlsx"))
-
-if __name__ == "__main__":
-    create_stats_file(0)
+    wb.save(os.path.join(app.root_path, 'estadisticas.xlsx'))
