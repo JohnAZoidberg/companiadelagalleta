@@ -39,6 +39,8 @@
               {% if g.user.is_admin() %}
               <li><a href="stock"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
               <li><a href="shifts"><span class="glyphicon glyphicon-user"></span> Trabajo</a></li>
+              <li><a href="stats"><span class="glyphicon glyphicon-download-alt"></span> Download</a></li>
+              <li><a href="update"><span class="glyphicon glyphicon-refresh"></span> Update</a></li>
               {% endif %}
               {% if g.user.is_authenticated() %}
               <li>
