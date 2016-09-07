@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+      <h2><a href="{{ url_for('stock_page.stock') }}">Stock</a> <small>{{ container_name }}</small></h2>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+        {% for item in stock %}
+        <tr class="{{ 'info' if item['recounted'] == 1 }}">
+            <td>{{ item["recounted"]|recountedformat }}</td>
+            {% if not ((item["date"] is sameDayAs stock[loop.index0 -1]["date"]) and not loop.first) %}
+            <td>
+              {{ item["date"]|datetimeformat }}
+            </td>
+            {% else  %}
+            <td>
+              <span style="color: lightgrey;">{{ item["date"]|dateformat }}</span>
+              {{ item["date"]|timeformat }}
+            </td>
+            {% endif %}
+            <td>{{ item["quantity"] }}</td>
+            <td>{{ item["tally"] }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+{% endblock %}
+{% block script %}
+    <script>
+  {{ super() }}
+      function reload_content() {
+          // pass
+      }
+    </script>
+{% endblock %}

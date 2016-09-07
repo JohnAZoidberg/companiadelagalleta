@@ -35,12 +35,12 @@
           </div>
           <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav navbar-right">
-              <li><a href="home"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+              <li><a href="{{ url_for("home_page.home") }}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
               {% if g.user.is_admin() %}
-              <li><a href="stock"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
-              <li><a href="shifts"><span class="glyphicon glyphicon-user"></span> Trabajo</a></li>
-              <li><a href="stats"><span class="glyphicon glyphicon-download-alt"></span> Download</a></li>
-              <li><a href="update"><span class="glyphicon glyphicon-refresh"></span> Update</a></li>
+              <li><a href="{{ url_for("stock_page.stock") }}"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
+              <li><a href="{{ url_for("shifts_page.shifts") }}"><span class="glyphicon glyphicon-user"></span> Trabajo</a></li>
+              <li><a href="{{ url_for("stats_download.stats") }}"><span class="glyphicon glyphicon-download-alt"></span> Download</a></li>
+              <li><a href="{{ url_for("update_page.update") }}"><span class="glyphicon glyphicon-refresh"></span> Update</a></li>
               {% endif %}
               {% if g.user.is_authenticated() %}
               <li>
@@ -65,7 +65,7 @@
                 </div>
               </li>
               {% if not server and False %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
-              <li><a href="logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+              <li><a href="{{ url_for("login_page.logout") }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
               {% endif %}
             </ul>
           </div>

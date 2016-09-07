@@ -15,7 +15,6 @@ from companiadelagalleta import util, jinja_filters
 from flask import Markup
 
 
-
 class UtilTestCase(unittest.TestCase):
     def test_is_same_day(self):
         test_dates = [
@@ -40,6 +39,20 @@ class UtilTestCase(unittest.TestCase):
             12, 0, datetime(2016, 8, 12, 12, 0, 1))
         assert util.earlier_than(
             12, 0, datetime(2016, 8, 12, 11, 0, 0))
+
+    def test_round_cent(self):
+        test_cases = [
+            (10, 0),
+            (100, 100),
+            (1000, 1000),
+            (10000, 10000),
+            (10005, 10000),
+            (10050, 10100),
+            (10040, 10000)
+        ]
+        for input, result in test_cases:
+            self.assertEqual(result, util.round_cent(input))
+
 
 class JinjaFiltersTestCase(unittest.TestCase):
     def test_money_format(self):

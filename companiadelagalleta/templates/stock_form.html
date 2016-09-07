@@ -8,7 +8,7 @@
                or (i == 1 and containerId >=  7 and containerId < 13)
                or (i == 2 and containerId >= 13 and containerId < 19) %}
             <div class="form-group">
-              <label class="control-label col-sm-5" for="box">{{ details['title'] }}:{{ stock[containerId]['status'] }} </label>
+              <label class="control-label col-sm-5" for="box"><a href="{{ url_for('stock_page.container_stock', container_id=containerId) }}">{{ details['title'] }}: {{ stock[containerId]['status'] }}</a></label>
               <div class="col-sm-7 input-group container-inputs" style="padding: 0 15px;" data-quantity="{{ stock[containerId]['quantity'] }}">
                 <div class="input-group-addon {{ 'alert-danger' if stock[containerId]['status'] != 3 and not server else ' alert-info' }}">{{ stock[containerId]['quantity'] }} <span class="container-modifier">+</span></div>
                 <input type="number" class="form-control quantity" name="container_{{ containerId }}" value="0" required>

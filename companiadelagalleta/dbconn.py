@@ -143,6 +143,7 @@ class CgBase:
                 print "This boxId does not exist"
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0))
+            price = util.round_cent(price)
             # status: 0: new, 1: edited, 2: deleted, 3: synced
             success = self.insert("cart",
                                   {"syncId": syncId, "boxId": boxId,
@@ -529,9 +530,15 @@ class CgBase:
             "  ORDER BY j.date DESC LIMIT 1) "
             "GROUP BY i.containerId")
         status_sql = (
-            "SELECT containerId, status "
-            "FROM stock "
-            "WHERE status <> 2 AND location = %s "
+            "SELECT s1.containerId, s1.status"
+            " FROM stock s1"
+            " LEFT JOIN stock s2 ON s1.containerId = s2.containerId"
+            "   AND s1.date < s2.date"
+            " WHERE s2.containerId IS NULL"
+            " AND s1.status <> 2 AND s1.location = %s"
+            #" AND syncId = ("
+            #"   SELECT "
+            #" )"
         )
         sql = (
             "SELECT Sub1.containerId, Sub1.quantity, Sub2.status "
@@ -539,7 +546,6 @@ class CgBase:
             "INNER JOIN (" + status_sql + ") Sub2 "
             "ON Sub1.containerId = Sub2.containerId"
         )
-        print sql
 
         result = self.simple_fetchall(sql, (self.location, self.location))
         containers = {}
@@ -550,6 +556,40 @@ class CgBase:
                 'status': status
             }
         return containers
+
+    def get_container_stock(self, container_id):
+        # TODO fetch correct location and not deleted stuff
+        sql = (
+            "   SELECT quantity, date, recounted"
+            "   FROM stock"
+            "   WHERE containerId = %s "
+            "     AND status <> 2"
+            " UNION ALL"
+            "   SELECT cart.quantity * -1, purchases.date, 2"
+            "   FROM boxes, cart, purchases "
+            "   WHERE purchases.syncId = cart.syncId"
+            "     AND cart.boxId = boxes.boxesEntryId"
+            "     AND boxes.container = %s"
+            "     AND purchases.status <> 2"
+            " ORDER BY date ASC"
+        )
+
+        stats = []
+        result = self.simple_fetchall(sql, (container_id, container_id))
+        tally = 0
+        for row in result:
+            (quantity, date, recounted) = row
+            if recounted == 0 or recounted == 2:
+                tally += quantity
+            elif recounted == 1:
+                tally = quantity
+            stats.append({
+                "quantity": quantity,
+                "date": date,
+                "recounted": recounted,
+                "tally": tally
+            })
+        return list(reversed(stats))[:50]
 
     def get_stock_items(self, allLocations=False, notsynced=False, datestring=False,
                   newerthan=None, returndict=False, containerIndexed=False, notnow=False):

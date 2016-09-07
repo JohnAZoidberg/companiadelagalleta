@@ -374,6 +374,9 @@ def db_update():
         result += "Show ongoing shifts only for admins"
         result += "Fix stats excel download"
         new_version = 801  # 0.8.1
+    if version < 10000:
+        result += "Add stock history for individual box"
+        new_version = 10000  # 1.0.0
 
     if new_version is not None:
         if not failure:

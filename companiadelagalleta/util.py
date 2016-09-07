@@ -73,7 +73,7 @@ country_list = OrderedDict([
 ])
 
 workers = OrderedDict([
-    (0, "Daniel"),
+    #(0, "Daniel"),
     (1, "Patricia"),
     # (2, "Raquel"),
     (3, "Roberta")
@@ -225,22 +225,31 @@ def log(*lines):
             + ["-----\n"]
         ))
 
+
 def html_newlines(input_str):
     return input_str.replace("\n", br)
+
 
 def only_admins(redirect_home=True):
     def decorator(func):
         from flask import flash, g, redirect, url_for, abort
         from flask_login import login_required
+
         @login_required
         @wraps(func)
         def wrapper(*args, **kwargs):
             if not g.user.is_admin():
                 if redirect_home:
-                    flash("The requested page is only accessible by admins!", "danger")
+                    flash("The requested page is only accessible by admins!",
+                          "danger")
                     return redirect(url_for("home_page.home"))
                 else:
                     abort(401)
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+# 1ct = 100, 1€ = 100 00
+def round_cent(x):
+    return int(round(x / 100.0)) * 100
