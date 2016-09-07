@@ -76,6 +76,7 @@ def container_stock(container_id):
     now = datetime.now()
     base = CgBase(location)
     stock = base.get_container_stock(container_id)
+    container_name = util.containers[container_id]["title"]
     workers = base.get_workers()
     version = base.get_version()
 
@@ -89,6 +90,7 @@ def container_stock(container_id):
         workers=workers,
         containers=util.containers,
         stock=stock,
+        container_name=container_name,
         version=version
     ))
     for key, val in new_cookies.iteritems():
