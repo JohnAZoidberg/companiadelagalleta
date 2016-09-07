@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Quantity</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+            {% for item in stock %}
+            <tr class="{{ 'info' if item['recounted'] == 1 }}">
+                <td>{{ item["recounted"]|recountedformat }}</td>
+                <td>{{ item["date"]|datetimeformat }}</td>
+                <td>{{ item["quantity"] }}</td>
+                <td>{{ item["tally"] }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+{% endblock %}
+{% block script %}
+    <script>
+  {{ super() }}
+      function reload_content() {
+          // pass
+      }
+    </script>
+{% endblock %}

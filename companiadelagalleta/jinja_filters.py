@@ -62,5 +62,14 @@ def durationformat(value):
 def weekdayformat(value):
     return util.weekdays[value.weekday()]
 
+
 def monthformat(value):
     return util.months[value]
+
+def recountedformat(value):
+    if value == 0:
+        return "Addition"
+    elif value == 1:
+        return ""
+    elif value == 2:
+        return "Purchase"
