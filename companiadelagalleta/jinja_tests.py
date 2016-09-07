@@ -10,3 +10,6 @@ def continent(value):
 
 def today(value):
     return util.is_same_day(datetime.now(), value)
+
+def sameDayAs(value1, value2):
+    return util.is_same_day(value1, value2)

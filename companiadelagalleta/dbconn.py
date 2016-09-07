@@ -583,7 +583,7 @@ class CgBase:
                 "recounted": recounted,
                 "tally": tally
             })
-        return reversed(stats[25:])
+        return list(reversed(stats[25:]))
 
     def get_stock_items(self, allLocations=False, notsynced=False, datestring=False,
                   newerthan=None, returndict=False, containerIndexed=False, notnow=False):

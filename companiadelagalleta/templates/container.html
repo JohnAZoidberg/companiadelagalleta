@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-      <h2>Stock <small>{{ container_name }}</small></h2>
+      <h2><a href="{{ url_for('stock_page.stock') }}">Stock</a> <small>{{ container_name }}</small></h2>
       <table class="table table-hover">
         <thead>
           <tr>
@@ -15,7 +15,16 @@
         {% for item in stock %}
         <tr class="{{ 'info' if item['recounted'] == 1 }}">
             <td>{{ item["recounted"]|recountedformat }}</td>
-            <td>{{ item["date"]|datetimeformat }}</td>
+            {% if not ((item["date"] is sameDayAs stock[loop.index0 -1]["date"]) and not loop.first) %}
+            <td>
+              {{ item["date"]|datetimeformat }}
+            </td>
+            {% else  %}
+            <td>
+              <span style="color: lightgrey;">{{ item["date"]|dateformat }}</span>
+              {{ item["date"]|timeformat }}
+            </td>
+            {% endif %}
             <td>{{ item["quantity"] }}</td>
             <td>{{ item["tally"] }}</td>
           </tr>
