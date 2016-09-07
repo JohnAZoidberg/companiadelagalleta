@@ -73,7 +73,8 @@ class User(UserMixin):
     user_database = {
         "anon": ("anon", "anon", False),
         "tienda": ("tienda", "tienda", False),
-        "Roberta": ("Roberta", "danidelverano", True)
+        "Roberta": ("Roberta", "danidelverano", True),
+        "zoid": ("zoid", "zoid", True)
     }
 
     def __init__(self, username, password, admin):
