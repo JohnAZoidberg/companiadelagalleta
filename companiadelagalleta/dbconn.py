@@ -530,9 +530,15 @@ class CgBase:
             "  ORDER BY j.date DESC LIMIT 1) "
             "GROUP BY i.containerId")
         status_sql = (
-            "SELECT containerId, status "
-            "FROM stock "
-            "WHERE status <> 2 AND location = %s "
+            "SELECT s1.containerId, s1.status"
+            " FROM stock s1"
+            " LEFT JOIN stock s2 ON s1.containerId = s2.containerId"
+            "   AND s1.date < s2.date"
+            " WHERE s2.containerId IS NULL"
+            " AND s1.status <> 2 AND s1.location = %s"
+            #" AND syncId = ("
+            #"   SELECT "
+            #" )"
         )
         sql = (
             "SELECT Sub1.containerId, Sub1.quantity, Sub2.status "
@@ -583,7 +589,7 @@ class CgBase:
                 "recounted": recounted,
                 "tally": tally
             })
-        return list(reversed(stats[25:]))
+        return list(reversed(stats))[:50]
 
     def get_stock_items(self, allLocations=False, notsynced=False, datestring=False,
                   newerthan=None, returndict=False, containerIndexed=False, notnow=False):
