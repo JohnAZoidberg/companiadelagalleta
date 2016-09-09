@@ -24,18 +24,36 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            <span class="navbar-brand">Ventas (v{{ version|readable_version }})</span>
-            {% if g.user.is_authenticated() %}
-            <span class="navbar-brand" id="working-now">
-              {% for wid, worker in workers.iteritems() if worker["working"] %}
-              <span class="end-work" data-worker="{{ wid }}">{{ worker["name"] }}</span>
-              {% endfor %}
-            {% endif %}
-            </span>
+            <a href="{{ url_for("home_page.home") }}" class="navbar-brand">Ventas (v{{ version|readable_version }})</a></span>
           </div>
+
           <div class="collapse navbar-collapse" id="myNavbar">
+            {% if g.user.is_authenticated() %}
+            <ul class="nav navbar-nav navbar-left">
+              <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" role="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ locations[location] }} <span class="caret"></a>
+                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
+                    {% for lid, location in locations.iteritems() %}
+                    <li><a href="?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
+                    {% endfor %}
+                  </ul>
+              </li>
+              <li class="dropdown">
+                <a class="dropdown-toggle" role="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Empezar <span class="caret"></span></a>
+                <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                  {% for wid, worker in workers.iteritems() if not worker["working"] %}
+                  <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
+                  {% endfor %}
+                </ul>
+              </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-left" id="working-now">
+              {% for wid, worker in workers.iteritems() if worker["working"] %}
+              <li class="end-work" data-worker="{{ wid }}"><a href="#">{{ worker["name"] }}</a></li>
+              {% endfor %}
+            </ul>
+            {% endif %}
             <ul class="nav navbar-nav navbar-right">
-              <li><a href="{{ url_for("home_page.home") }}"><span class="glyphicon glyphicon-home"></span> Home</a></li>
               {% if g.user.is_admin() %}
               <li><a href="{{ url_for("stock_page.stock") }}"><span class="glyphicon glyphicon-list-alt"></span> Stock</a></li>
               <li><a href="{{ url_for("shifts_page.shifts") }}"><span class="glyphicon glyphicon-user"></span> Trabajo</a></li>
@@ -43,27 +61,6 @@
               <li><a href="{{ url_for("update_page.update") }}"><span class="glyphicon glyphicon-refresh"></span> Update</a></li>
               {% endif %}
               {% if g.user.is_authenticated() %}
-              <li>
-                <div class="dropdown margin-5">
-                  <button class="btn btn-default dropdown-toggle" type="button" id="locationDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">{{ locations[location] }} <span class="caret"></button>
-                  <ul class="dropdown-menu" aria-labelledby="locationDropdown">
-                    {% for lid, location in locations.iteritems() %}
-                    <li><a href="?date={{ date|dateformat }}&location={{ lid }}">{{ location }} </a></li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </li>
-              <li>
-                <div class="dropdown margin-5">
-                  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">Empezar <span class="caret"></span>
-                  </button>
-                  <ul id="not-working-now" class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                    {% for wid, worker in workers.iteritems() if not worker["working"] %}
-                    <li><a href="#" class="begin-work" data-worker="{{ wid }}">{{ worker["name"] }}</a></li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </li>
               {% if not server and False %}<li><a href="#" id="sync-now"><span class="glyphicon glyphicon-refresh"></span> Sync</a></li>{% endif %}
               <li><a href="{{ url_for("login_page.logout") }}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
               {% endif %}
@@ -116,7 +113,7 @@
           not_workingstr = "";
           $.each( workers, function( index, value ){
               if (value["working"]) {
-                  workingstr += '<span class="end-work" data-worker="' + index + '">' + value["name"] + "</span> ";
+                  workingstr += '<li class="end-work" data-worker="' + index + '"><a href="#">' + value["name"] + '</a></li>';
               } else {
                   not_workingstr += '<li><a href="#" class="begin-work" data-worker="' + index + '">' + value["name"] + '</a></li> ';
               }
@@ -138,7 +135,7 @@
       });
       // end work
       $("#working-now").on('click', '.end-work', function() {
-          worker = $(this).html();
+          worker = $(this).text();
           if (confirm("Acabar trabajo como " + worker + "?")) {
               workerId = $(this).data("worker");
               workers[workerId]["working"] = false;
