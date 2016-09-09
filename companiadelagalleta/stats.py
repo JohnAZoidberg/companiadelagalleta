@@ -76,7 +76,7 @@ def create_stats_file(location):
         cajas["B" + row] = title
         cajas["C" + row] = price
 
-    # Insert work hours
+    """# Insert work hours
     trabajo = wb.get_sheet_by_name("Trabajo")
     row = 2
     for item in shifts:
@@ -84,6 +84,6 @@ def create_stats_file(location):
         trabajo["A" + s_row] = util.all_workers[item['workerId']]
         trabajo["B" + s_row] = item['start']
         trabajo["C" + s_row] = item['end']
-        row += 1
+        row += 1"""
 
     wb.save(os.path.join(app.root_path, 'estadisticas.xlsx'))

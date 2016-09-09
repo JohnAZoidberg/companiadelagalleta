@@ -378,8 +378,10 @@ def db_update():
         result += "Add stock history for individual box"
         new_version = 10000  # 1.0.0
     if version < 10001:
-        result += "Fix excel file and add september"
+        result += "Fix excel file and add september\n"
         new_version = 10001  # 1.0.1
+    if version < 10002:
+        new_version = 10002  # 1.0.2
 
     if new_version is not None:
         if not failure:
