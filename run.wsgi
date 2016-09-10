@@ -8,7 +8,5 @@ from werkzeug.debug import DebuggedApplication
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from companiadelagalleta import app
-from companiadelagalleta.dbdetails import dbdetails
 app.debug = True
-app.config['SECRET_KEY'] = dbdetails.secret
 application = DebuggedApplication(app, True)

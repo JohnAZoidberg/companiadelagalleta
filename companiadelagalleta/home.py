@@ -15,6 +15,7 @@ from dbdetails import dbdetails
 from flask import Blueprint, render_template, request, make_response, g,\
     redirect, flash, url_for
 from flask_login import login_required
+from flask_mail import Message
 
 home_page = Blueprint('home_page', __name__, template_folder='templates')
 @home_page.route('/', methods=['GET'])
@@ -69,9 +70,11 @@ def hello():
 @home_page.route('/test', methods=['GET'])
 @util.only_admins(redirect_home=False)
 def test():
-    base = CgBase(0)
-    #util.log("Testlog")
-    return "Done"
+    #base = CgBase(0)
+    msg = Message("Hello",
+                  recipients=["galletas@danielschaefer.me"])
+    g.mail.send(msg)
+    return "Sent email"
 
 @login_required
 @home_page.route('/purchases', methods=['GET'])

@@ -35,6 +35,7 @@ def save_purchase():
             purchase['discount'], purchase['boxes'], edited,
             note=purchase['note'])
         if insert_success:
+            base.send_stock_mail()
             resp = jsonify({"save_purchase": "Successful"})
             resp.status_code = 201
             return resp
@@ -169,6 +170,7 @@ def sync():
                     insert_item(base, _type, item, sync_time)
                 synced['deleted'][_type].append(sync_id)
     base.db.commit()
+    base.send_stock_mail()
 
     if dbdetails.server:
         # get data to return

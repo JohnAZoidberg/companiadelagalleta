@@ -18,15 +18,29 @@ from api import api_page
 from login import login_page, User
 import jinja_filters
 import jinja_tests
+from dbdetails import dbdetails
 
 from flask import Flask, g
 from flask_login import LoginManager, session
+from flask_mail import Mail
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = dbdetails.secret
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_page.login'
 login_manager.session_protection = "strong"
+
+app.config['MAIL_DEFAULT_SENDER'] = "galletas@danielschaefer.me"
+app.config['MAIL_SERVER'] = 'smtp.strato.de'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'galletas@danielschaefer.me'
+app.config['MAIL_PASSWORD'] = dbdetails.email_pw
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -35,6 +49,7 @@ def load_user(user_id):
 
 @app.before_request
 def load_session_user():
+    g.mail = mail
     if "user_id" in session:
         user = User.get(session["user_id"])
     else:
@@ -69,6 +84,4 @@ app.register_blueprint(stats_download)
 
 
 if __name__ == "__main__":
-    from dbdetails import dbdetails
-    app.config['SECRET_KEY'] = dbdetails.secret
     app.run(debug=True, threaded=True)

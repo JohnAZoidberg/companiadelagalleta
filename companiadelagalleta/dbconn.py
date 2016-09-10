@@ -7,9 +7,11 @@ import cgitb
 cgitb.enable()  # Displays any errors
 
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import MySQLdb
+from flask import g
+from flask_mail import Message
 
 import util
 from dbdetails import dbdetails
@@ -536,9 +538,6 @@ class CgBase:
             "   AND s1.date < s2.date"
             " WHERE s2.containerId IS NULL"
             " AND s1.status <> 2 AND s1.location = %s"
-            #" AND syncId = ("
-            #"   SELECT "
-            #" )"
         )
         sql = (
             "SELECT Sub1.containerId, Sub1.quantity, Sub2.status "
@@ -563,19 +562,20 @@ class CgBase:
             "   SELECT quantity, date, recounted"
             "   FROM stock"
             "   WHERE containerId = %s "
-            "     AND status <> 2"
+            "     AND status <> 2 AND location = %s"
             " UNION ALL"
             "   SELECT cart.quantity * -1, purchases.date, 2"
             "   FROM boxes, cart, purchases "
             "   WHERE purchases.syncId = cart.syncId"
             "     AND cart.boxId = boxes.boxesEntryId"
             "     AND boxes.container = %s"
-            "     AND purchases.status <> 2"
+            "     AND purchases.status <> 2 AND purchases.location = %s"
             " ORDER BY date ASC"
         )
 
         stats = []
-        result = self.simple_fetchall(sql, (container_id, container_id))
+        result = self.simple_fetchall(sql,
+            (container_id, self.location, container_id, self.location))
         tally = 0
         for row in result:
             (quantity, date, recounted) = row
@@ -661,3 +661,22 @@ class CgBase:
         else:
             self.db.rollback()
         return success
+
+    def send_stock_mail(self):
+        #if not dbdetails.server:
+        #    return
+        stock = self.get_stock()
+        with g.mail.connect() as conn:
+            for container_id, container in stock.iteritems():
+                quantity = container["quantity"]
+                name = util.containers[container_id]["title"]
+                if quantity < 20:
+                    subject = "Low on " + name
+                    message = "There are only {0} boxes of type {1} left".format(
+                        quantity, name
+                    )
+                    msg = Message(recipients=["galletas@danielschaefer.me"],
+                                  body=message,
+                                  subject=subject)
+                    conn.send(msg)
+                    print message
