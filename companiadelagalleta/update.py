@@ -382,6 +382,9 @@ def db_update():
         new_version = 10001  # 1.0.1
     if version < 10002:
         new_version = 10002  # 1.0.2
+    if version < 10003:
+        result += "Add Pedro\n"
+        new_version = 10003  # 1.0.3
 
     if new_version is not None:
         if not failure:
