@@ -5,3 +5,6 @@ estadisticas.xlsx
 *.pyc
 *.swp
 .ropeproject/
+build/
+*.egg-info/
+dist/
