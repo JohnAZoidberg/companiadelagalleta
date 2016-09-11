@@ -9,6 +9,7 @@ cgitb.enable()  # Displays any errors
 from inspect import getmembers, isfunction
 
 import util
+from dbdetails import dbdetails as dbd
 from home import home_page
 from stock import stock_page
 from shifts import shifts_page
@@ -18,11 +19,16 @@ from api import api_page
 from login import login_page, User
 import jinja_filters
 import jinja_tests
+from models import db
 
 from flask import Flask, g
 from flask_login import LoginManager, session
 
 app = Flask(__name__)
+db_uri = 'mysql://{}:{}@{}/{}'.format(dbd.user, dbd.passwd, dbd.host, "alchemy")
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+db.init_app(app)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_page.login'
@@ -41,6 +47,10 @@ def load_session_user():
         user = User.get("anon")
 
     g.user = user
+
+@app.before_first_request
+def create_database():
+     db.create_all()
 
 # add jinja filters and testswith inspection
 my_filters = {name: function
