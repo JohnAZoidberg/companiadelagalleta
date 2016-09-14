@@ -4,6 +4,7 @@ report.xlsx
 estadisticas.xlsx
 *.pyc
 *.swp
+*.swo
 .ropeproject/
 build/
 *.egg-info/

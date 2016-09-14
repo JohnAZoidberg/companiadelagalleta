@@ -8,6 +8,7 @@ cgitb.enable()  # Displays any errors
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from model import *
 
 import MySQLdb
 
@@ -18,6 +19,7 @@ import jinja_filters
 
 class CgBase:
     def __init__(self, location):
+        pass
         self.db = self._connectDb()
         self.db.autocommit(False)
         self.cur = self.db.cursor()
@@ -61,7 +63,7 @@ class CgBase:
         except:
             raise
 
-    def fetchone(self, table, columns, extra=("", ())):
+    def _fetchone(self, table, columns, extra=("", ())):
         self._fetch(table, columns, extra)
         result = self.cur.fetchone()
         if result is None:
@@ -70,15 +72,15 @@ class CgBase:
             return result[0]
         return result
 
-    def fetchall(self, table, columns, extra=("", ()), returndict=False):
+    def _fetchall(self, table, columns, extra=("", ()), returndict=False):
         self._fetch(table, columns, extra, returndict=returndict)
         return self.cur.fetchall()
 
-    def simple_fetchall(self, sql, extras):
+    def _simple_fetchall(self, sql, extras):
         self.cur.execute(sql, extras)
         return self.cur.fetchall()
 
-    def update(self, table, columnsdata, commit, extra, increment={}):
+    def _update(self, table, columnsdata, commit, extra, increment={}):
         try:
             first = True
             sqlstr = "UPDATE " + table + " SET "
@@ -105,7 +107,7 @@ class CgBase:
             raise
         return False
 
-    def insert(self, table, columns_data, commit, extra=("", ())):
+    def _insert(self, table, columns_data, commit, extra=("", ())):
         column_str = self._list_to_str(columns_data.keys())
         data_str, data_param = self._list_to_sql(columns_data.values())
         try:
@@ -125,41 +127,33 @@ class CgBase:
 
     def insert_purchase(self, country, card, date, discount, cart, edited,
                         location=None, status=0, syncId=None, note=None):
-        success = False
         if note == "":
             note = None
         if location is None:
             location = self.location
-        # a unique id to identify entries: unixtimestamp + 4 random digits
-        if syncId is None:
-            syncId = str(util.uniqueId())
         if len(cart) == 0:
-            success = True
-        for boxId, quantity in cart.iteritems():
-            price, containerId = self.fetchone(
-                "boxes", ["price", "container"],
-                (" WHERE boxesEntryId = %s", (boxId,)))
-            if price is None:
-                print "This boxId does not exist"
+            raise Exception("Empty cart")
+
+        cart_items = []
+        for box_id, quantity in cart.iteritems():
+            box = Box.query.get(box_id)
+            if box is None:
+                raise Exception("Box does not exists")
+            price = box.price
+            container_id = box.container_id
+
+            # apply discount
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0))
             price = util.round_cent(price)
-            # status: 0: new, 1: edited, 2: deleted, 3: synced
-            success = self.insert("cart",
-                                  {"syncId": syncId, "boxId": boxId,
-                                   "quantity": quantity, "price": price},
-                                  False)
-        success = success and self.insert("purchases",
-            {"country": country, "card": int(card),
-             "date": util.datestring(date), "discount": discount,
-             "status": status, "syncId": syncId, "edited": edited,
-             "location": location, "note": note},
-            False
-        )
-        if success:
-            self.db.commit()
-        else:
-            self.db.rollback()
+
+            cart_items.append(CartItem(None, boxId, container_id, price))
+
+        purchase = Purchase(location, country, card, discount,
+                                  discount, cart_items)
+        g.db.session.add(purchase)
+        g.db.session.commit()
+        success = True
         return success
 
     def insert_shift(self, workerId, start, end, edited,
@@ -240,7 +234,7 @@ class CgBase:
             where[0] += " AND purchases.status <> 3"
         if not getDeleted:
             where[0] += " AND purchases.status <> 2"
-        result = self.fetchall(
+        result = self._fetchall(
             pt+", "+ct+", "+bt,
             [pt+".syncId", pt+".country", pt+".card", pt+".discount",
              pt+".date", pt+".status", pt+".edited", pt+".location",
@@ -380,7 +374,7 @@ class CgBase:
 
     def get_boxes(self):
         boxes = OrderedDict()
-        results = self.fetchall("boxes", ["boxesEntryId", "title", "price"])
+        results = self._fetchall("boxes", ["boxesEntryId", "title", "price"])
         for result in results:
             (boxId, title, price) = result
             boxes[boxId] = {"title": title, "price": price}
@@ -390,13 +384,13 @@ class CgBase:
         self.update("config", {"last_sync": util.datestring(date)}, True, ("", ()))
 
     def get_last_sync(self):
-        return self.fetchone("config", ["last_sync"])
+        return self._fetchone("config", ["last_sync"])
 
     def get_version(self):
-        return self.fetchone("config", ["version"])
+        return self._fetchone("config", ["version"])
 
     def begin_work(self, workerId):
-        res = self.fetchone("shifts", ["workerId"],
+        res = self._fetchone("shifts", ["workerId"],
                             ("WHERE workerId = %s AND end IS NULL",
                              (workerId,)))
         if res is not None:
@@ -414,7 +408,7 @@ class CgBase:
             return end
 
     def get_workers(self):
-        working = self.fetchall("shifts", ["workerId"],
+        working = self._fetchall("shifts", ["workerId"],
                                 ("WHERE end IS NULL", ()))
         working = [w[0] for w in working] if working else []
         workers = {
@@ -441,7 +435,7 @@ class CgBase:
         if not getDeleted:
             where[0] += " AND status <> 2"
         where[0] += " ORDER BY start DESC"
-        result = self.fetchall("shifts",
+        result = self._fetchall("shifts",
             ["workerId", "start", "end", "syncId", "status", "edited", "location"],
             (where[0], tuple(where[1]))
         )
@@ -481,7 +475,7 @@ class CgBase:
             " AND MONTH(start) = %s AND YEAR(start) = %s"
             " ORDER BY start DESC"
         ), (self.location, self.location, month, year))
-        result = self.cur.fetchall()
+        result = self.cur._fetchall()
         workdays = OrderedDict()
         summary = OrderedDict()
         for row in result:
@@ -547,7 +541,7 @@ class CgBase:
             "ON Sub1.containerId = Sub2.containerId"
         )
 
-        result = self.simple_fetchall(sql, (self.location, self.location))
+        result = self._simple_fetchall(sql, (self.location, self.location))
         containers = {}
         for row in result:
             (containerId, quantity, status) = row
@@ -575,7 +569,7 @@ class CgBase:
         )
 
         stats = []
-        result = self.simple_fetchall(sql, (container_id, container_id))
+        result = self._simple_fetchall(sql, (container_id, container_id))
         tally = 0
         for row in result:
             (quantity, date, recounted) = row

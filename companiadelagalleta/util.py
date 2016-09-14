@@ -210,6 +210,8 @@ def datestring(date):
     except AttributeError as e:
         if str(e) == "'unicode' object has no attribute 'strftime'":
             return date
+        elif str(e) == "'NoneType' object has no attribute 'strftime'":
+            return None
         else:
             raise
 

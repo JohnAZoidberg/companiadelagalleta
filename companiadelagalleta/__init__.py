@@ -19,7 +19,7 @@ from api import api_page
 from login import login_page, User
 import jinja_filters
 import jinja_tests
-from models import db
+from model import db
 
 from flask import Flask, g
 from flask_login import LoginManager, session
@@ -47,6 +47,7 @@ def load_session_user():
         user = User.get("anon")
 
     g.user = user
+    g.db = db
 
 @app.before_first_request
 def create_database():

@@ -22,7 +22,7 @@
               </tr>
               {% for item in purchase['cart'] %}
               <tr class="syncid-{{ purchase['syncId'] }}">
-                <td align="right" colspan="2">{{ item['title'] }}</td>
+                <td align="right" colspan="2">{{ item.box["name"] }}</td>
                 <td>x{{ item['quantity'] }}</td>
                 <td align="right">{{ item['price']|moneyformat }}</td>
               </tr>
