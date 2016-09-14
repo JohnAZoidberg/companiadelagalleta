@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from model import *
 
 import MySQLdb
+from flask import g
 
 import util
 from dbdetails import dbdetails
@@ -140,17 +141,16 @@ class CgBase:
             if box is None:
                 raise Exception("Box does not exists")
             price = box.price
-            container_id = box.container_id
 
             # apply discount
             # if discount == 10 then multiply by .9
             price = int(price * ((100 - discount) / 100.0))
             price = util.round_cent(price)
 
-            cart_items.append(CartItem(None, boxId, container_id, price))
+            cart_items.append(CartItem(None, box_id, quantity, price))
 
         purchase = Purchase(location, country, card, discount,
-                                  discount, cart_items)
+                            date, cart_items)
         g.db.session.add(purchase)
         g.db.session.commit()
         success = True

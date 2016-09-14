@@ -80,25 +80,24 @@ def test():
     #strl_veg = model.Box(62, "Strelitzia Vegana", 159500, 15)
     #shift = model.Shift(0, 1, datetime.now())
     #strelitzia_stock = model.StockItem(0, 15, 5, 1, datetime.now())
-    carts = [
-        CartItem(None, 52, 1, 149500),
-        CartItem(None, 62, 2, 159500)
-    ]
-    purchase = Purchase(0, "de", False, 0, datetime.now(), carts)
+    #carts = [
+        #CartItem(None, 52, 1, 149500),
+        #CartItem(None, 62, 2, 159500)
+    #]
+    #purchase = Purchase(0, "de", False, 0, datetime.now(), carts)
     #g.db.session.add(strelitzia)
     #g.db.session.add(strl_can)
     #g.db.session.add(strl_veg)
     #g.db.session.add(strelitzia_stock)
     #g.db.session.add(shift)
     #g.db.session.commit()
-    g.db.session.add(purchase)
-    g.db.session.commit()
+    #g.db.session.add(purchase)
+    #g.db.session.commit()
     #res = model.Purchase.query.all()
-    res = model.Purchase.query.first()
+    res = Box.query.get(10)
     print res
-    res = model.CartItem.query.limit(10).all()
-    for i in res:
-        print i
+    res = Box.query.get("10")
+    print res
 
     return "Queried"
 
