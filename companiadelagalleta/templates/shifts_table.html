@@ -24,18 +24,17 @@
                 </td>
               </tr>
               {% for shift in workday %}
-              <tr class="toggle-edit {{ 'danger' if shift['status'] != 3 and not server else 'info' }}" data-syncid="{{ shift['syncId']}}">
+              <tr class="clickable toggle-edit {{ 'danger' if shift['status'] != 3 and not server else 'info' }}" data-syncid="{{ shift['syncId']}}">
                 <td align="right">{{ shift['worker'] }}</td>
                 <td>{{ shift['duration']|durationformat }}</td>
                 <td>{{ shift['start']|timeformat }} - {{ shift['end']|timeformat }}</td>
                 <td>{{ shift['sales']|moneyformat }} ({{ (shift['sales'] * 0.03)|moneyformat }})</td>
               </tr>
               <tr class="gone edit-inputs" data-syncid="{{ shift['syncId']}}">
-                <td colspan="2" align="right">
+                <td colspan="4" align="center">
                   <input type="text" class="edit-shift shift-start" value="{{ shift['start']|datetimeformat }}">
-                </td>
-                <td colspan="2">
                   <input type="text" class="edit-shift shift-end" value="{{ shift['end']|datetimeformat }}">
+                  <span class="delete-shift clickable glyphicon glyphicon-trash"></span>
                 </td>
               </tr>
               {% endfor %}

@@ -10,22 +10,63 @@
   {{ super() }}
       // edit shift
       // toggle inputs
-      // actually edit
       $('#shifts-container').on('click', '.toggle-edit', function (e) {
               var sync_id = $(this).data("syncid");
               console.log(sync_id)
               $('.edit-inputs[data-syncid="' + sync_id + '"]').toggleClass("gone");
+      });
+      // delete shift
+      $('#shifts-container').on('click', '.delete-shift', function (e) {
+              $parent = $(this).parent()
+              var sync_id = $parent.parent().data("syncid");
+              $start = $parent.find(".shift-start")
+              $end = $parent.find(".shift-end")
+              $start.prop("disabled", true)
+              $end.prop("disabled", true)
+              console.log(sync_id)
+              content = {"sync_id": sync_id}
+              $.ajax({
+                  type: "DELETE",
+                  url: "api/v1.0/shift",
+                  data: JSON.stringify(content),
+                  contentType: "application/json; charset=utf-8",
+                  dataType: "json",
+                  success: function(data, status, xhr) {
+                    if (xhr['status'] == 200) {
+                        console.log(xhr['responseJSON']);
+                        if (try_sync()) {
+                            reload_content();
+                        }
+                        $start.prop("disabled", false)
+                        $end.prop("disabled", false)
+                    }
+                  },
+                  error: function(xhr, status, error) {
+                    $start.prop("disabled", false)
+                    $end.prop("disabled", false)
+                    console.log(xhr.responseText)
+                    console.log(status)
+                    console.log(error)
+                    result = JSON.parse(xhr.responseText)
+                    alert(result["message"])
+                  }
+              });
       });
       // actually edit
       $('#shifts-container').on('keypress', '.edit-shift', function (e) {
           if (e.which === 13) {
               $this = $(this);
               $parent = $this.parent().parent();
-              $this.prop("disabled", false);
+              $this.prop("disabled", true);
+              $start = $parent.find(".shift-start")
+              $end = $parent.find(".shift-end")
+
+              $start.prop("disabled", true)
+              $end.prop("disabled", true)
 
               syncid = $parent.data("syncid");
-              start = $parent.find(".shift-start").val();
-              end = $parent.find(".shift-end").val();
+              start = $start.val();
+              end = $end.val();
               console.log(syncid, start, end)
 
               content = {"sync_id": syncid, "start": start, "end": end}
@@ -41,7 +82,8 @@
                         if (try_sync()) {
                             reload_content();
                         }
-                        $this.prop("disabled", false);
+                        $start.prop("disabled", false)
+                        $end.prop("disabled", false)
                     }
                   },
                   error: function(xhr, status, error) {
@@ -50,7 +92,8 @@
                     console.log(xhr.responseText)
                     console.log(status)
                     console.log(error)
-                    $this.prop("disabled", false);
+                    $start.prop("disabled", false)
+                    $end.prop("disabled", false)
                   }
               });
           }

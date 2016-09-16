@@ -296,6 +296,24 @@ def delete_item(base, _type, item, sync_time):
             base.delete_stock_item(sync_id)
 
 
+@api_page.route('/api/v1.0/shift', methods=['DELETE'])
+def delete_shift():
+    base = CgBase(util.get_location()[1])
+    shift = request.get_json()
+    success = base.delete_shift(shift["sync_id"])
+
+    if success:
+        return jsonify(shift)
+    else:
+        message = {
+            'status': 500,
+            'message': "Unknown start work error"
+        }
+        resp = jsonify(message)
+        resp.status_code = 500
+        return resp
+
+
 @api_page.route('/api/v1.0/shift', methods=['PUT'])
 def edit_shift():
     base = CgBase(util.get_location()[1])
