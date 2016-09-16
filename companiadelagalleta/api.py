@@ -296,9 +296,37 @@ def delete_item(base, _type, item, sync_time):
             base.delete_stock_item(sync_id)
 
 
-@api_page.route('/api/v1.0/shifts/<int:worker_id>/begin',
-                methods=['PUT'])
-def begin_(worker_id):
+@api_page.route('/api/v1.0/shift', methods=['PUT'])
+def edit_shift():
+    base = CgBase(util.get_location()[1])
+    shift = request.get_json()
+    start = convert_date(shift["start"] + ":00")
+    end = convert_date(shift["end"] + ":00")
+
+    if start is None or end is None:
+        message = {
+            'status': 400,
+            'message': "Not a valid datetime",
+            'wrong-args': (shift["start"], shift["end"])
+        }
+        resp = jsonify(message)
+        resp.status_code = 400
+        return resp
+    success = base.update_shift_times(shift["sync_id"], start, end)
+    if success:
+        return jsonify(shift)
+    else:
+        message = {
+            'status': 500,
+            'message': "Unknown start work error"
+        }
+        resp = jsonify(message)
+        resp.status_code = 500
+        return resp
+
+
+@api_page.route('/api/v1.0/shifts/<int:worker_id>/begin', methods=['PUT'])
+def begin_shift(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.begin_work(worker_id)
     if workres:
@@ -316,9 +344,8 @@ def begin_(worker_id):
         return resp
 
 
-@api_page.route('/api/v1.0/shifts/<int:worker_id>/end',
-                methods=['PUT'])
-def end_work(worker_id):
+@api_page.route('/api/v1.0/shifts/<int:worker_id>/end', methods=['PUT'])
+def end_shift(worker_id):
     base = CgBase(util.get_location()[1])
     workres = base.end_work(worker_id)
     if not workres:

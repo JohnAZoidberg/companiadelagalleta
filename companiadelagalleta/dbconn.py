@@ -184,10 +184,21 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def update_shift_times(self, sync_id, start, end):
+        success = self.update("shifts",
+                {"start": util.datestring(start), "end": util.datestring(end),
+                 "status": 1, "edited": util.datestring(datetime.now())},
+                False,
+                ("WHERE syncId = %s", (sync_id,))
+        )
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
+
     def update_shift(self, workerId, start, end, edited,
                      location, status, syncId):
-        success = False
-        # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
         if end is not None:
@@ -462,7 +473,7 @@ class CgBase:
 
     def get_shift_stats(self, month, year):
         self.cur.execute((
-            "SELECT workerId, DATE(start), start, status,"
+            "SELECT shifts.syncId, workerId, DATE(start), start, status,"
             "       nn.end, TIMEDIFF(nn.end, start),"
             " ("
             "   SELECT COALESCE(SUM(c.price * c.quantity),0) AS total"
@@ -485,9 +496,10 @@ class CgBase:
         workdays = OrderedDict()
         summary = OrderedDict()
         for row in result:
-            (workerId, workdate, start, status, end, duration, sales) = row
+            (syncId, workerId, workdate, start, status, end, duration, sales) = row
             sales = int(sales)
             shift = {
+                "syncId": syncId,
                 "workerId": workerId,
                 "worker": util.all_workers[workerId],
                 "duration": duration,
