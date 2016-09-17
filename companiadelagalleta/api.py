@@ -300,14 +300,14 @@ def delete_item(base, _type, item, sync_time):
 def delete_shift():
     base = CgBase(util.get_location()[1])
     shift = request.get_json()
-    success = base.delete_shift(shift["sync_id"])
+    success = base.mark_shift_deleted(shift["sync_id"])
 
     if success:
         return jsonify(shift)
     else:
         message = {
             'status': 500,
-            'message': "Unknown start work error"
+            'message': "Unknown delete_shift error"
         }
         resp = jsonify(message)
         resp.status_code = 500

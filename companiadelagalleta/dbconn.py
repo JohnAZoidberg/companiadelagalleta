@@ -417,7 +417,8 @@ class CgBase:
 
     def end_work(self, workerId):
         end = util.datestring(datetime.now())
-        i = self.update("shifts", {"end": end, "edited": datetime.now()},
+        i = self.update("shifts", {"end": end, "edited": datetime.now(),
+                                   "status": 1},
             True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
         if i == 0:
             return False
@@ -437,7 +438,7 @@ class CgBase:
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False,
                    newerthan=None, returndict=False, allLocations=False,
                    notnow=False):
-        where = ["WHERE end IS NOT NULL", []]
+        where = ["WHERE 1=1 ", []]
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
@@ -494,9 +495,10 @@ class CgBase:
         ), (self.location, self.location, month, year))
         result = self.cur.fetchall()
         workdays = OrderedDict()
-        summary = OrderedDict()
+        summary = {}
         for row in result:
-            (syncId, workerId, workdate, start, status, end, duration, sales) = row
+            (syncId, workerId, workdate, start, status, end, duration,
+             sales) = row
             sales = int(sales)
             shift = {
                 "syncId": syncId,
@@ -522,7 +524,9 @@ class CgBase:
                 workdays[workdate].append(shift)
             except KeyError:
                 workdays[workdate] = [shift]
-        return workdays, summary.values()
+        result = sorted((person for person in summary.itervalues()),
+                        key=lambda x: x["hours"], reverse=True)
+        return workdays, result
 
     def get_stock(self):
         quantity_sql =(
