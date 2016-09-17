@@ -129,7 +129,13 @@
               workers[workerId]["working"] = true;
               $.put("api/v1.0/shifts/"+workerId+"/begin", function(result) {
                   success = result["worker_id"]==workerId;
-                  if (success) updateWorkingStr();
+                  if (success) {
+                      updateWorkingStr();
+                      reload_shifts();
+                      if (try_sync()) {
+                          reload_shifts();
+                      }
+                  }
               });
           }
       });
@@ -141,7 +147,13 @@
               workers[workerId]["working"] = false;
               $.put("api/v1.0/shifts/"+workerId+"/end", function(result) {
                   success = result["worker_id"]==workerId;
-                  if (success) updateWorkingStr();
+                  if (success) {
+                      updateWorkingStr();
+                      reload_shifts();
+                      if (try_sync()) {
+                          reload_shifts();
+                      }
+                  }
               });
           }
       });
