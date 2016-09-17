@@ -464,7 +464,7 @@ class CgBase:
             if datestring:
                 start = util.datestring(start)
                 edited = util.datestring(edited)
-                end = "null" if end is None else util.datestring(end)
+                end = None if end is None else util.datestring(end)
             shifts.append({"syncId": key, "workerId": workerId, "start": start,
                            "end": end, "status": status, "edited": edited,
                            "location": location})
