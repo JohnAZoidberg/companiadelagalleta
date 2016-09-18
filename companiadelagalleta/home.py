@@ -32,12 +32,13 @@ def home():
 
     # date
     if showndate is None:
-        now = datetime.utcnow()
-    elif g.user.is_admin():
-        now = util.utc_strptime(showndate, '%Y-%m-%d')
+        now = datetime.now()
     else:
-        flash("Only admins can view past dates!", "danger")
-        return redirect(url_for("home_page.home"))
+        now = datetime.strptime(showndate, '%Y-%m-%d')
+        if (not g.user.is_admin() and
+                not util.is_same_day(datetime.now(), now)):
+            flash("Only admins can view past dates!", "danger")
+            return redirect(url_for("home_page.home"))
     # data
     base = CgBase(location)
     boxes = base.get_boxes()
@@ -87,13 +88,13 @@ def purchases():
 
     # date
     if showndate is None:
-        now = datetime.utcnow()
-    elif g.user.is_admin():
-        now = util.utc_strptime(showndate, '%Y-%m-%d')
+        now = datetime.now()
     else:
-        flash("Only admins can view past dates!", "danger")
-        return redirect(url_for("home_page.home"))
-
+        now = datetime.strptime(showndate, '%Y-%m-%d')
+        if (not g.user.is_admin() and
+                not util.is_same_day(datetime.now(), now)):
+            flash("Only admins can view past dates!", "danger")
+            return redirect(url_for("home_page.home"))
     # data
     base = CgBase(location)
     purchases, total = util.calc_purchases_totals(
