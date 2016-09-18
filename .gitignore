@@ -1,7 +1,10 @@
 log.txt
-dbdetails.py
 report.xlsx
 estadisticas.xlsx
+dbdetails.py
 *.pyc
 *.swp
 .ropeproject/
+build/
+*.egg-info/
+dist/

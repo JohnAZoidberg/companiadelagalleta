@@ -7,7 +7,7 @@ sys.setdefaultencoding("utf8")
 
 # TODO see if this actually works
 setup(name='companiadelagalleta',
-      version='0.7.0',
+      version='1.0.3',
       description='Tracking for cookie sales',
       url='http://github.com/JohnAZoidberg/companiadelagalleta',
       author='Daniel Schäfer',
@@ -15,5 +15,10 @@ setup(name='companiadelagalleta',
       packages=['companiadelagalleta', 'testing'],
       install_requires=[
           'flask',
+          'openpyxl',
+          'requests',
+          'flask-login',
+          'Flask-Mail',
+          'Flask-SQLAlchemy'
       ],
 )

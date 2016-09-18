@@ -184,10 +184,21 @@ class CgBase:
             self.db.rollback()
         return success
 
+    def update_shift_times(self, sync_id, start, end):
+        success = self.update("shifts",
+                {"start": util.datestring(start), "end": util.datestring(end),
+                 "status": 1, "edited": util.datestring(datetime.now())},
+                False,
+                ("WHERE syncId = %s", (sync_id,))
+        )
+        if success:
+            self.db.commit()
+        else:
+            self.db.rollback()
+        return success
+
     def update_shift(self, workerId, start, end, edited,
                      location, status, syncId):
-        success = False
-        # a unique id to identify entries: unixtimestamp + 4 random digits
         if syncId is None:
             syncId = str(util.uniqueId())
         if end is not None:
@@ -406,7 +417,8 @@ class CgBase:
 
     def end_work(self, workerId):
         end = util.datestring(datetime.now())
-        i = self.update("shifts", {"end": end, "edited": datetime.now()},
+        i = self.update("shifts", {"end": end, "edited": datetime.now(),
+                                   "status": 1},
             True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
         if i == 0:
             return False
@@ -426,7 +438,7 @@ class CgBase:
     def get_shifts(self, getDeleted=False, notsynced=False, datestring=False,
                    newerthan=None, returndict=False, allLocations=False,
                    notnow=False):
-        where = ["WHERE end IS NOT NULL", []]
+        where = ["WHERE 1=1 ", []]
         if not allLocations:
             where[0] += " AND location = %s"
             where[1].append(self.location)
@@ -452,7 +464,7 @@ class CgBase:
             if datestring:
                 start = util.datestring(start)
                 edited = util.datestring(edited)
-                end = "null" if end is None else util.datestring(end)
+                end = None if end is None else util.datestring(end)
             shifts.append({"syncId": key, "workerId": workerId, "start": start,
                            "end": end, "status": status, "edited": edited,
                            "location": location})
@@ -462,7 +474,7 @@ class CgBase:
 
     def get_shift_stats(self, month, year):
         self.cur.execute((
-            "SELECT workerId, DATE(start), start, status,"
+            "SELECT shifts.syncId, workerId, DATE(start), start, status,"
             "       nn.end, TIMEDIFF(nn.end, start),"
             " ("
             "   SELECT COALESCE(SUM(c.price * c.quantity),0) AS total"
@@ -483,11 +495,13 @@ class CgBase:
         ), (self.location, self.location, month, year))
         result = self.cur.fetchall()
         workdays = OrderedDict()
-        summary = OrderedDict()
+        summary = {}
         for row in result:
-            (workerId, workdate, start, status, end, duration, sales) = row
+            (syncId, workerId, workdate, start, status, end, duration,
+             sales) = row
             sales = int(sales)
             shift = {
+                "syncId": syncId,
                 "workerId": workerId,
                 "worker": util.all_workers[workerId],
                 "duration": duration,
@@ -510,7 +524,9 @@ class CgBase:
                 workdays[workdate].append(shift)
             except KeyError:
                 workdays[workdate] = [shift]
-        return workdays, summary.values()
+        result = sorted((person for person in summary.itervalues()),
+                        key=lambda x: x["hours"], reverse=True)
+        return workdays, result
 
     def get_stock(self):
         quantity_sql =(

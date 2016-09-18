@@ -8,18 +8,109 @@
 {% block script %}
     <script>
   {{ super() }}
+      // edit shift
+      // toggle inputs
+      $('#shifts-container').on('click', '.toggle-edit', function (e) {
+              var sync_id = $(this).data("syncid");
+              console.log(sync_id)
+              $('.edit-inputs[data-syncid="' + sync_id + '"]').toggleClass("gone");
+      });
+      // delete shift
+      $('#shifts-container').on('click', '.delete-shift', function (e) {
+              $parent = $(this).parent()
+              var sync_id = $parent.parent().data("syncid");
+              $start = $parent.find(".shift-start")
+              $end = $parent.find(".shift-end")
+              $start.prop("disabled", true)
+              $end.prop("disabled", true)
+              console.log(sync_id)
+              content = {"sync_id": sync_id}
+              $.ajax({
+                  type: "DELETE",
+                  url: "api/v1.0/shift",
+                  data: JSON.stringify(content),
+                  contentType: "application/json; charset=utf-8",
+                  dataType: "json",
+                  success: function(data, status, xhr) {
+                    if (xhr['status'] == 200) {
+                        console.log(xhr['responseJSON']);
+                        if (try_sync()) {
+                            reload_content();
+                        }
+                    }
+                  },
+                  error: function(xhr, status, error) {
+                    $start.prop("disabled", false)
+                    $end.prop("disabled", false)
+                    console.log(xhr.responseText)
+                    console.log(status)
+                    console.log(error)
+                    result = JSON.parse(xhr.responseText)
+                    alert(result["message"])
+                  }
+              });
+      });
+      // actually edit
+      $('#shifts-container').on('click', '.update-shift', function (e) {
+          $this = $(this);
+          $parent = $this.parent().parent();
+          $start = $parent.find(".shift-start")
+          $end = $parent.find(".shift-end")
+
+          $start.prop("disabled", true)
+          $end.prop("disabled", true)
+
+          syncid = $parent.data("syncid");
+          start = $start.val();
+          end = $end.val();
+          console.log(syncid, start, end)
+
+          content = {"sync_id": syncid, "start": start, "end": end}
+          $.ajax({
+              type: "PUT",
+              url: "api/v1.0/shift",
+              data: JSON.stringify(content),
+              contentType: "application/json; charset=utf-8",
+              dataType: "json",
+              success: function(data, status, xhr) {
+                if (xhr['status'] == 200) {
+                    console.log(xhr['responseJSON']);
+                    if (try_sync()) {
+                        reload_content();
+                    }
+                }
+              },
+              error: function(xhr, status, error) {
+                result = JSON.parse(xhr.responseText)
+                alert(result["message"])
+                console.log(xhr.responseText)
+                console.log(status)
+                console.log(error)
+                $start.prop("disabled", false)
+                $end.prop("disabled", false)
+              }
+          });
+      });
+      // change month
+      var current_month = null;
+      var current_year = null;
       $("#shifts-container").on("click", ".select-shift-month", function(e) {
           month = $(this).data("month");
           year = $(this).data("year");
+          current_month = month;
+          current_year = year;
           reload_shifts({"month": month, "year": year});
       });
       function reload_shifts(args) {
           var get_str = "";
-          if (args["month"] && args["year"]) {
-              get_str = "&month=" + args["month"] + "&year=" + args["year"];
+          if (current_month !== null && current_year !== null) {
+              args = {"month": month, "year": year}
+          }
+          if (args !== undefined && "month" in args && "year" in args) {
+              get_str = "?month=" + args["month"] + "&year=" + args["year"];
           }
           $("#shifts-container")
-              .load("shifts/table?date={{ date|dateformat }}" + get_str);
+              .load("shifts/table" + get_str);
       }
       // gets called from base.html
       function reload_content() {
