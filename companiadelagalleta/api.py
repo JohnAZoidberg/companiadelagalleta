@@ -15,7 +15,6 @@ import util
 from dbdetails import dbdetails
 
 from flask import Blueprint, request, redirect, url_for, jsonify
-from flask_login import login_required
 
 
 api_page = Blueprint('api_page', __name__, template_folder='templates')
@@ -27,11 +26,12 @@ def save_purchase():
     base = CgBase(util.get_location()[1])
     if purchase['boxes']:
         date = convert_date(purchase['datetime'] + ":00")
+        print "date: ", date
         if date is None:
             return abort_msg(400, "Not a valid datetime")
-        edited = datetime.now()
+        edited = datetime.utcnow()
         insert_success = base.insert_purchase(
-            purchase['country'], purchase['card'], purchase['datetime'],
+            purchase['country'], purchase['card'], date,
             purchase['discount'], purchase['boxes'], edited,
             note=purchase['note'])
         if insert_success:
@@ -60,7 +60,7 @@ def sync():
         # get data to return
         up_data = {
             "data": {},
-            "sync_time": util.datestring(datetime.now()),
+            "sync_time": util.datestring(datetime.utcnow()),
             "last_sync": util.datestring(base.get_last_sync())
         }
         up_data['data']['purchase'] = base.get_purchases(
@@ -94,7 +94,7 @@ def sync():
                 raise
         except:
             raise
-        sync_time = datetime.now()
+        sync_time = datetime.utcnow()
     else: # Serverside
         input = request.get_json()
         try:
@@ -409,11 +409,12 @@ def update_stock():
 
 def convert_date(datestring):
     try:
-        return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+        return util.localstringdate(datestring)
     except:
         try:
             datestring = datetime.now().strftime('%Y-%m-%d ') + datestring
-            return datetime.strptime(datestring, '%Y-%m-%d %H:%M:%S')
+            print datestring
+            return util.localstringdate(datestring)
         except:
             pass
     return None

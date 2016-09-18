@@ -1,5 +1,5 @@
 # coding=utf-8
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import randint
 import socket
 import os
@@ -12,6 +12,9 @@ from functools import wraps
 from flask import request, current_app as app
 
 import jinja_filters
+
+diff = datetime.now() - datetime.utcnow()
+utc_hrs = round(diff.total_seconds() / 3600)
 
 br = "<br>"
 
@@ -216,6 +219,30 @@ def datestring(date):
 
 def stringdate(string):
     return datetime.strptime(string, '%Y-%m-%d %H:%M:%S')
+
+
+def localstringdate(datestring):
+    return local_to_utc(stringdate(datestring))
+
+
+def localdatestring(date):
+    return datestring(utc_to_local(date))
+
+
+def local_strftime(date, format):
+    return utc_to_local(date).strftime(format)
+
+
+def utc_strptime(datestring, format):
+    return local_to_utc(datetime.strptime(datestring, format))
+
+
+def local_to_utc(utc_datetime):
+    return utc_datetime - timedelta(hours=utc_hrs)
+
+
+def utc_to_local(utc_datetime):
+    return utc_datetime + timedelta(hours=utc_hrs)
 
 
 def log(*lines):

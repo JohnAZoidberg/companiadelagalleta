@@ -187,7 +187,7 @@ class CgBase:
     def update_shift_times(self, sync_id, start, end):
         success = self.update("shifts",
                 {"start": util.datestring(start), "end": util.datestring(end),
-                 "status": 1, "edited": util.datestring(datetime.now())},
+                 "status": 1, "edited": util.datestring(datetime.utcnow())},
                 False,
                 ("WHERE syncId = %s", (sync_id,))
         )
@@ -288,7 +288,7 @@ class CgBase:
 
     def mark_purchase_deleted(self, syncId):
         syncStr = str(syncId)
-        edited = util.datestring(datetime.now())
+        edited = util.datestring(datetime.utcnow())
         success = self.update("purchases",
             {"status": 2, "edited": edited},
             False, ("WHERE syncId = %s", (syncStr,)))
@@ -299,7 +299,7 @@ class CgBase:
     def mark_shift_deleted(self, syncId):
         syncStr = str(syncId)
         success = self.update("shifts",
-            {"status": 2, "edited": util.datestring(datetime.now())},
+            {"status": 2, "edited": util.datestring(datetime.utcnow())},
             False, ("WHERE syncId = %s", (syncStr,)))
         if success:
             self.db.commit()
@@ -308,7 +308,7 @@ class CgBase:
     def mark_stock_item_deleted(self, syncId):
         syncStr = str(syncId)
         success = self.update("stock",
-            {"status": 2, "edited": util.datestring(datetime.now())},
+            {"status": 2, "edited": util.datestring(datetime.utcnow())},
             False, ("WHERE syncId = %s", (syncStr,)))
         if success:
             self.db.commit()
@@ -397,7 +397,7 @@ class CgBase:
             boxes[boxId] = {"title": title, "price": price}
         return boxes
 
-    def update_last_sync(self, date=datetime.now()):
+    def update_last_sync(self, date=datetime.utcnow()):
         self.update("config", {"last_sync": util.datestring(date)}, True, ("", ()))
 
     def get_last_sync(self):
@@ -412,12 +412,12 @@ class CgBase:
                              (workerId,)))
         if res is not None:
             return True
-        now = datetime.now()
+        now = datetime.utcnow()
         return self.insert_shift(workerId, now, None, now)
 
     def end_work(self, workerId):
-        end = util.datestring(datetime.now())
-        i = self.update("shifts", {"end": end, "edited": datetime.now(),
+        end = util.datestring(datetime.utcnow())
+        i = self.update("shifts", {"end": end, "edited": datetime.utcnow(),
                                    "status": 1},
             True, ("WHERE workerId = %s AND end IS NULL", (workerId,)))
         if i == 0:
@@ -666,7 +666,7 @@ class CgBase:
         )
 
     def update_stock(self, containers, absolute):
-        now = datetime.now()
+        now = datetime.utcnow()
         success = True
         for containerId, quantity in containers.iteritems():
             success = success and \

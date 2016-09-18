@@ -7,15 +7,15 @@ import util
 
 
 def dateformat(value):
-    return value.strftime('%Y-%m-%d')
+    return util.local_strftime(value, '%Y-%m-%d')
 
 
 def datetimeformat(value):
-    return value.strftime('%Y-%m-%d %H:%M')
+    return util.local_strftime(value, '%Y-%m-%d %H:%M')
 
 
 def timeformat(value):
-    return value.strftime('%H:%M')
+    return util.local_strftime(value, '%H:%M')
 
 
 def moneyformat(value):

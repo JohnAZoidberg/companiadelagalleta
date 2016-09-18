@@ -26,7 +26,7 @@ def stock():
     if not location_cookie:
         new_cookies = {"location": str(location)}
     # data
-    now = datetime.now()
+    now = datetime.utcnow()
     base = CgBase(location)
     stock = base.get_stock()
     workers = base.get_workers()
@@ -73,7 +73,7 @@ def container_stock(container_id):
     if not location_cookie:
         new_cookies = {"location": str(location)}
     # data
-    now = datetime.now()
+    now = datetime.utcnow()
     base = CgBase(location)
     stock = base.get_container_stock(container_id)
     container_name = util.containers[container_id]["title"]

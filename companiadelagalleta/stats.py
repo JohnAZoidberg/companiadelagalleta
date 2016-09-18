@@ -16,11 +16,14 @@ from openpyxl import load_workbook
 from flask import Blueprint, send_from_directory, current_app as app
 
 stats_download = Blueprint('stats_download', __name__)
+
+
 @stats_download.route('/stats')
 @util.only_admins(redirect_home=True)
 def stats():
     create_stats_file(util.get_location()[1])
     return send_from_directory('', 'estadisticas.xlsx')
+
 
 def colnum_string(n):
     div = n
@@ -33,15 +36,15 @@ def colnum_string(n):
 
 
 def day_to_datetime(day):
-    return datetime.strptime(day, '%Y-%m-%d')
+    return util.utc_strptime(day, '%Y-%m-%d')
 
 
 def create_stats_file(location):
     base = CgBase(location)
     purchases = base.get_purchases(allLocations=True,
-            newerthan=datetime(2016, 8, 1, 0, 0))
+                                   newerthan=datetime(2016, 8, 1, 0, 0))
     boxes = base.get_boxes()
-    shifts = base.get_shifts(allLocations=True)
+    # shifts = base.get_shifts(allLocations=True)
 
     # Insert sales
     wb = load_workbook(os.path.join(app.root_path, 'stats.xlsx'))

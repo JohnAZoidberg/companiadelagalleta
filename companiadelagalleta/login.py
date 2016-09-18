@@ -50,7 +50,7 @@ def show_login():
         new_cookies = {"location": str(location)}
 
     # data
-    now = datetime.now()
+    now = datetime.utcnow()
     base = CgBase(location)
     version = base.get_version()
     workers = base.get_workers()

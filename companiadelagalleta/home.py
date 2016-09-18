@@ -17,6 +17,8 @@ from flask import Blueprint, render_template, request, make_response, g,\
 from flask_login import login_required
 
 home_page = Blueprint('home_page', __name__, template_folder='templates')
+
+
 @home_page.route('/', methods=['GET'])
 @home_page.route('/home', methods=['GET'])
 @login_required
@@ -30,9 +32,9 @@ def home():
 
     # date
     if showndate is None:
-        now = datetime.now()
+        now = datetime.utcnow()
     elif g.user.is_admin():
-        now = datetime.strptime(showndate, '%Y-%m-%d')
+        now = util.utc_strptime(showndate, '%Y-%m-%d')
     else:
         flash("Only admins can view past dates!", "danger")
         return redirect(url_for("home_page.home"))
@@ -44,7 +46,8 @@ def home():
     workers = base.get_workers()
     version = base.get_version()
 
-    resp = make_response(render_template('home.html',
+    resp = make_response(render_template(
+        'home.html',
         title='Herramienta',
         date=now,
         countries=util.country_list.items(),
@@ -66,12 +69,14 @@ def home():
 def hello():
     return "Hello beautiful World"
 
+
 @home_page.route('/test', methods=['GET'])
 @util.only_admins(redirect_home=False)
 def test():
     base = CgBase(0)
     #util.log("Testlog")
     return "Done"
+
 
 @login_required
 @home_page.route('/purchases', methods=['GET'])
@@ -82,9 +87,9 @@ def purchases():
 
     # date
     if showndate is None:
-        now = datetime.now()
+        now = datetime.utcnow()
     elif g.user.is_admin():
-        now = datetime.strptime(showndate, '%Y-%m-%d')
+        now = util.utc_strptime(showndate, '%Y-%m-%d')
     else:
         flash("Only admins can view past dates!", "danger")
         return redirect(url_for("home_page.home"))
@@ -94,7 +99,8 @@ def purchases():
     purchases, total = util.calc_purchases_totals(
         base.get_purchases(onlydate=now))
 
-    return render_template('purchases.html',
+    return render_template(
+        'purchases.html',
         purchases=purchases,
         total=total,
         server=dbdetails.server,

@@ -94,6 +94,33 @@ def db_update():
     if version < 10004:
         result += "Add option to remove and add shifts\n"
         new_version = 10004  # 1.0.4
+    if version < 10100:
+        try:
+            # set db timezone to UTC
+            base.cur.execute("SET @@global.time_zone='+00:00'")
+            # update all entries to UTC
+            tables = [
+                ("config", "last_sync"),
+                ("purchases", "date"),
+                ("purchases", "edited"),
+                ("shifts", "start"),
+                ("shifts", "end"),
+                ("shifts", "edited"),
+                ("stock", "date"),
+                ("stock", "edited")
+            ]
+            for table, column in tables:
+                base.cur.execute(
+                    "UPDATE {0} SET {1} = {1} - INTERVAL 1 HOUR"
+                    .format(table, column))
+
+            base.db.commit()
+
+            result += "Make dates and times timezone agnostic\n"
+            new_version = 10100  # 1.1.0
+        except:
+            base.db.rollback()
+            raise
 
     if new_version is not None:
         if not failure:

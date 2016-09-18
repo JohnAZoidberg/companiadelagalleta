@@ -25,7 +25,7 @@ months = [
 @shifts_page.route('/shifts')
 @util.only_admins(redirect_home=True)
 def shifts():
-    now = datetime.now()
+    now = datetime.utcnow()
     # get/post and cookie
     new_cookies = {}
     location_cookie, location = util.get_location()
@@ -62,7 +62,7 @@ def shifts():
 @shifts_page.route('/shifts/table')
 @util.only_admins(redirect_home=False)
 def shifts_table():
-    now = datetime.now()
+    now = datetime.utcnow()
     # get/post and cookie
     location_cookie, location = util.get_location()
     # data
