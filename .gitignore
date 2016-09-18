@@ -1,6 +1,7 @@
 log.txt
 report.xlsx
 estadisticas.xlsx
+dbdetails.py
 *.pyc
 *.swp
 .ropeproject/
