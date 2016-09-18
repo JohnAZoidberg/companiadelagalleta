@@ -37,8 +37,6 @@
                         if (try_sync()) {
                             reload_content();
                         }
-                        $start.prop("disabled", false)
-                        $end.prop("disabled", false)
                     }
                   },
                   error: function(xhr, status, error) {
@@ -53,50 +51,45 @@
               });
       });
       // actually edit
-      $('#shifts-container').on('keypress', '.edit-shift', function (e) {
-          if (e.which === 13) {
-              $this = $(this);
-              $parent = $this.parent().parent();
-              $this.prop("disabled", true);
-              $start = $parent.find(".shift-start")
-              $end = $parent.find(".shift-end")
+      $('#shifts-container').on('click', '.update-shift', function (e) {
+          $this = $(this);
+          $parent = $this.parent().parent();
+          $start = $parent.find(".shift-start")
+          $end = $parent.find(".shift-end")
 
-              $start.prop("disabled", true)
-              $end.prop("disabled", true)
+          $start.prop("disabled", true)
+          $end.prop("disabled", true)
 
-              syncid = $parent.data("syncid");
-              start = $start.val();
-              end = $end.val();
-              console.log(syncid, start, end)
+          syncid = $parent.data("syncid");
+          start = $start.val();
+          end = $end.val();
+          console.log(syncid, start, end)
 
-              content = {"sync_id": syncid, "start": start, "end": end}
-              $.ajax({
-                  type: "PUT",
-                  url: "api/v1.0/shift",
-                  data: JSON.stringify(content),
-                  contentType: "application/json; charset=utf-8",
-                  dataType: "json",
-                  success: function(data, status, xhr) {
-                    if (xhr['status'] == 200) {
-                        console.log(xhr['responseJSON']);
-                        if (try_sync()) {
-                            reload_content();
-                        }
-                        $start.prop("disabled", false)
-                        $end.prop("disabled", false)
+          content = {"sync_id": syncid, "start": start, "end": end}
+          $.ajax({
+              type: "PUT",
+              url: "api/v1.0/shift",
+              data: JSON.stringify(content),
+              contentType: "application/json; charset=utf-8",
+              dataType: "json",
+              success: function(data, status, xhr) {
+                if (xhr['status'] == 200) {
+                    console.log(xhr['responseJSON']);
+                    if (try_sync()) {
+                        reload_content();
                     }
-                  },
-                  error: function(xhr, status, error) {
-                    result = JSON.parse(xhr.responseText)
-                    alert(result["message"])
-                    console.log(xhr.responseText)
-                    console.log(status)
-                    console.log(error)
-                    $start.prop("disabled", false)
-                    $end.prop("disabled", false)
-                  }
-              });
-          }
+                }
+              },
+              error: function(xhr, status, error) {
+                result = JSON.parse(xhr.responseText)
+                alert(result["message"])
+                console.log(xhr.responseText)
+                console.log(status)
+                console.log(error)
+                $start.prop("disabled", false)
+                $end.prop("disabled", false)
+              }
+          });
       });
       // change month
       var current_month = null;
